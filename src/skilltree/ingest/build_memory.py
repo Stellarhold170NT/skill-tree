@@ -1,0 +1,371 @@
+"""build_memory — dựng Memory cognee từ Corpus SWEBOK theo preset (Task 3).
+
+Pipeline (GLOSSARY.md): ingest (cognee.add) → cognify → index, tất cả trong
+cognee legacy V1 API. Mọi Run phải ghi resolved config + timing để tái lập
+(CONTEXT.md).
+
+Sử dụng (cwd = repo root /workspace):
+    /opt/venv/bin/python src/skilltree/ingest/build_memory.py --preset smoke
+    /opt/venv/bin/python src/skilltree/ingest/build_memory.py --preset base --run-id run-00
+
+Artifacts ghi vào runs/<run_id>/:
+    ingest.log           — log thời gian từng bước (python tự mở file, KHÔNG shell redirect)
+    resolved_config.json — preset đã resolve + môi trường (reproducible)
+    ingest_metrics.json  — timing add/cognify/graph/search (đầu vào cho Task 4-6)
+    search_sample.txt    — trích kết quả truy vấn kiểm chứng
+
+LLM key round-robin: khi preset khai báo >=2 env var trong `llm_api_keys_env`,
+monkeypatch litellm.acompletion để xoay vòng api_key trên TỪNG call (adapter
+litellm_native của cognee lookup litellm.acompletion qua module attr LÚC GỌI
+nên patch toàn cục, chỉ đổi kwarg api_key).
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import importlib
+import itertools
+import json
+import logging
+import os
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from skilltree.ingest.presets import (  # noqa: E402
+    public_preset,
+    resolve_files,
+    summarize_files,
+)
+
+LOG = logging.getLogger("skilltree.ingest")
+
+
+# ------------------------------------------------------- llm key rotation ----
+
+def load_env_file() -> None:
+    """Nạp .env của repo vào os.environ (override=False) TRƯỚC khi đọc key.
+
+    cognee cũng nạp .env nhưng muộn hơn (lúc import cognee); round-robin cần
+    key trước thời điểm đó. override=False: biến môi trường thật được giữ.
+    """
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv(REPO_ROOT / ".env", override=False)
+    except ImportError:
+        LOG.warning("[llm-keys] python-dotenv không có sẵn — chỉ dùng os.environ")
+
+
+def read_api_keys(env_names: list[str]) -> list[str]:
+    """Đọc danh sách key gateway từ biến môi trường (theo tên trong preset)."""
+    keys: list[str] = []
+    for name in env_names:
+        value = os.environ.get(name, "").strip()
+        if value and value not in keys:
+            keys.append(value)
+    return keys
+
+
+def install_key_round_robin(keys: list[str]) -> int:
+    """Monkeypatch litellm.acompletion xoay vòng api_key trên từng call.
+
+    Chỉ thay kwarg api_key; phần còn lại giữ nguyên. Trả về số key đang xoay.
+    Idempotent: gọi lại không chồng patch (marker __skilltree_rr__).
+    """
+    import litellm
+
+    if getattr(litellm.acompletion, "__skilltree_rr__", False):
+        return 0  # đã patch từ trước
+    if len(keys) < 2:
+        return 0
+
+    cycle = itertools.cycle(keys)
+    original = litellm.acompletion
+
+    async def rotating_acompletion(*args: Any, **kwargs: Any):
+        kwargs["api_key"] = next(cycle)
+        return await original(*args, **kwargs)
+
+    rotating_acompletion.__skilltree_rr__ = True  # type: ignore[attr-defined]
+    rotating_acompletion.__skilltree_rr_original__ = original  # type: ignore[attr-defined]
+    litellm.acompletion = rotating_acompletion
+    return len(keys)
+
+
+def key_fingerprint(key: str) -> str:
+    """Dấu vắn của key để log/resolved_config mà không lộ secret."""
+    return f"...{key[-4:]}" if len(key) >= 4 else "..."
+
+
+# ---------------------------------------------------------------- logging ----
+
+def setup_logging(run_dir: Path) -> Path:
+    """Logger ghi song song ra runs/<run_id>/ingest.log và stdout."""
+    run_dir.mkdir(parents=True, exist_ok=True)
+    log_path = run_dir / "ingest.log"
+    LOG.setLevel(logging.INFO)
+    LOG.handlers.clear()
+    fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s", "%Y-%m-%dT%H:%M:%S")
+    fh = logging.FileHandler(log_path, mode="w", encoding="utf-8")
+    fh.setFormatter(fmt)
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setFormatter(fmt)
+    LOG.addHandler(fh)
+    LOG.addHandler(sh)
+    return log_path
+
+
+# ------------------------------------------------------- cognify mapping ----
+
+def resolve_graph_model(name: str) -> type:
+    """Resolve `graph_model` preset ("Class" | "module.Class" | "module:Class") thành class."""
+    candidates: list[str] = []
+    if ":" in name:
+        candidates.append(name)
+    elif "." in name:
+        candidates.append(name)
+        module, _, cls = name.rpartition(".")
+        candidates.append(f"{module}:{cls}")
+    else:
+        candidates.append(f"cognee.shared.data_models:{name}")
+        candidates.append(f"cognee.shared.data_models:{name}Model")
+    for cand in candidates:
+        module, _, cls = cand.partition(":")
+        try:
+            mod = importlib.import_module(module)
+            obj = getattr(mod, cls)
+            if isinstance(obj, type):
+                return obj
+        except (ImportError, AttributeError):
+            continue
+    raise ImportError(f"Không resolve được graph_model '{name}' (thử: {candidates})")
+
+
+def build_cognify_kwargs(preset: dict[str, Any]) -> dict[str, Any]:
+    """Map preset thẳng vào kwargs của cognee.cognify() (signature đã xác minh 1.6.4)."""
+    kwargs: dict[str, Any] = {"datasets": preset["dataset"]}
+    if preset.get("chunk_size") is not None:
+        kwargs["chunk_size"] = int(preset["chunk_size"])
+    if preset.get("chunks_per_batch") is not None:
+        kwargs["chunks_per_batch"] = int(preset["chunks_per_batch"])
+    if preset.get("custom_prompt"):
+        kwargs["custom_prompt"] = preset["custom_prompt"]
+    if preset.get("graph_model"):
+        kwargs["graph_model"] = resolve_graph_model(preset["graph_model"])
+    if preset.get("extractor"):
+        kwargs["extractor"] = preset["extractor"]  # "llm" | "gliner"
+    kwargs["incremental_loading"] = bool(preset.get("incremental_loading", True))
+    if preset.get("chunk_attachment") in ("direct", "all"):
+        kwargs["chunk_attachment"] = preset["chunk_attachment"]
+    return kwargs
+
+
+# ------------------------------------------------------------- graph stats ---
+
+async def collect_graph_stats() -> dict[str, Any]:
+    """Đếm node/edge của graph Ladybug (best-effort, không làm chết Run)."""
+    from cognee.infrastructure.databases.graph import get_graph_engine
+
+    stats: dict[str, Any] = {}
+    try:
+        graph = await get_graph_engine()
+        t0 = time.perf_counter()
+        nodes, edges = await graph.get_graph_counts()
+        stats.update(
+            nodes=nodes,
+            edges=edges,
+            counts_seconds=round(time.perf_counter() - t0, 3),
+        )
+    except Exception as exc:  # noqa: BLE001
+        stats["error"] = f"{type(exc).__name__}: {exc}"
+    return stats
+
+
+def compact_results(results: Any, limit_each: int = 400, limit_n: int = 3) -> list[str]:
+    """Rút gọn kết quả search thành chuỗi ngắn để log/report."""
+    out: list[str] = []
+    items = results if isinstance(results, list) else [results]
+    for item in items[:limit_n]:
+        text = getattr(item, "search_result", None) or getattr(item, "text", None)
+        if text is None:
+            text = str(item)
+        if not isinstance(text, str):
+            text = json.dumps(text, ensure_ascii=False, default=str)
+        out.append(text.strip()[:limit_each])
+    return out
+
+
+# ------------------------------------------------------------------- build ---
+
+async def run_build(preset: dict[str, Any], run_id: str, run_search: bool = True) -> dict[str, Any]:
+    # Gắn log NGAY từ đầu để mọi bước (kể cả round-robin) vào ingest.log
+    run_id = run_id or f"run-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    run_dir = REPO_ROOT / "runs" / run_id
+    log_path = setup_logging(run_dir)
+
+    # Nạp .env rồi patch litellm TRƯỚC khi cognee build client lần đầu.
+    load_env_file()
+    keys = read_api_keys(preset.get("llm_api_keys_env") or ["LLM_API_KEY"])
+    n_rotating = install_key_round_robin(keys)
+    if n_rotating:
+        LOG.info("[llm-keys] round-robin ACTIVE: %d keys %s",
+                 n_rotating, [key_fingerprint(k) for k in keys])
+    else:
+        LOG.info("[llm-keys] round-robin OFF (dùng 1 key %s)",
+                 key_fingerprint(keys[0]) if keys else "n/a")
+
+    import cognee  # import sau khi logging + patch sẵn sàng
+
+    LOG.info("=== Run %s | preset=%s ===", run_id, preset.get("name"))
+    metrics: dict[str, Any] = {
+        "run_id": run_id,
+        "preset_name": preset.get("name"),
+        "preset_path": preset.get("path"),
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "cognee_version": getattr(cognee, "__version__", "1.6.4"),
+        "llm_keys": {
+            "env_names": list(preset.get("llm_api_keys_env") or ["LLM_API_KEY"]),
+            "n_active": max(n_rotating, 1 if keys else 0),
+            "fingerprints": [key_fingerprint(k) for k in keys],
+            "round_robin": bool(n_rotating),
+        },
+    }
+
+    # 1) Resolve Corpus (glob + subsets)
+    files = resolve_files(preset, out_dir=run_dir / "corpus")
+    summary = summarize_files(files)
+    LOG.info("[corpus] %s", json.dumps(summary, ensure_ascii=False))
+    metrics["corpus"] = summary
+
+    # 2) Reset state (nếu preset yêu cầu) — prune_data + prune_system(metadata=True)
+    if preset.get("reset"):
+        t0 = time.perf_counter()
+        await cognee.prune.prune_data()
+        await cognee.prune.prune_system(metadata=True)
+        prune_s = time.perf_counter() - t0
+        LOG.info("[prune] prune_data + prune_system(metadata=True) done")
+        LOG.info("[prune] time=%.2fs", prune_s)
+        metrics["prune"] = {"seconds": round(prune_s, 3)}
+    else:
+        LOG.info("[prune] reset=false — giữ nguyên state hiện có")
+
+    # 3) ingest: add từng file text vào Dataset của preset
+    t_add0 = time.perf_counter()
+    add_details = []
+    for f in files:
+        t0 = time.perf_counter()
+        await cognee.add(str(f), dataset_name=preset["dataset"])
+        dt = time.perf_counter() - t0
+        add_details.append({"file": str(f), "seconds": round(dt, 3),
+                            "chars": len(f.read_text(encoding="utf-8"))})
+        LOG.info("[add] file=%s chars=%d time=%.2fs", f.name, add_details[-1]["chars"], dt)
+    add_s = time.perf_counter() - t_add0
+    LOG.info("[add] total files=%d chars=%d time=%.2fs",
+             len(files), summary["n_chars"], add_s)
+    metrics["add"] = {"seconds": round(add_s, 3), "details": add_details}
+
+    # 4) cognify — kwargs map thẳng từ preset
+    kwargs = build_cognify_kwargs(preset)
+    LOG.info("[cognify] kwargs=%s", json.dumps(
+        {k: (v.__name__ if isinstance(v, type) else v) for k, v in kwargs.items()},
+        ensure_ascii=False, default=str))
+    t0 = time.perf_counter()
+    cognify_result = await cognee.cognify(**kwargs)
+    cognify_s = time.perf_counter() - t0
+    LOG.info("[cognify] time=%.2fs", cognify_s)
+    metrics["cognify"] = {"seconds": round(cognify_s, 3)}
+    try:
+        blob = json.dumps(cognify_result, ensure_ascii=False, default=str)
+        LOG.info("[cognify] result=%s", blob[:600])
+        metrics["cognify"]["result"] = json.loads(blob) if len(blob) < 100000 else blob[:2000]
+    except (TypeError, ValueError):
+        LOG.info("[cognify] result(unserializable)=%s", str(cognify_result)[:600])
+
+    # 5) Thống kê graph: node/edge
+    stats = await collect_graph_stats()
+    LOG.info("[graph] %s", json.dumps(stats, ensure_ascii=False, default=str))
+    metrics["graph"] = stats
+
+    # 6) Truy vấn kiểm chứng — chứng minh Memory dùng được sau build
+    if run_search:
+        from cognee.api.v1.search import SearchType
+
+        qtype = SearchType[preset.get("search_type", "GRAPH_COMPLETION")]
+        query = preset.get("search_query") or "Software requirements là gì?"
+        t0 = time.perf_counter()
+        results = await cognee.search(
+            query_text=query, query_type=qtype, datasets=[preset["dataset"]]
+        )
+        search_s = time.perf_counter() - t0
+        sample = compact_results(results)
+        LOG.info("[search] type=%s query=%r results=%d time=%.2fs",
+                 qtype.name, query, len(results) if isinstance(results, list) else 1, search_s)
+        LOG.info("[search] sample_0=%r", sample[0] if sample else "(empty)")
+        (run_dir / "search_sample.txt").write_text(
+            f"query: {query}\ntype: {qtype.name}\n"
+            + "\n---\n".join(compact_results(results, limit_each=1200, limit_n=3))
+            + "\n",
+            encoding="utf-8",
+        )
+        metrics["search"] = {"type": qtype.name, "query": query, "seconds": round(search_s, 3),
+                             "n_results": len(results) if isinstance(results, list) else 1,
+                             "sample": sample}
+
+    # 7) Ghi metrics + resolved config (reproducible; KHÔNG ghi giá trị key)
+    metrics["finished_at"] = datetime.now(timezone.utc).isoformat()
+    total_s = sum(
+        metrics.get(k, {}).get("seconds", 0)
+        for k in ("prune", "add", "cognify", "search")
+        if isinstance(metrics.get(k), dict)
+    )
+    metrics["total_seconds"] = round(total_s, 3)
+    LOG.info("[total] %.2fs (prune+add+cognify+search)", metrics["total_seconds"])
+    (run_dir / "ingest_metrics.json").write_text(
+        json.dumps(metrics, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    (run_dir / "resolved_config.json").write_text(
+        json.dumps({
+            "run_id": run_id,
+            "resolved_at": metrics["finished_at"],
+            "preset": public_preset(preset),
+            "corpus": summary,
+            "cognify_kwargs": {
+                k: (v.__name__ if isinstance(v, type) else v)
+                for k, v in build_cognify_kwargs(preset).items()
+            },
+            "cognee_version": metrics["cognee_version"],
+            "llm_keys": metrics["llm_keys"],
+            "timings_seconds": {k: metrics.get(k, {}).get("seconds")
+                                for k in ("prune", "add", "cognify", "search")
+                                if isinstance(metrics.get(k), dict)},
+        }, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    LOG.info("=== Run %s DONE | log=%s ===", run_id, log_path)
+    return metrics
+
+
+def main(argv: list[str] | None = None) -> int:
+    from skilltree.ingest.presets import load_preset
+
+    parser = argparse.ArgumentParser(description="Build Memory cognee từ Corpus theo preset")
+    parser.add_argument("--preset", required=True, help="tên preset (configs/presets/) hoặc path")
+    parser.add_argument("--run-id", default=None, help="id Run (mặc định: run_id trong preset)")
+    parser.add_argument("--skip-search", action="store_true", help="bỏ qua truy vấn kiểm chứng")
+    args = parser.parse_args(argv)
+
+    preset = load_preset(args.preset)
+    run_id = args.run_id or preset.get("run_id") or f"run-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    metrics = asyncio.run(run_build(preset, run_id, run_search=not args.skip_search))
+    print(json.dumps({k: metrics.get(k) for k in ("run_id", "total_seconds", "graph")},
+                     ensure_ascii=False, default=str))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
