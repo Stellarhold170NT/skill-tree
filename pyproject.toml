@@ -1,0 +1,20 @@
+[project]
+name = "skilltree"
+version = "0.1.0"
+description = "SkillTree - cognee memory workspace (xu ly du lieu, luu tru, truy xuat)"
+requires-python = ">=3.10,<3.15"
+dependencies = [
+    # Memory engine: ingestion (remember) + luu tru local (sqlite/lancedb/ladybug) + truy xuat (recall)
+    "cognee[docling]==1.6.4",
+]
+
+[project.optional-dependencies]
+# extras nang cap khi can mo rong backend luu tru / provider
+postgres = ["cognee[postgres]==1.6.4"]
+neo4j = ["cognee[neo4j]==1.6.4"]
+ollama = ["cognee[ollama]==1.6.4"]
+anthropic = ["cognee[anthropic]==1.6.4"]
+
+[tool.uv]
+# giam pham vi resolver, tranh conflict voi cac goi dung cho muc dich khac
+constraint-dependencies = []

@@ -1,0 +1,15 @@
+# secrets & local state
+.env
+.data_storage/
+.cognee_system/
+.venv/
+
+# skills mirror repos (dependency ngoài, co git rieng)
+.agents/
+
+# python
+__pycache__/
+*.pyc
+
+# uv (giu uv.lock, bo cache)
+.venv*/
