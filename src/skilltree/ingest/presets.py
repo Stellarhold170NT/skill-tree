@@ -6,9 +6,8 @@ benchmark config). Task 6 (tinh chỉnh) chỉ đổi preset, không sửa code.
 Các khoá preset (mặc định trong DEFAULTS):
 - reset             : bool  — prune_data + prune_system(metadata=True) trước build
 - dataset           : str   — tên Dataset cognee (partition), mặc định "swebok_v4"
-- chunk_size        : int|None — None = cognee tự resolve
-                      (min(embedding_max_tokens, llm_max//2) — với fastembed
-                       MiniLM multilingual là 126 tokens, KHÔNG phải 1500)
+- chunk_size        : int|None — None = cognee tự resolve (min(window embedding,
+                      llm_max//2) — với e5-large là 510 tokens)
 - chunks_per_batch  : int|None — số chunk xử lý đồng thời mỗi wave của cognify
 - custom_prompt     : str|None — prompt hướng dẫn trích xuất entity của cognify
 - graph_model       : str|None — tên class BaseModel (mặc định KnowledgeGraph);
@@ -16,19 +15,20 @@ Các khoá preset (mặc định trong DEFAULTS):
 - extractor         : "llm" | "gliner" (mặc định "llm")
 - files             : list glob (tương đối repo root) trỏ vào Corpus
 - subsets           : list tên Knowledge Area (theo metadata.json) — chỉ dùng
-                      content các trang của KA đó (test nhanh), ghi ra file
-                      subset trong runs/<run_id>/corpus/
+                      content các trang của KA đó, ghi ra file subset trong
+                      runs/<run_id>/corpus/
 - llm_api_keys_env  : list TÊN biến môi trường chứa API key gateway; khi có
                       >=2 key, build_memory monkeypatch litellm.acompletion
-                      để xoay vòng api_key từng call (spread load, tránh 429).
-                      Giá trị key KHÔNG bao giờ được ghi vào preset/config.
+                      để xoay vòng api_key từng call. KHÔNG ghi giá trị key.
+- raise_on_error    : bool (mặc định False) — chunk fail sau 3 retry bị log +
+                      bỏ qua thay vì làm chết cả Run (build dài qua gateway)
 - incremental_loading, chunk_attachment : pass-through cho cognify()
 - search_type / search_query           : truy vấn kiểm chứng sau build
 - run_id            : id Run (có thể bị CLI --run-id ghi đè)
 
 Sử dụng:
     from skilltree.ingest.presets import load_preset, resolve_files
-    preset = load_preset("smoke")            # configs/presets/smoke.yaml
+    preset = load_preset("base4ka")          # configs/presets/base4ka.yaml
     files  = resolve_files(preset, out_dir)  # resolve glob + subsets
 """
 
@@ -45,11 +45,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 PRESET_DIR = REPO_ROOT / "configs" / "presets"
 CORPUS_DIR = REPO_ROOT / "corpora" / "swebok-v4"
 
-#: Mặc định bám theo giá trị mặc định của cognee 1.6.4.
+#: Mặc định bám theo giá trị mặc định của cognee 1.6.4 (trừ raise_on_error=False).
 DEFAULTS: dict[str, Any] = {
     "reset": True,
     "dataset": "swebok_v4",
-    "chunk_size": None,          # None -> cognee tự resolve (126 với MiniLM)
+    "chunk_size": None,          # None -> cognee tự resolve (510 với e5-large)
     "chunks_per_batch": None,    # None -> cognee tự chọn (2000)
     "custom_prompt": None,
     "graph_model": None,         # None -> KnowledgeGraph mặc định của cognee
@@ -57,6 +57,7 @@ DEFAULTS: dict[str, Any] = {
     "files": ["corpora/swebok-v4/swebok-v4.md"],
     "subsets": None,
     "llm_api_keys_env": ["LLM_API_KEY"],
+    "raise_on_error": False,
     "incremental_loading": True,
     "chunk_attachment": None,    # None -> cognee tự chọn ("direct")
     "search_type": "GRAPH_COMPLETION",
@@ -122,11 +123,7 @@ def _slice_pages(text: str, page_start: int, page_end: int) -> str:
 
 
 def expand_subsets(preset: dict[str, Any], out_dir: Path) -> list[Path]:
-    """Lọc Corpus theo `subsets` (tên Knowledge Area) và ghi file subset ra out_dir.
-
-    Phục vụ test nhanh: chỉ ingest đúng các trang của KA, giữ nguyên marker
-    trang để truy vết nguồn về PDF gốc.
-    """
+    """Lọc Corpus theo `subsets` (tên Knowledge Area) và ghi file subset ra out_dir."""
     out_dir = Path(out_dir)
     meta = json.loads((CORPUS_DIR / "metadata.json").read_text(encoding="utf-8"))
     k_by_name = {ka["name"].strip().lower(): ka for ka in meta.get("knowledge_areas", [])}
@@ -164,12 +161,7 @@ def expand_subsets(preset: dict[str, Any], out_dir: Path) -> list[Path]:
 
 
 def resolve_files(preset: dict[str, Any], out_dir: Path | None = None) -> list[Path]:
-    """Resolve `files` (glob tương đối repo root) + `subsets` (nếu có) thành list file.
-
-    - Không có subsets: glob trực tiếp (file hoặc pattern).
-    - Có subsets  : trích các trang của KA từ file corpus đầu tiên, ghi file
-      subset vào out_dir (thường là runs/<run_id>/corpus/) và trả về file đó.
-    """
+    """Resolve `files` (glob tương đối repo root) + `subsets` (nếu có) thành list file."""
     if preset.get("subsets"):
         if out_dir is None:
             raise ValueError(
