@@ -13,3 +13,9 @@ __pycache__/
 
 # uv (giu uv.lock, bo cache)
 .venv*/
+
+# benchmark artifacts (metrics/answers/dashboard — khong push, chi push reports/)
+runs/
+
+# corpus PDF nang (text .md + questions.jsonl van duoc push)
+corpora/**/*.pdf
