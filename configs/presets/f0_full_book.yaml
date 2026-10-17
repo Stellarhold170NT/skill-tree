@@ -1,0 +1,34 @@
+# F0 — RUN-FINAL: toàn bộ sách SWEBOK v4 (413 trang) với custom_prompt semantic boost (winner B1).
+# reset: FALSE — giữ nguyên các dataset hiện có (swebok_v4_b1), full-book dựng dataset riêng.
+run_id: run-final
+reset: false
+dataset: swebok_v4_full
+
+
+chunk_size: 512
+chunks_per_batch: 25
+raise_on_error: false
+extractor: llm
+
+custom_prompt: >-
+  You are building a technical knowledge graph from the SWEBOK v4 software engineering
+  guide. Extract concepts with MEANINGFUL typed relations between them:
+  REQUIRES, CONSTRAINS, VERIFIES, VALIDATES, MITIGATES, CAUSES, PRODUCES,
+  TRANSFORMS_TO, PART_OF, USES. Connect techniques to the activities and knowledge
+  areas they belong to, artifacts to the activities that produce or consume them, and
+  principles to the practices they constrain. For every entity write a one-sentence
+  description of its role in the software engineering process. Do NOT create generic
+  relations like related_to or mentions; prefer the specific relation types above.
+
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+
+
+search_type: GRAPH_COMPLETION
+search_query: "Kiến trúc phần mềm là gì và tại sao cần nhiều view kiến trúc?"
