@@ -1,0 +1,44 @@
+{
+  "verdict": "SMOKE_FAILED_STOPPED_BEFORE_FULL_BUILD",
+  "timestamp": "2026-10-17T11:55Z",
+  "sandbox": "sess-f762161c (workspace swebok-cognee)",
+  "preset": "configs/presets/c5_smoke.yaml (reset:false, dataset swebok_v4_c5_smoke, 1 KA Software Architecture, file subset_Software-Architecture_p67-82.md 52204 chars)",
+  "log": "/root/c5-smoke.log (container), 3326 lines",
+  "timeline": {
+    "t0_11:37:42": "build_memory.py --preset c5_smoke launched detached (PID 831)",
+    "t1_11:38:35": "[add] file subset OK; cognify started with custom_prompt (1353 chars) + graph_model SWEBOKGraph + extractor llm + raise_on_error false",
+    "t2_11:43-11:46": "LLM extraction SUCCEEDED after validation retries (3x retry 1/3 + 1x retry 2/3, all about nodes.source_chunks str-vs-list; no retry 3/3, no extraction error) -> SWEBOKGraph instances were built",
+    "t3_11:45:48": "CRASH: add_data_points -> ValidationError '18 validation errors for DocumentChunk' (contains.0/1/2 tuples from SWEBOKGraph fields rejected)",
+    "t4": "build_memory built-in retry: '[cognify] lần 1 fail (ValidationError: 18 validation errors for DocumentChunk) — thử lại 1 lần' -> same failure",
+    "t5_11:53": "fatal traceback through build_memory.py:417 -> process exit; NO data usable; MemFree stayed ~3.78GB (not an OOM); B1 dataset untouched (reset:false honored)"
+  },
+  "root_cause": {
+    "summary": "SWEBOKGraph (plain pydantic BaseModel) khong tuan thu contract graph_model cua cognee 1.6.4",
+    "mechanism": "cognee/tasks/graph/extract_graph_from_data.py::integrate_chunk_graphs: 'if not issubclass(graph_model, KnowledgeGraph): data_chunks[i].contains = chunk_graph' -> SWEBOKGraph instance dat vao DocumentChunk.contains; sau do cognee/tasks/storage/add_data_points.py:110 re-validate DocumentChunk, contains phai la list[tuple[Edge, Entity|Timestamp]] (ontology co so cua cognee) -> SWEBOKGraph (fields summary/nodes/edges) bi tu choi 18 validation errors, 2 lan cognify deu fail nhu nhau",
+    "custom_prompt_status": "KHONG bi bo qua — kwargs log chua day du custom_prompt 1353 chars; LLM extraction da ra SWEBOKGraph hop le (retry source_chunks thanh cong)",
+    "contract_required": "graph_model phai la subclass cua cognee.shared.data_models.KnowledgeGraph: nodes: list[Node(id, name, type, description)], edges: list[Edge(source_node_id, target_node_id, relationship_name, description)]",
+    "caveat_lowercase": "Neu dung duong KnowledgeGraph-subclass: cognee/modules/engine/utils/generate_edge_name.py LOWERCASES relationship_name khi luu ('PART_OF' -> 'part_of'). Kiem tra enum 15 quan he phai doi xuong case-insensitive hoac normalize luc dump",
+    "caveat_edge_props": "Duong KnowledgeGraph-subclass CHI giu relationship_name + description cua canh; field rieng nhu confidence/source_chunks cua SWEBOKEdge se BI MAT trong edge properties (chi con trong description neu nhom vao do)"
+  },
+  "log_excerpts": [
+    "[cognify] kwargs={\"datasets\": \"swebok_v4_c5_smoke\", \"chunk_size\": 512, \"chunks_per_batch\": 25, \"custom_prompt\": \"Bạn trích xuất đồ thị tri thức...\", \"graph_model\": \"SWEBOKGraph\", \"extractor\": \"llm\", \"incremental_loading\": true, \"raise_on_error\": false}",
+    "litellm_native validation retry 1/3: 6 validation errors for SWEBOKGraph nodes.17.source_chunks Input should be a valid array [type=list_type, input_value=\"Architecture analysis is...\", input_type=str]",
+    "error Coroutine task errored: `add_data_points` exception_message='18 validation errors for DocumentChunk contains.0.Entity Input should be a valid dictionary or instance of Entity [type=model_type, input_value=(\\'summary\\', \"Trang 67 m...detailed design stage.\"), input_type=tuple]'",
+    "WARNING [cognify] lần 1 fail (ValidationError: 18 validation errors for DocumentChunk) — thử lại 1 lần",
+    "pydantic_core._pydantic_core.ValidationError: 18 validation errors for DocumentChunk contains.1.Entity input_value=('nodes', [SWEBOKNode(name='Softwar...', source_chunks=['p. 67'])]) | contains.2.Entity input_value=('edges', [SWEBOKEdge(source_name='...', source_chunks=['p. 67'])])",
+    "File \"/workspace/src/skilltree/ingest/build_memory.py\", line 417 in main: metrics = asyncio.run(run_build(preset, run_id, run_search=not args.skip_search))",
+    "File \"/opt/venv/lib/python3.11/site-packages/cognee/tasks/storage/add_data_points.py\", line 110, in add_data_points"
+  ],
+  "sample_extraction_evidence": "Log chua repr da bi cognee truncate (SWEBOKNode(name='Softwar...', source_chunks=['p. 67']), SWEBOKEdge(source_name='...', source_chunks=['p. 67'])) — du khong doc duoc full gia tri, chung to extraction ra SWEBOKNode/SWEBOKEdge instance that voi source_chunks=['p. 67']",
+  "fix_options": [
+    "A (khuyen nghi): viet lai src/skilltree/ontology/swebok.py cho SWEBOKGraph ke thua cognee.shared.data_models.KnowledgeGraph, SWEBOKNode ke thua Node (id/name/type/description, type=Literal 14 enum), SWEBOKEdge ke thua Edge (source_node_id/target_node_id/relationship_name Literal 15 enum + description) — confidence ghep vao description (vd '... (confidence=0.8)') vi khong duoc luu rieng; custom_prompt cap nhat quy tac id/node tham chieu; can re-smoke truoc khi build full; luu y relationship_name se bi lowercase trong graph",
+    "B: dung duong custom DataPoint model + chunk_attachment='all' (docstring cognee goi 'Custom DataPoint models only') — fields kieu Edge; prompt LLM phai xuat nested DataPoint/Edge — cao rui ro va khong thuc te cho LLM extraction",
+    "C: bo graph_model, quay lai custom_prompt-only kieu B1 — mat dung dich C5 (enum garanti edges)"
+  ],
+  "state_after": {
+    "dataset_swebok_v4_c5_smoke": "co the co metadata rong/rac, chua co graph usable; chua dump kiem tra (nhe RAM)",
+    "dataset_swebok_v4_b1": "NGUYEN VEN (reset:false, khong co prune nao chay)",
+    "sandbox_memory": "MemAvailable ~6.1GB sau khi process chet — khong phai OOM"
+  },
+  "next_step_request": "Parent quyet dinh fix (A/B/C) va phep sua swebok.py + custom_prompt trong yaml (ngoai danh sach cam sua build_memory.py/presets.py/ab_probe.py/stage_b.py); sau fix can re-smoke truoc khi dung 74-85 phut cho build full"
+}
