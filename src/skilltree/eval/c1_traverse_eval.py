@@ -3,10 +3,12 @@
 C1 — constrained traversal: với mỗi câu stress (SWEBOK-S01..S24) chọn mode theo Ý câu hỏi
      (lineage / verify / overview — CONTEXT_MODES của traverse.py), extract start node từ
      câu hỏi, traverse có lọc predicate (k=2, lineage k=3), render_context(max_tokens=1200)
-     rồi gọi LLM trả lời. Judge dùng template Y NGUYÊN của ab_probe (import trực tiếp từ
-     skilltree.eval.ab_probe / quick_eval — không copy tay): judge_correctness cho mọi câu,
-     judge_elements + judge_hops cho câu thường, judge_negative cho câu topology=negative
-     (S21). Baseline B1 champion (docs/adr/0003): corr 0.456 / elems 0.322 / hop ~0.73.
+     rồi gọi LLM trả lời. Nếu subgraph 0 cạnh theo direction của mode, thử lại direction
+     "both" (fallback, cùng predicate set) — tránh chấm 0 chỉ vì hướng duyệt. Judge dùng
+     template Y NGUYÊN của ab_probe (import trực tiếp từ skilltree.eval.ab_probe /
+     quick_eval — không copy tay): judge_correctness cho mọi câu, judge_elements +
+     judge_hops cho câu thường, judge_negative cho câu topology=negative (S21).
+     Baseline B1 champion (docs/adr/0003): corr 0.456 / elems 0.322 / hop ~0.73.
      C1 thắng nếu correctness_mean > 0.50 hoặc hop_precision_mean > 0.78.
 
 C2 — entity merge trên graph thật: find_merge_groups + split_heading_candidates
@@ -68,7 +70,9 @@ if str(REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from skilltree.agent.entity_merge import (  # noqa: E402
+    SYNONYM_CANONICAL,
     find_merge_groups,
+    normalize as em_normalize,
     split_heading_candidates,
 )
 from skilltree.agent.traverse import (  # noqa: E402
@@ -399,29 +403,44 @@ def candidate_phrases(question: str) -> list[str]:
     return cands
 
 
+def _match_phrase(name_index: list[tuple[str, str]], phrase: str):
+    """Trả (nid, matched_name): khớp TÊN ĐÚNG trước, sau đó tên ngắn nhất chứa cụm
+    (word-boundary, tránh 'fault' dính 'default')."""
+    pl = phrase.strip().lower()
+    if len(pl) < 3:
+        return None
+    for nid, nm in name_index:
+        if nm.lower() == pl:
+            return nid, nm
+    subs = [
+        (len(nm), nid, nm)
+        for nid, nm in name_index
+        if re.search(rf"\b{re.escape(pl)}\b", nm.lower())
+    ]
+    if subs:
+        subs.sort()
+        return subs[0][1], subs[0][2]
+    return None
+
+
 def extract_start_node(graph: dict, question: str, name_index: list[tuple[str, str]]):
-    """Entity chính của câu hỏi -> node id. Ưu tiên khớp TÊN ĐÚNG, sau đó tên ngắn nhất
-    chứa cụm (word-boundary, tránh 'fault' dính 'default')."""
+    """Entity chính của câu hỏi -> node id. Ứng viên: thuật ngữ Anh hoa + n-gram;
+    mỗi ứng viên thử khớp trực tiếp, fail thì thử canonical synonym (bug -> Fault)."""
     seen: set[str] = set()
     for phrase in candidate_phrases(question):
         p = phrase.strip()
-        if len(p) < 3:
+        if len(p) < 3 or p.lower() in seen:
             continue
-        pl = p.lower()
-        if pl in seen:
-            continue
-        seen.add(pl)
-        for nid, nm in name_index:
-            if nm.lower() == pl:
-                return nid, p
-        subs = [
-            (len(nm), nid, nm)
-            for nid, nm in name_index
-            if re.search(rf"\b{re.escape(pl)}\b", nm.lower())
-        ]
-        if subs:
-            subs.sort()
-            return subs[0][1], p
+        seen.add(p.lower())
+        hit = _match_phrase(name_index, p)
+        if hit:
+            return hit[0], p
+        # fallback synonym cùng khái niệm (entity_merge): bug/defect -> Fault
+        canon = SYNONYM_CANONICAL.get(em_normalize(p))
+        if canon:
+            hit = _match_phrase(name_index, canon)
+            if hit:
+                return hit[0], f"{p} → {canon}"
     return None, None
 
 
@@ -503,6 +522,17 @@ async def eval_one(q: dict, graph: dict, index: dict, name_index: list, llm: LLM
             }
         )
         return row
+    if not sub.get("edges") and spec["direction"] != "both":
+        # fallback: subgraph 0 cạnh theo hướng của mode -> thử cả 2 hướng (cùng predicates)
+        sub = traverse(
+            graph,
+            index,
+            start_id,
+            set(spec["predicates"]),
+            direction="both",
+            k=k,
+        )
+        row["direction"] = "both (fallback 0-edge)"
     context = render_context(sub, max_tokens=1200)
     row["n_ctx_nodes"] = len(sub.get("nodes", []))
     row["n_ctx_edges"] = len(sub.get("edges", []))
@@ -816,7 +846,6 @@ async def cmd_c3(args) -> int:
             f"=> {r['correct']} ({r['audit_latency_s']}s)",
             flush=True,
         )
-    stored = read_rows(out_path)
     summ = audit_summary(out_path)
     per = summ.get("per_predicate", {})
     weakest = None
@@ -883,7 +912,6 @@ def cmd_structure(args) -> int:
             sem_count += 1
     total = n_edges or 1
 
-    # sample cạnh theo predicate (đúng nghĩa sample của analyze_graph.predicate_samples)
     samples: dict[str, list] = {}
     for pred, lst in by_pred.items():
         ex = []
@@ -934,7 +962,7 @@ def cmd_structure(args) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        description="Stage C ablation: C1 traversal / C2 merge / C3 edge audit / structure"
+        description="Stage C ablation: C1 traversal / C2 merge / C3 edge audit"
     )
     sub = ap.add_subparsers(dest="cmd", required=True)
 
