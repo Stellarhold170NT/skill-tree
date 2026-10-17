@@ -1,0 +1,21 @@
+{"meta": true, "note": "SUMMARY của runs/c2/merge_proposals.jsonl (72KB trong container > 60KB limit VFS): 57 nhóm exact + 0 semantic + 191 heading-split; tổng 62 node đã gộp. Full proposals giữ trong container.", "n_groups_exact": 57, "n_groups_semantic": 0, "n_heading_split_candidates": 191, "total_nodes_merged": 62}
+{"kind": "exact", "canonical": "Fault", "n_variants": 7, "variant_names": ["defect", "software defect", "fault", "software fault", "defect", "fault"], "evidence": "7 node normalize về cùng nhóm 'fault'"}
+{"kind": "exact", "canonical": "abstraction", "n_variants": 2, "variant_names": ["abstraction", "abstraction"], "evidence": "2 node normalize về cùng nhóm 'abstraction'"}
+{"kind": "exact", "canonical": "application", "n_variants": 2, "variant_names": ["application", "application"], "evidence": "2 node normalize về cùng nhóm 'application'"}
+{"kind": "exact", "canonical": "application domain", "n_variants": 2, "variant_names": ["application domain", "application domain"], "evidence": "2 node normalize về cùng nhóm 'application domain'"}
+{"kind": "exact", "canonical": "architecture view", "n_variants": 2, "variant_names": ["architecture view", "architecture view"], "evidence": "2 node normalize về cùng nhóm 'architecture view'"}
+{"kind": "exact", "canonical": "assertions, design by contract and defensive programming", "n_variants": 2, "variant_names": ["assertions, design by contract and defensive programming", "assertions, design by contract, and defensive programming"], "evidence": "2 node normalize về cùng nhóm 'assertions design by contract and defensive programming'"}
+{"kind": "exact", "canonical": "assurance, security and safety", "n_variants": 2, "variant_names": ["assurance, security, and safety", "assurance, security and safety"], "evidence": "2 node normalize về cùng nhóm 'assurance security and safety'"}
+{"kind": "exact", "canonical": "change", "n_variants": 2, "variant_names": ["change", "change"], "evidence": "2 node normalize về cùng nhóm 'change'"}
+{"kind": "exact", "canonical": "component", "n_variants": 2, "variant_names": ["component", "component"], "evidence": "2 node normalize về cùng nhóm 'component'"}
+{"kind": "exact", "canonical": "concern", "n_variants": 2, "variant_names": ["concern", "concern"], "evidence": "2 node normalize về cùng nhóm 'concern'"}
+{"kind": "exact", "canonical": "constraint", "n_variants": 2, "variant_names": ["constraint", "constraint"], "evidence": "2 node normalize về cùng nhóm 'constraint'"}
+{"kind": "exact", "canonical": "controllability, replication and generalization", "n_variants": 2, "variant_names": ["controllability, replication, and generalization", "controllability, replication and generalization"], "evidence": "2 node normalize về cùng nhóm 'controllability replication and generalization'"}
+{"kind": "exact", "canonical": "design concern", "n_variants": 2, "variant_names": ["design concern", "design concern"], "evidence": "2 node normalize về cùng nhóm 'design concern'"}
+{"kind": "exact", "canonical": "development life cycle", "n_variants": 2, "variant_names": ["development life cycle", "development life cycle"], "evidence": "2 node normalize về cùng nhóm 'development life cycle'"}
+{"kind": "exact", "canonical": "divide and conquer", "n_variants": 2, "variant_names": ["divide and conquer", "divide-and-conquer"], "evidence": "2 node normalize về cùng nhóm 'divide and conquer'"}
+{"kind": "exact", "canonical": "domain-specific testing", "n_variants": 2, "variant_names": ["domain-specific testing", "domain-specific testing"], "evidence": "2 node normalize về cùng nhóm 'domain specific testing'"}
+{"kind": "exact", "canonical": "framework", "n_variants": 2, "variant_names": ["framework", "framework"], "evidence": "2 node normalize về cùng nhóm 'framework'"}
+{"kind": "exact", "canonical": "knowledge area", "n_variants": 2, "variant_names": ["knowledge area", "knowledge-area"], "evidence": "2 node normalize về cùng nhóm 'knowledge area'"}
+{"kind": "exact", "canonical": "model", "n_variants": 2, "variant_names": ["model", "model"], "evidence": "2 node normalize về cùng nhóm 'model'"}
+{"kind": "exact", "canonical": "notation", "n_variants": 2, "variant_names": ["notation", "notation"], "evidence": "2 node normalize về cùng nhóm 'notation'"}
