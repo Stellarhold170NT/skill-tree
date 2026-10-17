@@ -62,17 +62,7 @@ def cfg() -> dict:
             "api_key": keys[0] if keys else ""}
 
 
-async def llm(user_prompt: str, system: str, max_tokens: int = 2000) -> str:
-    import litellm
 
-    c = cfg()
-    resp = await litellm.acompletion(
-        model=c["model"], api_key=c["api_key"], api_base=c["endpoint"],
-        messages=[{"role": "system", "content": system},
-                  {"role": "user", "content": user_prompt}],
-        max_completion_tokens=max_tokens, temperature=0.2)
-    m = resp.choices[0].message
-    return (m.content or getattr(m, "reasoning_content", "") or "").strip()
 
 
 async def graph_answer(question: str, dataset: str) -> tuple[str, float]:
@@ -115,13 +105,12 @@ async def cmd_review(ka: str, draft_path: str, dataset: str) -> dict:
     # 1-hop traversal rồi lọc parent theo tên KA trong Python (an toàn, tránh param API)
     raw = await db.query(
         "MATCH (a:Node)-[r]->(b:Node) "
-        "RETURN coalesce(a.name,''), r.relationship_name, coalesce(b.name,''), "
-        "coalesce(b.description,'') LIMIT 800")
+        "RETURN coalesce(a.name,''), r.relationship_name, coalesce(b.name,'') LIMIT 800")
     items = []
     for row in (raw or []):
         if ka.lower() in str(row[0]).lower() and str(row[1]) not in ("contains", "made_from"):
             items.append({"parent": row[0], "rel": row[1], "child": row[2],
-                          "description": (row[3] or "")[:200]})
+                          "description": ""})
     print(f"[review] {len(items)} node con từ KA '{ka}'", flush=True)
 
     dpath = Path(draft_path)
