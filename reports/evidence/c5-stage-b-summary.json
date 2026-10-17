@@ -1,0 +1,31 @@
+{
+  "label": "C5",
+  "mode": "GRAPH_COMPLETION",
+  "top_k": 10,
+  "structured_rag": false,
+  "generated_at": "2026-10-17T17:40:53Z",
+  "sandbox": "sess-8706a67a 16GiB",
+  "dataset": "swebok_v4_c5",
+  "questions": "corpora/swebok-v4/questions_stress.jsonl (24 cau stress)",
+  "n_scored": 24,
+  "n_errors": 0,
+  "correctness_mean": 0.538,
+  "element_completeness_mean": 0.29,
+  "hop_precision_mean": 0.717,
+  "latency_p50": 40.11,
+  "by_topology": {
+    "lineage": {"n": 2, "corr": 0.45},
+    "linear": {"n": 13, "corr": 0.546},
+    "negative": {"n": 1, "corr": 0.8},
+    "paradox": {"n": 1, "corr": 0.5},
+    "reverse": {"n": 3, "corr": 0.5},
+    "tree": {"n": 4, "corr": 0.525}
+  },
+  "comparison_b1_adr0003": {
+    "B1": {"corr": 0.456, "elems": 0.322, "hop": 0.73},
+    "C5": {"corr": 0.538, "elems": 0.29, "hop": 0.717},
+    "delta": {"corr": "+0.082", "elems": "-0.032", "hop": "-0.013"},
+    "gate": "WIN neu corr > 0.50 HOAC hop > 0.78 HOAC elems > 0.36",
+    "gate_result": "C5 WIN — corr 0.538 > 0.50 (2 tieu chi con lai khong dat)"
+  }
+}
