@@ -63,7 +63,10 @@ async def rag_answer(cfg, question, chunks, structured: bool) -> str:
     return await litellm_text(cfg, prompt, system=system)
 
 
-async def run_round(label: str, mode: str, top_k: int, structured_rag: bool) -> dict:
+async def run_round(label: str, mode: str, top_k: int, structured_rag: bool,
+                    dataset: str = "swebok_v4") -> dict:
+    global DATASET
+    DATASET = dataset
     load_env_file()
     keys = read_keys()
     install_key_round_robin(keys)
@@ -151,5 +154,7 @@ if __name__ == "__main__":
     ap.add_argument("--mode", default="GRAPH_COMPLETION")
     ap.add_argument("--top-k", type=int, default=10)
     ap.add_argument("--rag-structured", action="store_true")
+    ap.add_argument("--dataset", default="swebok_v4")
     args = ap.parse_args()
-    raise SystemExit(asyncio.run(run_round(args.label, args.mode, args.top_k, args.rag_structured)))
+    raise SystemExit(asyncio.run(run_round(args.label, args.mode, args.top_k,
+                                           args.rag_structured, args.dataset)))
