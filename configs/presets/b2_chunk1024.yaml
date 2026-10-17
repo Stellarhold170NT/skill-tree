@@ -1,0 +1,29 @@
+# B2 — S2 rebuild với chunk 1024 tokens (danh sách kỹ thuật không bị đứt giữa chunk).
+run_id: run-00-b2
+reset: true
+dataset: swebok_v4_b2
+
+
+chunk_size: 1024
+chunks_per_batch: 15   # chunk to hơn → giảm batch để giữ memory
+raise_on_error: false
+extractor: llm
+
+
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+subsets:
+  - Software Architecture
+  - Software Design
+  - Software Construction
+  - Software Testing
+
+
+search_type: GRAPH_COMPLETION
+search_query: "Kiến trúc phần mềm là gì và tại sao cần nhiều view kiến trúc?"

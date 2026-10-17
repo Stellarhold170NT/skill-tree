@@ -1,0 +1,39 @@
+# B1 — S2 rebuild với custom_prompt ép quan hệ ngữ nghĩa (semantic edges 11.6% -> 25-30%).
+# Cùng cấu hình baseline base4ka_s2 (chunk 512, batch 25, reset, extractor llm) + custom_prompt.
+run_id: run-00-b1
+reset: true
+dataset: swebok_v4_b1
+
+
+chunk_size: 512
+chunks_per_batch: 25
+raise_on_error: false
+extractor: llm
+
+custom_prompt: >-
+  You are building a technical knowledge graph from the SWEBOK v4 software engineering
+  guide. Extract concepts with MEANINGFUL typed relations between them:
+  REQUIRES, CONSTRAINS, VERIFIES, VALIDATES, MITIGATES, CAUSES, PRODUCES,
+  TRANSFORMS_TO, PART_OF, USES. Connect techniques to the activities and knowledge
+  areas they belong to, artifacts to the activities that produce or consume them, and
+  principles to the practices they constrain. For every entity write a one-sentence
+  description of its role in the software engineering process. Do NOT create generic
+  relations like related_to or mentions; prefer the specific relation types above.
+
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+subsets:
+  - Software Architecture
+  - Software Design
+  - Software Construction
+  - Software Testing
+
+
+search_type: GRAPH_COMPLETION
+search_query: "Kiến trúc phần mềm là gì và tại sao cần nhiều view kiến trúc?"
