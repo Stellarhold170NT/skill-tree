@@ -19,19 +19,31 @@ C3 — audit precision mẫu cạnh: sample_edges(n=100, seed=7) rồi judge T�
      ("Quan hệ A -[PRED]-> B có ĐÚNG ngữ nghĩa theo tên predicate không?") — precision
      < 0.90 => FAIL (kèm predicate yếu nhất).
 
+structure — tính lại các metric cấu trúc giống analyze_graph.py (script đó crash với
+     "Table Entity does not exist" trên graph B1 mới vì schema Ladybug không có label
+     Entity) nhưng tính TỪ DUMP (không sửa file có sẵn): cùng output shape
+     runs/graph_probe/structure_<dataset>.json.
+
 LLM client: AsyncOpenAI tới gateway OpenAI-compatible ($LLM_ENDPOINT), model = $LLM_MODEL
 bỏ prefix "openai/", round-robin 3 key (LLM_API_KEY, LLM_API_KEY_2, LLM_API_KEY_3).
 GLM-5.3-Flash là reasoning model hay trả content RỖNG (reasoning ăn hết budget) =>
 retry-on-empty 3 lần: content rỗng -> thử reasoning_content -> max_completion_tokens x2
 -> retry. Judge: temp 0.1, 2000 tokens, parse JSON, 3 attempts.
 
+PRED_UP: dump_graph.py trả predicate lowercase ("part_of", "verifies"...) trong khi
+CONTEXT_MODES của traverse.py lọc theo UPPERCASE ("PART_OF", "VERIFIES"...) — load_dump()
+chuẩn hóa predicate theo bảng PRED_UP (is_a -> SUBTYPE_OF cho mode overview), giữ nguyên
+các predicate provenance (contains, made_from...).
+
 Resumable: kết quả append sau từng câu/cạnh; chạy lại sẽ skip id đã có trong file out.
 
 Sử dụng (cwd = /workspace, export OMP_NUM_THREADS=2 ORT_INTRA_OP_NUM_THREADS=2):
+  /opt/venv/bin/python src/skilltree/eval/c1_traverse_eval.py structure \
+      --dump artifacts/graph_swebok_v4_b1.json.gz --dataset swebok_v4_b1
   /opt/venv/bin/python src/skilltree/eval/c1_traverse_eval.py c1 \
       --dump artifacts/graph_swebok_v4_b1.json.gz
   /opt/venv/bin/python src/skilltree/eval/c1_traverse_eval.py c2 \
-      --dump artifacts/graph_swebok_v4_b1.json.gz
+      --dump artifacts/graph_swebok_v4_b1.json.gz --save-merged artifacts/graph_swebok_v4_b1_merged.json.gz
   /opt/venv/bin/python src/skilltree/eval/c1_traverse_eval.py c3 \
       --dump artifacts/graph_swebok_v4_b1.json.gz
 """
@@ -40,13 +52,14 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import gzip
 import itertools
 import json
 import os
 import re
 import sys
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -91,6 +104,26 @@ BASELINE_B1 = {
 }
 WIN_CORRECTNESS = 0.50
 WIN_HOP = 0.78
+
+# dump predicate (lowercase) -> predicate chuẩn của CONTEXT_MODES / ontology
+PRED_UP = {
+    "part_of": "PART_OF",
+    "verifies": "VERIFIES",
+    "validates": "VALIDATES",
+    "mitigates": "MITIGATES",
+    "causes": "CAUSES",
+    "requires": "REQUIRES",
+    "uses": "USES",
+    "produces": "PRODUCES",
+    "constrains": "CONSTRAINS",
+    "transforms_to": "TRANSFORMS_TO",
+    "injects": "INJECTS",
+    "depends_on": "DEPENDS_ON",
+    "is_a": "SUBTYPE_OF",
+}
+# predicate provenance/structural — giữ nguyên, không tính là semantic (như analyze_graph)
+STRUCTURAL_PREDICATES = {"contains", "is_a", "made_from", "authored", "published_at",
+                         "has_timestamp"}
 
 # Generator prompt — copy Y NGUYÊN từ ab_probe.rag_answer_over_chunks (CHUNKS mode),
 # chỉ thay "Các đoạn trích" bằng context render từ subgraph traversal.
@@ -169,7 +202,7 @@ class LLM:
                 max_completion_tokens=tokens, **kwargs
             )
         except Exception as exc:  # gateway cũ có thể không nhận max_completion_tokens
-            if "max_completion_tokens" in str(exc) or "max_completion_token" in str(exc):
+            if "max_completion_tokens" in str(exc):
                 return await self._client(key).chat.completions.create(
                     max_tokens=tokens, **kwargs
                 )
@@ -210,7 +243,6 @@ class LLM:
                     return text, {
                         "attempts": attempt + 1,
                         "max_completion_tokens": tokens,
-                        "empty_content": bool(attempt or text),
                         "error": None,
                     }
                 last_err = "empty_content"
@@ -279,7 +311,7 @@ async def judge_elements(llm: LLM, question: str, gold: str, answer: str) -> dic
             mm = re.search(r'"missing"\s*:\s*\[(.*?)\]', text, re.S)
             missing = re.findall(r'"([^"]+)"', mm.group(1))[:8] if mm else []
             return {"completeness": _clamp(float(m.group(1))), "missing": missing}
-    return {"completeness": 0.0, "missing": [f"judge_parse_fail {text[:80]}" ]}
+    return {"completeness": 0.0, "missing": [f"judge_parse_fail {text[:80]}"]}
 
 
 async def judge_hops(llm: LLM, question: str, expected_path: str, answer: str) -> dict:
@@ -290,12 +322,12 @@ async def judge_hops(llm: LLM, question: str, expected_path: str, answer: str) -
         question=question[:500], expected_path=expected_path[:600], answer=answer[:1500]
     )
     text = ""
+
+    def _int(name: str, src: str) -> int | None:
+        m = re.search(rf'"{name}"\s*:\s*([0-9]+)', src)
+        return int(m.group(1)) if m else None
+
     for _ in range(3):
-
-        def _int(name: str, src: str) -> int | None:
-            m = re.search(rf'"{name}"\s*:\s*([0-9]+)', src)
-            return int(m.group(1)) if m else None
-
         text, _meta = await llm.chat(JUDGE_SYSTEM, prompt, max_completion_tokens=2000)
         total = _int("hops_total", text)
         if total:
@@ -317,22 +349,25 @@ async def judge_hops(llm: LLM, question: str, expected_path: str, answer: str) -
 
 
 def load_dump(path: str | Path) -> dict:
-    """Nạp dump của dump_graph.py (edges src/rel/dst) về shape chuẩn traverse.py
-    (edges source/target/relationship_name) — không sửa file có sẵn."""
+    """Nạp dump của dump_graph.py (edges src/rel/dst, predicate lowercase) về shape
+    chuẩn traverse.py (edges source/target/relationship_name UPPERCASE theo PRED_UP)
+    — không sửa file có sẵn."""
     graph = load_graph(path)  # load_graph chấp nhận .json.gz
     norm_edges: list[dict] = []
     for e in graph["edges"]:
         if "source" in e and "target" in e:
-            norm_edges.append(e)
+            src, dst, rel = e["source"], e["target"], e.get("relationship_name", "?")
         else:
-            norm_edges.append(
-                {
-                    "source": e["src"],
-                    "target": e["dst"],
-                    "relationship_name": e.get("rel", "?"),
-                    "properties": e.get("properties", {}),
-                }
-            )
+            src, dst, rel = e["src"], e["dst"], e.get("rel", "?")
+        rel_norm = PRED_UP.get(str(rel).lower(), rel)
+        norm_edges.append(
+            {
+                "source": src,
+                "target": dst,
+                "relationship_name": rel_norm,
+                "properties": e.get("properties", {}),
+            }
+        )
     return {"nodes": graph["nodes"], "edges": norm_edges}
 
 
@@ -705,8 +740,6 @@ async def cmd_c2(args) -> int:
         flush=True,
     )
     if args.save_merged:
-        import gzip
-
         dest = Path(args.save_merged)
         dest.parent.mkdir(parents=True, exist_ok=True)
         with gzip.open(dest, "wt", encoding="utf-8") as fh:
@@ -827,12 +860,81 @@ async def cmd_c3(args) -> int:
     return 0
 
 
+# --------------------------------------------------------------- structure ---
+
+
+def cmd_structure(args) -> int:
+    """Metric cấu trúc giống analyze_graph.py nhưng tính từ DUMP (analyze_graph crash
+    'Table Entity does not exist' với graph B1 mới)."""
+    graph = load_dump(args.dump)
+    nodes = graph["nodes"]
+    edges = graph["edges"]
+    n_nodes, n_edges = len(nodes), len(edges)
+
+    degree: Counter = Counter()
+    by_pred: dict[str, list[dict]] = defaultdict(list)
+    sem_count = 0
+    for e in edges:
+        degree[e["source"]] += 1
+        degree[e["target"]] += 1
+        pred = e.get("relationship_name", "?")
+        by_pred[pred].append(e)
+        if pred.lower() not in STRUCTURAL_PREDICATES:
+            sem_count += 1
+    total = n_edges or 1
+
+    # sample cạnh theo predicate (đúng nghĩa sample của analyze_graph.predicate_samples)
+    samples: dict[str, list] = {}
+    for pred, lst in by_pred.items():
+        ex = []
+        for e in lst[:3]:
+            ex.append({
+                "from": node_name(graph, e["source"])[:80],
+                "to": node_name(graph, e["target"])[:80],
+            })
+        samples[pred] = ex
+
+    out = {
+        "dataset": args.dataset,
+        "generated_from": f"dump {Path(args.dump).name} (subcommand structure của c1_traverse_eval.py; analyze_graph.py crash 'Table Entity does not exist')",
+        "nodes": n_nodes,
+        "edges": n_edges,
+        "edge_ratio": round(n_edges / max(1, n_nodes), 3),
+        "isolated": sum(1 for nid in nodes if degree.get(nid, 0) == 0),
+        "isolated_pct": round(100 * sum(1 for nid in nodes if degree.get(nid, 0) == 0) / max(1, n_nodes), 2),
+        "semantic_edges": sem_count,
+        "semantic_pct": round(100 * sem_count / total, 1),
+        "predicates": [
+            {"type": p, "count": len(by_pred[p]), "pct": round(100 * len(by_pred[p]) / total, 1)}
+            for p in sorted(by_pred, key=lambda k: -len(by_pred[k]))[:15]
+        ],
+        "predicate_samples": samples,
+        "top_degree": [
+            (node_name(graph, nid)[:80], deg)
+            for nid, deg in sorted(degree.items(), key=lambda kv: -kv[1])[:10]
+        ],
+        "entity_types": [
+            [t, c] for t, c in Counter(
+                (n.get("type") or "UNKNOWN") for n in nodes.values()
+            ).most_common(12)
+        ],
+    }
+    dest = Path(args.dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps({k: out[k] for k in ("nodes", "edges", "semantic_pct",
+                                          "isolated_pct", "edge_ratio")}, indent=1))
+    print("[top predicates]", [(p["type"], p["pct"]) for p in out["predicates"][:8]])
+    print("->", dest)
+    return 0
+
+
 # -------------------------------------------------------------------- CLI ----
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        description="Stage C ablation: C1 traversal / C2 merge / C3 edge audit"
+        description="Stage C ablation: C1 traversal / C2 merge / C3 edge audit / structure"
     )
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -857,6 +959,11 @@ def main(argv: list[str] | None = None) -> int:
     p3.add_argument("--n", type=int, default=100)
     p3.add_argument("--seed", type=int, default=7)
 
+    ps = sub.add_parser("structure", help="metric cấu trúc graph từ dump (thay analyze_graph)")
+    ps.add_argument("--dump", default=str(DEFAULT_DUMP))
+    ps.add_argument("--dataset", default="swebok_v4_b1")
+    ps.add_argument("--dest", default=None, help="mặc định runs/graph_probe/structure_<dataset>.json")
+
     args = ap.parse_args(argv)
     os.environ.setdefault("OMP_NUM_THREADS", "2")
     os.environ.setdefault("ORT_INTRA_OP_NUM_THREADS", "2")
@@ -869,8 +976,12 @@ def main(argv: list[str] | None = None) -> int:
         asyncio.run(run_eval(graph, "c1", Path(args.out), Path(args.summary), args.limit))
     elif args.cmd == "c2":
         asyncio.run(cmd_c2(args))
-    else:
+    elif args.cmd == "c3":
         asyncio.run(cmd_c3(args))
+    else:
+        if not getattr(args, "dest", None):
+            args.dest = str(REPO_ROOT / "runs" / "graph_probe" / f"structure_{args.dataset}.json")
+        cmd_structure(args)
     return 0
 
 
