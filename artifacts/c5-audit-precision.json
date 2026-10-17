@@ -1,0 +1,73 @@
+{
+  "dataset": "swebok_v4_c5",
+  "semantic_edges_total": 3897,
+  "sampled": 100,
+  "scored": 95,
+  "unscored": 5,
+  "precision_total": 0.821,
+  "target": 0.9,
+  "pass": false,
+  "per_predicate": {
+    "CAUSES": {
+      "precision": 1.0,
+      "n": 6
+    },
+    "CONSTRAINS": {
+      "precision": 1.0,
+      "n": 5
+    },
+    "CONSUMES": {
+      "precision": 0.833,
+      "n": 6
+    },
+    "DEPENDS_ON": {
+      "precision": 0.875,
+      "n": 8
+    },
+    "INJECTS": {
+      "precision": 0.333,
+      "n": 6
+    },
+    "MEASURED_BY": {
+      "precision": 0.667,
+      "n": 6
+    },
+    "MITIGATES": {
+      "precision": 0.667,
+      "n": 6
+    },
+    "OTHER": {
+      "precision": 1.0,
+      "n": 6
+    },
+    "PART_OF": {
+      "precision": 0.667,
+      "n": 6
+    },
+    "PRODUCES": {
+      "precision": 0.714,
+      "n": 7
+    },
+    "REQUIRES": {
+      "precision": 0.8,
+      "n": 5
+    },
+    "SUBTYPE_OF": {
+      "precision": 1.0,
+      "n": 9
+    },
+    "USESTOOL": {
+      "precision": 1.0,
+      "n": 6
+    },
+    "VALIDATES": {
+      "precision": 0.8,
+      "n": 5
+    },
+    "VERIFIES": {
+      "precision": 0.875,
+      "n": 8
+    }
+  },
+  "note": "predicate đã UPPERCASE từ dạng lowercase cognee lưu; cạnh infra (contains/is_a/made_from/is_part_of) loại khỏi audit vì không phải sản phẩm C5"
+}

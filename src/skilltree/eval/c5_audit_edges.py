@@ -125,7 +125,7 @@ async def audit_edge(cfg, e: dict, sem: asyncio.Semaphore, tries: int = 3) -> di
     async with sem:
         for attempt in range(tries):
             try:
-                text = await litellm_text(cfg, prompt, system=JUDGE_SYSTEM, max_tokens=200)
+                text = await litellm_text(cfg, prompt, system=JUDGE_SYSTEM, max_tokens=1000)
                 verdict = parse_judge(text)
                 if verdict is not None:
                     break
