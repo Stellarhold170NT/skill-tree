@@ -1,0 +1,37 @@
+{
+  "variant": "c3_edge_audit",
+  "generated_at": "2026-10-17T11:23:47.836880+00:00",
+  "n_sampled": 100,
+  "gateway_calls": 104,
+  "audit_summary": {
+    "precision_total": 0.82,
+    "n_audited": 100,
+    "target": 0.9,
+    "pass": false,
+    "per_predicate": {
+      "CAUSES": {"precision": 0.833, "n": 6},
+      "CONSTRAINS": {"precision": 1.0, "n": 6},
+      "MITIGATES": {"precision": 1.0, "n": 6},
+      "PART_OF": {"precision": 0.636, "n": 11},
+      "PRODUCES": {"precision": 0.571, "n": 7},
+      "REQUIRES": {"precision": 1.0, "n": 6},
+      "SUBTYPE_OF": {"precision": 0.875, "n": 8},
+      "TRANSFORMS_TO": {"precision": 0.5, "n": 6},
+      "USES": {"precision": 1.0, "n": 8},
+      "VALIDATES": {"precision": 0.667, "n": 6},
+      "VERIFIES": {"precision": 1.0, "n": 7},
+      "contains": {"precision": 1.0, "n": 10},
+      "is_part_of": {"precision": 1.0, "n": 6},
+      "made_from": {"precision": 0.333, "n": 6},
+      "use_provides": {"precision": 1.0, "n": 1}
+    }
+  },
+  "weakest_predicate": {
+    "predicate": "made_from",
+    "precision": 0.333,
+    "n": 6
+  },
+  "fail_flag": true,
+  "note": "FAIL nếu precision_total < 0.90 (target theo review Stage C). Phân tích: các predicate ngữ nghĩa cốt lõi VERIFIES/USES/REQUIRES/MITIGATES/CONSTRAINS đạt 1.0; kéo precision xuống là made_from 0.333 (cạnh provenance giữa node TextSummary/DocumentChunk có TÊN RỖNG — LLM không xác nhận được), TRANSFORMS_TO 0.5, PRODUCES 0.571, PART_OF 0.636, VALIDATES 0.667. Nếu loại nhóm provenance không tên (made_from, n=6): precision ≈ 0.872 — vẫn dưới 0.90.",
+  "method": "sample_edges(n=100, seed=7, stratified) + LLM judge từng cạnh (GLM-5.3-Flash, temp 0.1, retry 3, round-robin 3 keys); prompt theo brief Stage C; file chi tiết runs/c3/audit_edges.jsonl trong container (100 dòng, mỗi dòng 1 cạnh + correct true/false)"
+}
