@@ -5,9 +5,9 @@
 # không ai restart, chết lặng tới khi người ta kiểm tra thủ công. Supervisor này
 # khóa lại khoảng trống đó ở tầng process:
 #
-#   1. Preflight gateway: trước MỖI lần start, chờ LLM endpoint trả lời được
-#      (poll mỗi PREFLIGHT_POLL giây, tối đa PREFLIGHT_MAX) — đỡ đốt retry khi
-#      gateway đang sập toàn cục.
+#   1. Preflight gateway: trước MỖI lần start, kiểm tra ĐÚNG path build cần
+#      (POST /chat/completions 1-token qua từng key). Chỉ start khi có key trả
+#      2xx/429. Poll mỗi PREFLIGHT_POLL giây, tối đa PREFLIGHT_MAX.
 #   2. Chạy build_memory.py. Exit 0 = thành công → ghi ledger, thoát.
 #   3. Chết (rc != 0) → backoff 300s × 2^k cap 30 phút, restart tối đa
 #      MAX_RESTARTS lần. Preset dùng incremental_loading=true nên mỗi lần chạy
@@ -19,9 +19,9 @@
 #
 # Dùng (cwd tùy ý, script tự cd về repo root):
 #   nohup bash scripts/run_supervised.sh c5_full_book run-00-c5full \
-#     > /root/c5b-supervisor.log 2>&1 &
+#     > /dev/null 2>&1 &
 #
-# Env tùy chọn: MAX_RESTARTS=8 STALL_SEC=5400 PREFLIGHT_MAX=14400 PREFLIGHT_POLL=300
+# Env tùy chọn: MAX_RESTARTS=8 STALL_SEC=5400 PREFLIGHT_MAX=43200 PREFLIGHT_POLL=300
 
 set -u
 cd "$(dirname "$0")/.." || exit 1   # repo root
@@ -30,7 +30,7 @@ PRESET="${1:?Dùng: run_supervised.sh <preset> <run-id>}"
 RUN_ID="${2:?Dùng: run_supervised.sh <preset> <run-id>}"
 MAX_RESTARTS="${MAX_RESTARTS:-8}"
 STALL_SEC="${STALL_SEC:-5400}"            # 90 phút không có tín hiệu = treo
-PREFLIGHT_MAX="${PREFLIGHT_MAX:-14400}"   # chờ gateway hồi phục tối đa 4h
+PREFLIGHT_MAX="${PREFLIGHT_MAX:-43200}"   # chờ gateway hồi phục tối đa 12h (outage qua đêm)
 PREFLIGHT_POLL="${PREFLIGHT_POLL:-300}"
 
 RUN_DIR="runs/${RUN_ID}"
@@ -53,7 +53,11 @@ cleanup() {
   [ -n "$PID" ] && kill "$PID" 2>/dev/null
   rmdir "$LOCK_DIR" 2>/dev/null
 }
-trap cleanup EXIT INT TERM
+# TERM/INT: dọn dẹp rồi THOẬT (bài học: trap không exit → supervisor "chết giả",
+# tiếp tục vòng lặp và đẻ process build đè lên orphan).
+trap 'cleanup; exit 130' INT
+trap 'cleanup; exit 143' TERM
+trap cleanup EXIT
 
 # Nạp .env để có LLM_ENDPOINT/LLM_API_KEY cho preflight (python build tự nạp lại).
 set -a; [ -f .env ] && . ./.env; set +a
@@ -62,36 +66,51 @@ if [ -z "${LLM_ENDPOINT:-}" ]; then
   exit 3
 fi
 
-
+# Preflight ĐÚNG path mà build cần: POST /chat/completions 1-token qua TỪNG key,
+# coi gateway HEALTHY chỉ khi có key trả 2xx (hoặc 429 — auth OK, mới bị throttle).
+# GET /models trên gateway này treo vĩnh viễn → KHÔNG dùng làm health check.
 gw_alive() {
   $PY - <<'PYEOF'
-import os, sys, urllib.error, urllib.request
+import os, sys, json, urllib.error, urllib.request
 base = os.environ.get("LLM_ENDPOINT", "").rstrip("/")
-key = os.environ.get("LLM_API_KEY", "")
-cands = [base + "/models"]
-if "/v1" not in base:
-    cands.append(base + "/v1/models")
-for url in cands:
-    req = urllib.request.Request(url, headers={"Authorization": "Bearer " + key} if key else {})
+model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
+payload = json.dumps({"model": model,
+                      "messages": [{"role": "user", "content": "ping"}],
+                      "max_tokens": 1}).encode()
+keys = [k for k in (os.environ.get("LLM_API_KEY", ""),
+                    os.environ.get("LLM_API_KEY_2", ""),
+                    os.environ.get("LLM_API_KEY_3", "")) if k]
+notes = []
+for i, key in enumerate(keys, 1):
+    req = urllib.request.Request(
+        base + "/chat/completions", data=payload,
+        headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=20) as r:
-            print(f"OK {r.status} {url}")
+        with urllib.request.urlopen(req, timeout=75) as r:
+            print(f"HEALTHY key#{i} HTTP {r.status}")
             sys.exit(0)
     except urllib.error.HTTPError as e:
-        print(f"OK(server trả lời) {e.code} {url}")
-        sys.exit(0)
+        notes.append(f"key#{i}=HTTP{e.code}")
+        if e.code == 429:
+            print(f"HEALTHY key#{i} HTTP 429 (throttle nhưng auth OK)")
+            sys.exit(0)
     except Exception as e:
-        print(f"DEAD {url}: {type(e).__name__}: {e}"[:140])
+        notes.append(f"key#{i}={type(e).__name__}")
+print("SICK |", "; ".join(notes) if notes else "không có key nào trong .env")
 sys.exit(1)
 PYEOF
 }
 
 wait_gateway() {
-  local deadline=$(( $(date +%s) + PREFLIGHT_MAX ))
+  local deadline=$(( $(date +%s) + PREFLIGHT_MAX )) out
   while :; do
-    if gw_alive; then return 0; fi
+    if out=$(gw_alive 2>&1); then
+      log "preflight OK: ${out:0:160}"
+      return 0
+    fi
+    echo "[$(date -Is)] $out" >> "$RUN_DIR/preflight.log"
     if [ "$(date +%s)" -ge "$deadline" ]; then return 1; fi
-    log "preflight: gateway CHƯA lên — thử lại sau ${PREFLIGHT_POLL}s"
+    log "preflight: gateway CHƯA healthy (${out:0:160}) — thử lại sau ${PREFLIGHT_POLL}s"
     sleep "$PREFLIGHT_POLL"
   done
 }

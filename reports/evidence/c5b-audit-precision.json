@@ -1,0 +1,29 @@
+{
+ "dataset": "swebok_v4_full_c5",
+ "semantic_edges_total": 18585,
+ "sampled": 100,
+ "scored": 96,
+ "unscored": 4,
+ "precision_total": 0.885,
+ "target": 0.9,
+ "pass": false,
+ "so_sanh": {"C5a_s2_precision": 0.821, "delta": "+6.4pt nhưng vẫn dưới gate 0.90"},
+ "per_predicate": {
+  "CAUSES": {"precision": 0.833, "n": 6},
+  "CONSTRAINS": {"precision": 0.833, "n": 6},
+  "CONSUMES": {"precision": 1.0, "n": 6},
+  "DEPENDS_ON": {"precision": 0.857, "n": 7},
+  "INJECTS": {"precision": 0.667, "n": 6},
+  "MEASURED_BY": {"precision": 0.833, "n": 6},
+  "MITIGATES": {"precision": 0.833, "n": 6},
+  "OTHER": {"precision": 1.0, "n": 6},
+  "PART_OF": {"precision": 0.875, "n": 8},
+  "PRODUCES": {"precision": 0.833, "n": 6},
+  "REQUIRES": {"precision": 1.0, "n": 6},
+  "SUBTYPE_OF": {"precision": 0.857, "n": 7},
+  "USESTOOL": {"precision": 1.0, "n": 7},
+  "VALIDATES": {"precision": 1.0, "n": 7},
+  "VERIFIES": {"precision": 0.833, "n": 6}
+ },
+ "note": "predicate đã UPPERCASE từ dạng lowercase cognee lưu; cạnh infra (contains/is_a/made_from/is_part_of) loại khỏi audit vì không phải sản phẩm C5. Điểm yếu nhất: INJECTS 0.667 (n=6) — đầu chuỗi nhân quả HumanError->Fault."
+}

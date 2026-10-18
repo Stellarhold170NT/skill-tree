@@ -26,6 +26,7 @@ chỉ retry 1 lần rồi process chết lặng 23 phút không ai hay):
 - llm_activity.json: rotating_acompletion ghi nhịp MỌI LLM call (kể cả call lỗi) —
   supervisor/watchdog dùng để phân biệt "đang chạy" với "treo".
 - ingest.log mở mode="a": restart không xoá lịch sử; [session] đánh dấu pid/attempt.
+- acquire_build_lock: chặn 2 process build cùng run_id (orphan + supervisor đè nhau).
 - Supervisor: scripts/run_supervised.sh — preflight gateway, watchdog treo, restart.
 
 LLM key round-robin: khi preset khai báo >=2 env var trong `llm_api_keys_env`,
@@ -194,6 +195,34 @@ def setup_logging(run_dir: Path) -> Path:
     return log_path
 
 
+# ------------------------------------------------------------ build lock ----
+
+def acquire_build_lock(run_id: str) -> Path:
+    """Chặn 2 process build cùng run_id chạy song song (orphan + supervisor
+    restart đè nhau lên cùng dataset → hỏng graph). Lock /tmp kèm pid; lock
+    stale (pid đã chết) tự động được chiếm lại."""
+    lock_path = Path("/tmp") / f"skilltree-build-{run_id}.lock"
+    while True:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode())
+            os.close(fd)
+            return lock_path
+        except FileExistsError:
+            try:
+                other = int(lock_path.read_text().strip() or "0")
+            except (ValueError, OSError):
+                other = 0
+            if other and Path(f"/proc/{other}").exists():
+                LOG.error("[lock] build khác đang chạy pid=%d — thoát", other)
+                raise SystemExit(3)
+            LOG.warning("[lock] lock stale (pid %s chết) — chiếm lại", other)
+            try:
+                lock_path.unlink()
+            except OSError:
+                pass
+
+
 # ------------------------------------------------------- cognify mapping ----
 
 def resolve_graph_model(name: str) -> type:
@@ -348,6 +377,7 @@ async def run_build(preset: dict[str, Any], run_id: str, run_search: bool = True
     run_id = run_id or f"run-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     run_dir = REPO_ROOT / "runs" / run_id
     log_path = setup_logging(run_dir)
+    lock_path = acquire_build_lock(run_id)
     guard = MemoryGuard(interval=60)
     guard.start()
     LOG.info("[session] pid=%d attempt=%s log_mode=append", os.getpid(),
@@ -504,6 +534,10 @@ async def run_build(preset: dict[str, Any], run_id: str, run_search: bool = True
         return metrics
     finally:
         guard.stop()
+        try:
+            lock_path.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def main(argv: list[str] | None = None) -> int:

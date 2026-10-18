@@ -1,0 +1,33 @@
+{
+  "dataset": "swebok_v4_full_c5",
+  "nodes": 11275,
+  "edges": 48382,
+  "structural_edges": {
+    "contains": 17684,
+    "is_part_of": 627,
+    "made_from": 627
+  },
+  "semantic_enum_edges": {
+    "mitigates": 504,
+    "other": 3336,
+    "subtype_of": 2442,
+    "part_of": 4696,
+    "causes": 354,
+    "produces": 1166,
+    "consumes": 857,
+    "usestool": 515,
+    "constrains": 1129,
+    "depends_on": 1646,
+    "verifies": 524,
+    "validates": 205,
+    "injects": 42,
+    "measured_by": 365,
+    "requires": 804
+  },
+  "schema_violation_is_a": 10859,
+  "pct_structural": 39.1,
+  "pct_enum": 38.4,
+  "pct_is_a": 22.4,
+  "semantic_edges_after_filter": 18585,
+  "note": "dump ladybug rel lowercase; contains/made_from/is_part_of = cognee-internal; is_a = LLM emitted thay subtype_of; audit ln tren 18585 semantic edges (sample 100/96 scored) precision 0.885"
+}
