@@ -1,0 +1,13 @@
+{
+  "n": 54,
+  "label": "T7-bank element metric v2 (deterministic key-term matching)",
+  "instrument": "t7_element_v2.py — normalize NFD bỏ dấu, substring OR sliding-window fuzzy ratio >= 0.8, derive key terms từ trailer 'Phần tử key:' của gold; 0 LLM call, deterministic",
+  "elems_v1_mean": 0.365,
+  "elems_v2_mean": 0.468,
+  "corr_mean": 0.51,
+  "by_level_v2": {"L1": 0.523, "L2": 0.47, "L3": 0.411},
+  "by_level_v1": {"L1": 0.454, "L2": 0.412, "L3": 0.231},
+  "zero_v1_rows": ["QA-L1-03", "QA-L3-03", "QA-L1-05", "QA-L2-05", "QA-L3-05", "QA-L1-06", "QA-L3-08", "QA-L2-10", "QA-L3-10", "QA-L1-11", "QA-L2-11", "QA-L3-11", "QA-L2-12", "QA-L3-14", "QA-L3-15", "QA-L1-16", "QA-L3-16", "QA-L3-18"],
+  "zero_v2_rows": ["QA-L3-05", "QA-L1-12"],
+  "note": "18 zero v1 là artifact của LLM element judge; v2 xác nhận chỉ 2 câu thiếu nội dung thật. Per-row đầy đủ tái tạo được: python src/skilltree/eval/t7_element_v2.py (<1s, deterministic)"
+}

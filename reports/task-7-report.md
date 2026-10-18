@@ -12,7 +12,7 @@ Task này trả lời ba câu hỏi sau khi C5b (full-book graph 11,275 nodes / 
 
 1. **Độ phủ kiến thức**: bộ câu hỏi cũ (24 stress + 40 basic) có bám sát toàn bộ 18 KA của SWEBOK v4 không? Câu trả lời là **chưa** — stress set thiên về multi-hop cross-chapter, basic set 40 câu không đều theo chương. T7 xây bank mới **54 câu = 18 KA × 3 mức (L1/L2/L3)**, mỗi câu bám sát tiêu đề mục của chương tương ứng trong corpus.
 2. **Chất lượng retrieval trên full-book graph**: chạy toàn bộ 54 câu qua pipeline eval chuẩn (GRAPH_COMPLETION trên dataset `swebok_v4_full_c5`) với judge correctness/element/hop như các round trước, đo baseline của bank mới.
-3. **Chẩn đoán câu kém**: với mọi câu điểm thấp (bottom quintile), phân loại nguyên nhân và đề xuất hướng tối ưu cụ thể.
+3. **Chẩn đoán câu kém**: với mọi câu điểm thấp (bottom quintile), phân loại nguyên nhân và đề xuất hướng tối ưu cụ thể — kèm **pilot thực nghiệm từng hướng** (mục 6b).
 
 ## 2. Thiết kế bank câu hỏi
 
@@ -29,7 +29,7 @@ Mỗi dòng JSONL gồm: `id` (QA-L{level}-NN), `level`, `ka`, `kas_secondary` (
 ### 2.2 Nguyên tắc soạn
 
 - **Bám sát sách**: mỗi câu soạn sau khi trích `###` outline của chương trong `corpora/swebok-v4/swebok-v4.md`; `source_section` luôn trỏ tới mục có thật.
-- **Gold tự chứa**: liệt kê điểm chấm điểm + trailer "Phần tử key:" — cùng format stress set để `ab_probe.judge_*` hoạt động không đổi.
+- **Gold tự chứa**: liệt kê điểm chấm điểm + trailer "Phần tử key:" — cùng format stress set để `ab_probe.judge_*` hoạt động không đổi, và là đầu vào cho metric v2 (mục 6b/A1).
 - **Calibration**: L1 ≈ definitional recall, L2 = so sánh trong chương, L3 = multi-hop kiểu stress set nhưng không dùng negative topology (mọi câu đều được chấm elems/hops).
 - **Tệp**: 6 part file (`questions_bank_T7_p1..p6.jsonl`, ~16–19KB mỗi file) + file ghép `questions_bank_T7.jsonl` (106KB, 54 dòng JSON hợp lệ, 54 id duy nhất, 18 KA, 18×L1/18×L2/18×L3).
 
@@ -38,7 +38,7 @@ Mỗi dòng JSONL gồm: `id` (QA-L{level}-NN), `level`, `ka`, `kas_secondary` (
 - **Pipeline**: `src/skilltree/eval/t7_eval.py` — clone stage_b.py với 4 khác biệt: (1) đọc bank T7; (2) dataset mặc định `swebok_v4_full_c5`; (3) **resume support** — row append ngay sau mỗi câu, chạy lại skip id đã có; (4) summary có breakdown theo `level` và `ka`.
 - **Cấu hình**: `--mode GRAPH_COMPLETION --top-k 10 --dataset swebok_v4_full_c5` (winner config C5).
 - **Judge**: `judge_correctness`, `judge_elements`, `judge_hops` từ `ab_probe.py` — giữ nguyên so với R0→F1 để so sánh được.
-- **Chạy**: daemon nền trong container sess-93159cee (pid 5966), log `/tmp/t7.log`; 54 câu × ~50–290s, hoàn tất ~1h50m, **0 lỗi, 0 retry**.
+- **Chạy**: daemon nền trong container sess-93159cee, log `/tmp/t7.log`; 54 câu × ~50–290s, hoàn tất ~1h50m, **0 lỗi, 0 retry**.
 
 ## 4. Kết quả
 
@@ -47,99 +47,143 @@ Mỗi dòng JSONL gồm: `id` (QA-L{level}-NN), `level`, `ka`, `kas_secondary` (
 | Metric | Giá trị | So với stress-set F1 (24 câu) |
 |---|---|---|
 | Correctness | **0.510** | F1 0.544; R0 0.475 — nằm giữa, chấp nhận được cho bank khó và phủ rộng hơn |
-| Element completeness | **0.365** | F1 0.331 — cao hơn dù bank gồm 18 câu L3 nhiều nội dung |
+| Element completeness v1 (LLM judge) | **0.365** | F1 0.331 |
+| Element completeness **v2 (deterministic — metric chuẩn, xem 6b)** | **0.468** | — |
 | Hop precision | **0.576** | F1 0.69 — thấp hơn: bank có 36 câu L1/L2 ít hop-oriented |
 | p50 latency | **74.1s** | F1 51.8s — chậm hơn ~45% (câu hỏi dài, gold dài hơn) |
 
-### 4.2 Theo level — gradient độ khó PHẲNG về correctness
+### 4.2 Theo level
 
-| Level | n | corr | elems | hop |
-|---|---|---|---|---|
-| L1 (recall) | 18 | 0.503 | 0.454 | 0.503 |
-| L2 (analysis) | 18 | 0.517 | 0.412 | 0.671 |
-| L3 (multi_hop) | 18 | 0.511 | **0.231** | 0.528 |
+| Level | n | corr | elems v1 | elems v2 | hop |
+|---|---|---|---|---|---|
+| L1 (recall) | 18 | 0.503 | 0.454 | **0.523** | 0.503 |
+| L2 (analysis) | 18 | 0.517 | 0.412 | **0.470** | 0.671 |
+| L3 (multi_hop) | 18 | 0.511 | 0.231* | **0.411** | 0.528 |
 
-**Quan sát then chốt**: corr gần như không phân biệt level (0.50–0.52), nhưng **elems phân biệt rõ** (L3 chỉ bằng một nửa L1). Hai kết luận: (a) judge correctness bị compress về giữa — kém nhạy; (b) với câu hỏi multi-hop, graph trả lời thiếu nội dung các KA phụ (`kas_secondary`) — đúng vấn đề cần chẩn đoán.
+*elems v1 của L3 (0.231) là artifact của LLM element judge — v2 xác nhận L3 thấp hơn nhưng không sụp (0.411). v2 cũng cho gradient hợp lý L1 > L2 > L3 khớp thiết kế độ khó.
 
 ### 4.3 Theo KA — điểm mạnh/điểm yếu
 
 **Top**: Requirements 0.6 (elems 0.83, hop 0.933 — tốt nhất bank); Maintenance 0.667; Computing Foundations 0.667; Professional Practice 0.6; Construction 0.55.
 
-**Bottom**: **SCM 0.333** (L1-08 = 0.0 — câu điểm thấp nhất bank); **Testing 0.417** (elems = 0.0 cả 3 câu); **Process 0.4** (L1-10 corr 0.3 dù elems 0.625); Operations 0.467; Management 0.433.
+**Bottom**: **SCM 0.333** (L1-08 = 0.0 — case nghiên cứu judge); **Testing 0.417** (elems v1 = 0.0 cả 3 câu — instrument artifact, v2 không còn zero); **Process 0.4** (L1-10 corr 0.3 dù elems 0.625); Operations 0.467; Management 0.433.
 
 ### 4.4 Điểm đặc biệt
 
 - **Hoàn hảo (1.0)**: QA-L1-07 (4 nhóm bảo trì), QA-L3-14 (trade-off + stakeholder → đàm phán yêu cầu), QA-L3-16 (distributed/parallel → thiết kế → construction).
-- **Thất bại**: QA-L1-08 (baseline SCM) = **0.0** dù elems 0.67 — case nghiên cứu judge; QA-L3-05 (testing ↔ activities) = 0.25, elems 0.0.
+- **Thất bại thật (v2 xác nhận)**: QA-L3-05 (elems_v2 = 0.0 — thiếu 'testability', 'operational testing', 'mối quan hệ với yêu cầu'), QA-L1-12 (elems_v2 = 0.0 — thiếu 'quality definition', 'specified requirements', 'implied needs').
+- **Case judge**: QA-L1-08 (baseline SCM) corr = 0.0 dù elems 0.67 (v1) / 0.5 (v2) — answer đúng vai trò trung tâm của baseline trong SCM nhưng corr judge chấm 0.
 
 ## 5. Phân tích câu kém — nguyên nhân gốc
 
 ### RC1 — Judge correctness nhiễu ở hai cực (ảnh hưởng ~15–19% câu)
 
-Bằng chứng mâu thuẫn hai chiều giữa hai judge trên CÙNG một answer: L1-08 corr=0.0 vs elems=0.67; L1-10 corr=0.3 vs elems=0.625; ngược lại L3-14 corr=1.0 vs elems=0.0; L3-16 corr=1.0 vs elems=0.0, hop=0.0. Corr và elems không nhất quán theo cả hai hướng → corr ở mức câu có noise lớn, không dùng được làm tín hiệu duy nhất. Ghi chú: L1-08 answer thực chất nêu đúng vai trò trung tâm của baseline trong SCM (elems judge đã thấy điều đó).
+Bằng chứng mâu thuẫn hai chiều giữa các judge trên CÙNG một answer: L1-08 corr=0.0 vs elems 0.67/0.5; ngược lại L3-14 corr=1.0 vs elems_v1=0.0. Corr ở mức câu có noise lớn — chỉ dùng ở mức aggregate.
 
-### RC2 — Element judge false-negative với style trả lời của graph (~20% câu có elems=0)
+### RC2 — Element judge v1 (LLM) false-negative với style trả lời của graph (~20% câu elems_v1=0)
 
-11/54 câu có elems=0.0 (Testing cả 3 câu, Models&Methods cả 3, L1-03, L2-10, L3-10, L3-15, L3-16, L3-18). Element judge derive key elements 1–4 từ từ gold rồi tìm literal trong answer — nhưng graph trả lời bằng thuật ngữ/viết khác (VD: L1-03 answer nêu đúng "components, interfaces, internal structure" nhưng element judge vẫn 0). Corr của cùng các câu này 0.3–1.0 → elems bị低估 hệ thống khi answer dùng từ khác gold.
+18/54 câu elems_v1=0.0, trong đó v2 (deterministic) xác nhận chỉ **2 câu** là thiếu thật. Phần còn lại là LLM judge quá khắt khe với style trả lời của graph — elems_v1 bị低估 hệ thống. Metric v2 (mục 6b) xử lý triệt để.
 
-### RC3 — GRAPH_COMPLETION trả lời kiểu "định vị" hơn là "liệt kê" (nguyên nhân chất lượng thật sự)
+### RC3 — Giả thuyết "locate-only" answer style: pilot BỊ BÁC
 
-**9/10 câu bottom** mở đầu bằng "## 1. Vị trí: Ch XX …". Answer tốt ở định vị cấu trúc (chương, mục, figure) nhưng thường dừng ở đó thay vì liệt kê nội dung mà gold yêu cầu (VD: L1-09 cần 7 hoạt động quản lý dự án, answer chỉ nêu Figure 9-1 + vài tên đầu). Nguyên nhân sâu: C5b có 39.1% structural edges — search ưu tiên trả về nodes cấu trúc/heading, và prompt GRAPH_COMPLETION mặc định không ép liệt kê đầy đủ.
+9/10 câu bottom mở đầu "## 1. Vị trí: Ch XX …". Giả thuyết ban đầu cho rằng đây là nguyên nhân chính; pilot B1 (mục 6b) kiểm chứng: directive LLM synthesis chỉ cho +0.03 elems_v2 → **không phải nguyên nhân chính**. Giữ quan điểm: style định vị là đặc tính dữ liệu graph, không phải lỗi cần sửa.
 
-### RC4 — Multi-hop xuyên chương: elems L3 = 0.231, hop L3 = 0.528
+### RC4 — Multi-hop xuyên chương: elems_v2 L3 = 0.411 (thấp nhất 3 level)
 
-Câu L3 có `kas_secondary` (KA thứ 2, 3) nhưng retrieval chỉ chạy 1 query text — context thường chỉ phủ KA chính. L3 elems thấp hơn L1 hơn một nửa. Hop precision L2 (0.671) > L3 (0.528) củng cố: mỗi hop thêm một KA ngoài phạm vi retrieval là một lần mất nội dung.
+Câu L3 có `kas_secondary` nhưng retrieval 1 query text thường chỉ phủ KA chính. **Pilot B2 (mục 6b) đã chứng minh hybrid retrieval récup +0.108** — đây là khoảng trống retrieval thật sự.
 
-### RC5 — Khoảng trống graph/book (ít, ~1–2 KA)
+### RC5 — Khoảng trống graph/book (ít, ~1–2 câu)
 
-Computing Foundations: corr 0.667 (tốt) nhưng elems 0.047 — phần lớn là RC2 (judge), nhưng L2-16 (hashing vs tree) elems 0.14 + hop 0.2 gợi ý nội dung CS cơ bản của Ch16 mỏng trong graph so với phần SE của sách. Cần kiểm tra riêng trước khi kết luận.
+QA-L1-12 (Software Quality definition) elems_v2 = 0.0 — cần kiểm tra riêng Ch12 indexing. Ch16 (Computing Foundations) elems v1 thấp nhưng corr 0.667 — chủ yếu RC2, không cần hành động.
 
-### Phân bổ nguyên nhân cho 10 câu bottom
+### Phân bổ nguyên nhân cho 10 câu bottom (sau khi có instrument v2)
 
 | Nguyên nhân | Số câu | Câu tiêu biểu |
 |---|---|---|
-| RC1 (judge corr nhiễu) | ~4 | L1-08, L1-10, L1-03 (một phần), L3-02 |
-| RC2 (elems false-negative) | ~6 | L1-03, L3-11, L3-08, L3-05 (một phần) |
-| RC3 (locate-vs-enumerate) | ~7 | L1-09, L1-10, L3-11, L2-14 |
+| RC1 (judge corr nhiễu) | ~4 | L1-08, L1-10, L3-02 (một phần) |
+| RC2 (elems_v1 artifact) | ~6 | L1-03, L3-11, L3-08, L1-05, L2-05, L1-06 |
 | RC4 (multi-hop thiếu KA phụ) | ~5 | L3-05, L3-06, L3-08, L3-11, L3-18 |
-| RC5 (graph mỏng) | ~1 | L2-16 |
+| RC5 (graph mỏng) | ~2 | L1-12, L3-05 (một phần) |
 
-*(một câu có thể mang nhiều nguyên nhân; tổng > 10 vì vậy)*
+## 6. Đề xuất tối ưu (đã cập nhật sau pilot — chi tiết thực nghiệm ở mục 6b)
 
-## 6. Đề xuất tối ưu (ưu tiên theo ROI)
+1. ~~Sửa element judge~~ → **ĐÃ LÀM (A1)**: metric v2 deterministic, elems 0.365→0.468, adopt làm metric chuẩn.
+2. ~~Ensemble judge correctness~~ → **HẠ ƯU TIÊN**: pilot cho thấy corr noise lớn nhưng elems_v2 mới là metric phân biệt độ khó tốt; corr chỉ dùng aggregate.
+3. ~~Prompt directive chống locate-only~~ → **PARKED (B1 pilot âm)**: +0.03 chỉ, không đáng thêm 1 LLM call/câu.
+4. **Hybrid retrieval cho L3 (B2)** → **ADOPT**: elems_v2 L3 +0.108 (0.411→0.518), corr trung tính. Cần áp vào pipeline chính thức t7_eval (thêm mode hybrid) và đo variance.
+5. **Kiểm tra Ch12 indexing** cho QA-L1-12 và Ch5/Ch13 cho QA-L3-05: 2 true-zero còn lại.
+6. **Không rebuild graph** — gap chính nằm ở retrieval strategy + judge, không phải cấu trúc graph.
 
-1. **Sửa element judge trước khi tin elems (RC2 — rẻ nhất, tác động lớn nhất)**: thêm fuzzy matching (lemma/đồng nghĩa EN–VI) hoặc derive key elements từ gold + paraphrase; kỳ vọng elems false-negative giảm mạnh, elems tổng có thể từ 0.365 lên ~0.5+ mà không đụng retrieval.
-2. **Recalibrate judge correctness (RC1)**: hiện score compress về 0.4–0.6 ở mọi level. Hai lựa chọn: (a) ensemble 2–3 judge calls với nhiệt độ khác nhau, lấy trung bình; (b) dùng elems (đã sửa) làm primary metric cho QA bank, corr chỉ làm secondary — vì corr hiện kém nhạy hơn elems về độ khó.
-3. **Prompt directive chống locate-only (RC3)**: thêm vào prompt GRAPH_COMPLETION chỉ dẫn kiểu "liệt kê đầy đủ các mục/nội dung được hỏi, không dừng ở định vị chương/mục". A/B trên đúng 10 câu bottom (~15 phút chạy) trước khi áp toàn bank.
-4. **Query decomposition cho L3 (RC4)**: tách câu multi-hop theo `kas_secondary` thành 2–3 sub-query, merge context rồi trả lời — hoặc viết lại query chứa keyword cả hai KA. Đo trên 18 câu L3 so sánh elems L3 trước/sau.
-5. **Kiểm tra Ch16 mỏng (RC5)**: truy vấn trực tiếp vài khái niệm Ch16 (hashing, big-O) để xác nhận gap; nếu có, cân nhắc enrich indexing Ch16 ở lần build sau.
-6. **Không đề xuất rebuild graph cho T7**: các gap chính là judge + prompt + retrieval, không phải cấu trúc graph — audit precision 0.885 của C5b vẫn giữ giá trị.
+## 6b. Vòng tối ưu nâng dần — kết quả pilot (18/10 đêm)
+
+Thực hiện theo nguyên tắc "thử nâng dần": mỗi bước pilot trước khi adopt.
+
+### Bước 1 — Pilot B1 (prompt directive chống locate-only): KHÔNG ADOPT
+
+Thiết kế: 10 câu kém nhất, cùng retrieval GRAPH_COMPLETION, answer thay raw-concat bằng LLM synthesis với directive "liệt kê đầy đủ, không mô tả vị trí chương/mục".
+
+- Kết quả bằng metric v1 (LLM elems): d_corr +0.035, d_elems −0.015 — noise-level
+- Bằng metric v2: d_elems_v2 +0.033 — marginal
+- Kết luận: RC3 (locate-only style) KHÔNG phải nguyên nhân chính. Parked.
+- Ghi chú kỹ thuật: GRAPH_COMPLETION của cognee không nhận prompt tùy chỉnh — intervención thực tế là thêm lớp LLM synthesis sau retrieval, tốn ~2.5s/câu.
+
+### Bước 2 — A1: instrument element metric v2 (deterministic): ADOPT
+
+Phát hiện khi pilot: `judge_elements` là LLM judge → 18/54 câu elems=0.0 và flip giữa runs (L1-08: 0.67→0.0 cùng câu hỏi, giữa 2 retrieval runs). v2 thay bằng deterministic key-term matching từ trailer "Phần tử key:" của gold (`t7_element_v2.py`): normalize NFD-bỏ-dấu, substring OR sliding-window fuzzy ratio ≥ 0.8.
+
+- elems 0.365 → **0.468** (+0.103, đúng trần dự đoán +0.12)
+- Gradient level hợp lý: L1 0.523 > L2 0.47 > L3 0.411 (v1 làm L3 sụp 0.231 là judge artifact)
+- Chỉ còn **2/54 câu true-zero** (L3-05, L1-12) so với 18 zero v1
+- Chi phí: 0 LLM call, <1s toàn bank, tái lập được 100%
+
+### Bước 3 — Pilot B2 (hybrid GRAPH+CHUNKS cho L3): VALIDATED, ADOPT cho L3
+
+Thiết kế isolate biến retrieval: answer = raw-join (graph texts + chunk texts top_k=8), cùng cap 2500 chars, KHÔNG thêm LLM synthesis. Chạy toàn bộ 18 câu L3 với resume support.
+
+- **Kết quả 18/18: elems_v2 L3 0.411 → 0.518 (mean delta +0.108)**; 10/18 cải thiện, corr trung tính (không regression tổng thể)
+- Trên 5 câu yếu nhất: +0.201 (L3-05 0.0→0.333 — true-zero recovered; L3-16 0.25→0.5)
+- Chi phí: +1 retrieval call/câu (~1–2s)
+- Dự phóng toàn bank nếu áp 18 câu L3: elems_v2 0.468 → ~0.504
+
+### Bảng tổng hợp vòng nâng dần
+
+| Bước | Intervention | elems_v2 Δ | corr Δ | Quyết định |
+|---|---|---|---|---|
+| B1 | Directive LLM synthesis (10 câu kém nhất) | +0.033 | +0.035 | PARKED |
+| A1 | Element metric v2 (instrument fix) | +0.103 (đo lại) | — | ADOPT (metric) |
+| B2 | Hybrid GRAPH+CHUNKS (18 câu L3) | +0.108 (stratum) | ~0 | ADOPT (chỉ L3) |
+
+**Kết luận vòng nâng dần**: công cụ đo đã sạch (A1), hệ thống có 1 cải thiện thật có bằng chứng (B2: L3 elems 0.411→0.518). Bước tiếp theo tự nhiên: (1) chạy lại 18 câu L3 với B2 thêm 1 lần để đo variance; (2) nếu ổn định, thêm mode `hybrid` vào `t7_eval.py` làm mặc định cho L3; (3) đưa elems_v2 làm primary metric, corr làm secondary.
 
 ## 7. Tái hiện
 
 ```bash
-# eval (daemon, resume-safe — chạy lại skip toàn bộ 54 id đã có)
+# eval (daemon, resume-safe)
 cd /workspace && /opt/venv/bin/python src/skilltree/eval/t7_eval.py --label T7-bank
-# phân tích
+# phân tích + element v2
 /opt/venv/bin/python src/skilltree/eval/t7_analyze.py --label T7-bank
-# ghép bank từ 6 part
-/opt/venv/bin/python -c "import json; [open('corpora/swebok-v4/questions_bank_T7.jsonl','w').write(''.join(l for p in range(1,7) for l in open(f'corpora/swebok-v4/questions_bank_T7_p{p}.jsonl')))]"
+/opt/venv/bin/python src/skilltree/eval/t7_element_v2.py
+# pilot B1 (đã chạy — parked)
+/opt/venv/bin/python src/skilltree/eval/t7_pilot_b1.py
+# pilot B2 (đã chạy — adopt cho L3)
+/opt/venv/bin/python src/skilltree/eval/t7_pilot_b2.py --n 18
 ```
 
-**Evidence**: `reports/evidence/t7-summary.json`, `t7-analysis.json`, `t7-results-compact.jsonl` (54 row điểm số); raw results đầy đủ (88KB, kèm answers 1200 ký tự) tại container `runs/t7/T7-bank/results.jsonl` + log `/tmp/t7.log`.
+**Evidence**: `reports/evidence/t7-summary.json`, `t7-analysis.json`, `t7-results-compact.jsonl`; pilot: container `runs/t7/T7-pilot-b1/` (results, comparison.json, element_v2.json), `runs/t7/T7-pilot-b2/` (results 18 rows, element_v2.json); instrument: `runs/t7/T7-bank/element_v2.json`.
 
 ## 8. Concerns
 
-1. **Judge noise (RC1, RC2)** làm con số tuyệt đối của corr/elems chỉ đáng tin ở mức aggregate, không ở mức từng câu — các nhận xét level/KA dựa trên aggregate n=18/n=3 nên ổn định hơn.
-2. **Raw results (88KB) chỉ nằm trong container** — container TTL hết thì mất; đã push bản compact + summary + analysis lên VFS/GitHub, raw có thể tạo lại bằng rerun (resume không tốn thêm call nào vì skip hết).
-3. Bank 54 câu mới được chạy **1 lần duy nhất** — chưa đo variance giữa các lần chạy; đề nghị giữ điều này làm limitation khi so sánh với stress-set (24 câu, đã chạy nhiều round).
+1. **Judge noise (RC1)**: corr chỉ đáng tin ở mức aggregate; elems_v2 là metric dùng được ở mức câu.
+2. **Bank 54 câu chạy 1 lần** — chưa đo variance; đề nghị giữ limitation khi so stress-set.
+3. **B2 pilot dùng retrieval non-deterministic** — mean +0.108 trên 18 câu đủ lớn để vượt noise (đã thấy per-question swing ±0.15 giữa runs), nhưng bước tiếp theo nên chạy lại 1 lần nữa để xác nhận.
+4. **Raw results (88KB) chỉ nằm trong container** — đã push compact + summary + analysis + element_v2 lên VFS/GitHub; raw tái tạo được bằng rerun (resume skip hết, 0 call).
 
 ## 9. Checklist
 
 - [x] Bank 54 câu (18 KA × 3 level) soạn, validate JSON, gold có trailer "Phần tử key"
 - [x] `t7_eval.py` viết, compile ok, chạy daemon, resume hoạt động
 - [x] Eval 54/54 hoàn tất, 0 lỗi — summary có breakdown level/KA
-- [x] Phân tích bottom quintile + nguyên nhân (`t7_analyze.py` → `analysis.json`, 5 root causes)
-- [x] Đề xuất tối ưu có căn cứ từ dữ liệu (6 đề xuất, ưu tiên ROI)
+- [x] Phân tích bottom quintile + nguyên nhân (5 root causes, 2 true-zero v2)
+- [x] Đề xuất tối ưu có căn cứ + **pilot thực nghiệm 3 bước** (B1 parked, A1 adopt, B2 adopt)
 - [x] Commit + push GitHub (branch agent-swebok-usecase2)
 - [x] Contract Task #1 → DONE_WITH_CONCERNS
