@@ -13,10 +13,20 @@ Artifacts ghi vào runs/<run_id>/:
     resolved_config.json — preset đã resolve + môi trường (reproducible)
     ingest_metrics.json  — timing add/cognify/graph/search (đầu vào cho Task 4-6)
     search_sample.txt    — trích kết quả truy vấn kiểm chứng
+    llm_activity.json    — nhịp LLM call (cho supervisor/watchdog)
 
 Chống OOM (sandbox gVisor 8Gi, 2 lần chết khi cognify nặng):
 - OMP_NUM_THREADS / ORT_INTRA_OP_NUM_THREADS = 2 (setdefault, TRƯỚC import onnxruntime)
 - MemoryGuard thread log MemAvailable mỗi phút vào ingest.log
+
+Chịu lỗi gateway LLM (bài học C5b 2026-10-17: chết 23:31 vì ServiceUnavailableError,
+chỉ retry 1 lần rồi process chết lặng 23 phút không ai hay):
+- cognify_resilient: retry backoff luỹ thừa + jitter (env SKILLTREE_COGNIFY_*).
+  incremental_loading=true khiến mỗi retry chỉ tính tiếp chunk chưa xong.
+- llm_activity.json: rotating_acompletion ghi nhịp MỌI LLM call (kể cả call lỗi) —
+  supervisor/watchdog dùng để phân biệt "đang chạy" với "treo".
+- ingest.log mở mode="a": restart không xoá lịch sử; [session] đánh dấu pid/attempt.
+- Supervisor: scripts/run_supervised.sh — preflight gateway, watchdog treo, restart.
 
 LLM key round-robin: khi preset khai báo >=2 env var trong `llm_api_keys_env`,
 monkeypatch litellm.acompletion để xoay vòng api_key trên TỪNG call (adapter
@@ -33,6 +43,7 @@ import itertools
 import json
 import logging
 import os
+import random
 import sys
 import threading
 import time
@@ -79,26 +90,57 @@ def read_api_keys(env_names: list[str]) -> list[str]:
     return keys
 
 
-def install_key_round_robin(keys: list[str]) -> int:
-    """Monkeypatch litellm.acompletion xoay vòng api_key trên từng call (idempotent)."""
+def install_key_round_robin(keys: list[str], activity_path: Path | None = None) -> int:
+    """Monkeypatch litellm.acompletion (idempotent):
+    - xoay vòng api_key trên từng call khi có >=2 key;
+    - ghi nhịp MỌI LLM call (kể cả call lỗi) vào activity_path (llm_activity.json)
+      để supervisor/watchdog phân biệt run đang chạy với run treo.
+    Return: số key đang xoay vòng (0 nếu <2 key — tracker vẫn hoạt động)."""
     import litellm
 
     if getattr(litellm.acompletion, "__skilltree_rr__", False):
         return 0
-    if len(keys) < 2:
-        return 0
 
-    cycle = itertools.cycle(keys)
+    cycle = itertools.cycle(keys) if len(keys) >= 2 else None
     original = litellm.acompletion
+    state: dict[str, Any] = {"n_calls": 0, "n_errors": 0, "last_call_ts": "", "last_ok_ts": ""}
+
+    def _touch(ok: bool | None) -> None:
+        now = datetime.now(timezone.utc).isoformat()
+        if ok is None:  # call bắt đầu
+            state["n_calls"] += 1
+            state["last_call_ts"] = now
+        elif ok:
+            state["last_ok_ts"] = now
+        else:
+            state["n_errors"] += 1
+            state["last_call_ts"] = now  # call lỗi cũng là hoạt động gần nhất
+        if activity_path is None:
+            return
+        try:
+            tmp = f"{activity_path}.tmp"
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump(state, fh)
+            os.replace(tmp, activity_path)
+        except OSError:
+            pass  # tracker không bao giờ được làm chết build
 
     async def rotating_acompletion(*args: Any, **kwargs: Any):
-        kwargs["api_key"] = next(cycle)
-        return await original(*args, **kwargs)
+        if cycle is not None:
+            kwargs["api_key"] = next(cycle)
+        _touch(None)
+        try:
+            result = await original(*args, **kwargs)
+        except Exception:
+            _touch(False)
+            raise
+        _touch(True)
+        return result
 
     rotating_acompletion.__skilltree_rr__ = True  # type: ignore[attr-defined]
     rotating_acompletion.__skilltree_rr_original__ = original  # type: ignore[attr-defined]
     litellm.acompletion = rotating_acompletion
-    return len(keys)
+    return len(keys) if cycle is not None else 0
 
 
 def key_fingerprint(key: str) -> str:
@@ -136,13 +178,14 @@ class MemoryGuard:
 # ---------------------------------------------------------------- logging ----
 
 def setup_logging(run_dir: Path) -> Path:
-    """Logger ghi song song ra runs/<run_id>/ingest.log và stdout."""
+    """Logger ghi song song ra runs/<run_id>/ingest.log (mode="a" — append qua các
+    lần restart của supervisor) và stdout."""
     run_dir.mkdir(parents=True, exist_ok=True)
     log_path = run_dir / "ingest.log"
     LOG.setLevel(logging.INFO)
     LOG.handlers.clear()
     fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s", "%Y-%m-%dT%H:%M:%S")
-    fh = logging.FileHandler(log_path, mode="w", encoding="utf-8")
+    fh = logging.FileHandler(log_path, mode="a", encoding="utf-8")
     fh.setFormatter(fmt)
     sh = logging.StreamHandler(sys.stdout)
     sh.setFormatter(fmt)
@@ -199,6 +242,71 @@ def build_cognify_kwargs(preset: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
+# ------------------------------------------------ cognify chịu lỗi gateway ----
+
+COGNIFY_MAX_ATTEMPTS = int(os.environ.get("SKILLTREE_COGNIFY_ATTEMPTS", "12"))
+COGNIFY_BACKOFF_BASE_S = float(os.environ.get("SKILLTREE_COGNIFY_BACKOFF_S", "60"))
+COGNIFY_BACKOFF_CAP_S = float(os.environ.get("SKILLTREE_COGNIFY_BACKOFF_CAP_S", "900"))
+
+# Marker lỗi tạm thời (gateway 5xx / timeout / rate-limit) — khớp theo tên class
+# và message, đi theo chuỗi __cause__/__context__ của litellm.
+_TRANSIENT_MARKERS = (
+    "ServiceUnavailable", "Service Unavailable", "temporarily unreachable",
+    "APIConnectionError", "APITimeoutError", "Timeout", "timed out",
+    "RateLimit", "rate limit", "429", "InternalServerError", "overloaded",
+    "Connection reset", "Connection error", "bad gateway", "Bad Gateway",
+    "502", "503", "EOF",
+)
+
+
+def _is_transient(exc: BaseException) -> bool:
+    """Gateway 5xx/timeout/ratelimit coi là tạm thời → retry nhiều lần được."""
+    seen: set[int] = set()
+    cur: BaseException | None = exc
+    while cur is not None and id(cur) not in seen:
+        seen.add(id(cur))
+        text = f"{type(cur).__name__} {cur}"
+        if any(m in text for m in _TRANSIENT_MARKERS):
+            return True
+        cur = cur.__cause__ or cur.__context__
+    return False
+
+
+async def cognify_resilient(cognee: Any, kwargs: dict[str, Any]) -> tuple[Any, int, list[str]]:
+    """cognify với retry backoff luỹ thừa + jitter.
+
+    An toàn khi retry vì preset dùng incremental_loading=true — mỗi lần retry
+    chỉ tính tiếp các chunk chưa xử lý xong, không làm lại từ đầu.
+
+    - Lỗi tạm thời: retry tới COGNIFY_MAX_ATTEMPTS (mặc định 12), backoff
+      60s × 2^k, cap 15 phút, jitter ±20% → chịu được outage gateway ~2h.
+    - Lỗi khác (schema sai, auth, config): chỉ cho tối đa 3 attempt tổng rồi
+      raise — đỡ đốt giờ cho lỗi cứng, supervisor sẽ quyết định ở tầng trên.
+    """
+    errors: list[str] = []
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            return await cognee.cognify(**kwargs), attempt, errors
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"attempt{attempt}: {type(exc).__name__}: {exc}"[:400])
+            transient = _is_transient(exc)
+            hard_cap = COGNIFY_MAX_ATTEMPTS if transient else 3
+            if attempt >= hard_cap:
+                LOG.error("[cognify] bỏ cuộc sau %d attempt (transient=%s): %s",
+                          attempt, transient, errors[-1])
+                raise
+            if transient:
+                delay = min(COGNIFY_BACKOFF_BASE_S * (2 ** (attempt - 1)), COGNIFY_BACKOFF_CAP_S)
+                delay *= random.uniform(0.8, 1.2)
+            else:
+                delay = 120.0
+            LOG.warning("[cognify] attempt %d/%s fail (transient=%s): %s — retry sau %.0fs",
+                        attempt, hard_cap, transient, errors[-1][:280], delay)
+            await asyncio.sleep(delay)
+
+
 # ------------------------------------------------------------- graph stats ---
 
 async def collect_graph_stats() -> dict[str, Any]:
@@ -242,6 +350,8 @@ async def run_build(preset: dict[str, Any], run_id: str, run_search: bool = True
     log_path = setup_logging(run_dir)
     guard = MemoryGuard(interval=60)
     guard.start()
+    LOG.info("[session] pid=%d attempt=%s log_mode=append", os.getpid(),
+             os.environ.get("SKILLTREE_ATTEMPT", "1"))
     LOG.info("[threads] OMP_NUM_THREADS=%s ORT_INTRA_OP_NUM_THREADS=%s",
              os.environ.get("OMP_NUM_THREADS"), os.environ.get("ORT_INTRA_OP_NUM_THREADS"))
 
@@ -249,7 +359,7 @@ async def run_build(preset: dict[str, Any], run_id: str, run_search: bool = True
         # Nạp .env rồi patch litellm TRƯỚC khi cognee build client lần đầu.
         load_env_file()
         keys = read_api_keys(preset.get("llm_api_keys_env") or ["LLM_API_KEY"])
-        n_rotating = install_key_round_robin(keys)
+        n_rotating = install_key_round_robin(keys, activity_path=run_dir / "llm_activity.json")
         if n_rotating:
             LOG.info("[llm-keys] round-robin ACTIVE: %d keys %s",
                      n_rotating, [key_fingerprint(k) for k in keys])
@@ -292,7 +402,7 @@ async def run_build(preset: dict[str, Any], run_id: str, run_search: bool = True
             LOG.info("[prune] time=%.2fs", prune_s)
             metrics["prune"] = {"seconds": round(prune_s, 3)}
         else:
-            LOG.info("[prune] reset=false — giữ nguyên state hiện có")
+            LOG.info("[prune] reset=false — giữ nguyên state hiện có (resume incremental)")
 
         # 3) ingest: add từng file text vào Dataset của preset
         t_add0 = time.perf_counter()
@@ -310,25 +420,18 @@ async def run_build(preset: dict[str, Any], run_id: str, run_search: bool = True
                  len(files), summary["n_chars"], add_s)
         metrics["add"] = {"seconds": round(add_s, 3), "details": add_details}
 
-        # 4) cognify — kwargs map thẳng từ preset
+        # 4) cognify — kwargs map thẳng từ preset, retry chịu lỗi gateway
         kwargs = build_cognify_kwargs(preset)
         LOG.info("[cognify] kwargs=%s", json.dumps(
             {k: (v.__name__ if isinstance(v, type) else v) for k, v in kwargs.items()},
             ensure_ascii=False, default=str))
         t0 = time.perf_counter()
-        cognify_error = None
-        try:
-            cognify_result = await cognee.cognify(**kwargs)
-        except Exception as exc:  # noqa: BLE001
-            cognify_error = f"{type(exc).__name__}: {exc}"
-            LOG.warning("[cognify] lần 1 fail (%s) — thử lại 1 lần", cognify_error)
-            cognify_result = await cognee.cognify(**kwargs)
+        cognify_result, cognify_attempts, cognify_errors = await cognify_resilient(cognee, kwargs)
         cognify_s = time.perf_counter() - t0
-        LOG.info("[cognify] time=%.2fs%s", cognify_s,
-                 f" | first_attempt_error={cognify_error}" if cognify_error else "")
-        metrics["cognify"] = {"seconds": round(cognify_s, 3)}
-        if cognify_error:
-            metrics["cognify"]["first_attempt_error"] = cognify_error
+        LOG.info("[cognify] time=%.2fs attempts=%d", cognify_s, cognify_attempts)
+        metrics["cognify"] = {"seconds": round(cognify_s, 3), "attempts": cognify_attempts}
+        if cognify_errors:
+            metrics["cognify"]["attempt_errors"] = cognify_errors
         try:
             blob = json.dumps(cognify_result, ensure_ascii=False, default=str)
             LOG.info("[cognify] result=%s", blob[:600])
