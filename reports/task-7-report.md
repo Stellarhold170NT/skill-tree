@@ -1,7 +1,7 @@
 # Task 7 — SWEBOK QA bank toàn diện: eval trên memory full-book C5, phân tích câu kém, đề xuất tối ưu
 
 **Status:** DONE_WITH_CONCERNS
-**Ngày:** 2026-10-18 (báo cáo duyệt sáng 19-10; cập nhật đêm: A2 glossary + B3 pilot)
+**Ngày:** 2026-10-18 (báo cáo duyệt sáng 19-10; cập nhật đêm: A2 glossary + B3 pilot + ablation)
 **Contract:** Task #1 (taskloop) — "T7: SWEBOK QA bank toàn diện (18 KA × 3 level) → eval full-book → phân tích câu kém → đề xuất tối ưu → báo cáo sáng 19/10"; Task #2 — "B3 pilot: query expansion VI→EN"
 
 ---
@@ -12,7 +12,7 @@ Task này trả lời ba câu hỏi sau khi C5b (full-book graph 11,275 nodes / 
 
 1. **Độ phủ kiến thức**: bộ câu hỏi cũ (24 stress + 40 basic) có bám sát toàn bộ 18 KA của SWEBOK v4 không? Câu trả lời là **chưa** — stress set thiên về multi-hop cross-chapter, basic set 40 câu không đều theo chương. T7 xây bank mới **54 câu = 18 KA × 3 mức (L1/L2/L3)**, mỗi câu bám sát tiêu đề mục của chương tương ứng trong corpus.
 2. **Chất lượng retrieval trên full-book graph**: chạy toàn bộ 54 câu qua pipeline eval chuẩn (GRAPH_COMPLETION trên dataset `swebok_v4_full_c5`) với judge correctness/element/hop như các round trước, đo baseline của bank mới.
-3. **Chẩn đoán câu kém**: với mọi câu điểm thấp (bottom quintile), phân loại nguyên nhân và đề xuất hướng tối ưu cụ thể — kèm **pilot thực nghiệm từng hướng** (mục 6b, 6 bước).
+3. **Chẩn đoán câu kém**: với mọi câu điểm thấp (bottom quintile), phân loại nguyên nhân và đề xuất hướng tối ưu cụ thể — kèm **pilot thực nghiệm từng hướng** (mục 6b, 6 bước + ablation).
 
 ## 2. Thiết kế bank câu hỏi
 
@@ -72,7 +72,7 @@ Gradient hợp lý L1 > L2 > L3 khớp thiết kế độ khó. Glossary cải t
 ### 4.4 Điểm đặc biệt
 
 - **Hoàn hảo (1.0)**: QA-L1-07 (4 nhóm bảo trì), QA-L3-14 (trade-off + stakeholder → đàm phán yêu cầu), QA-L3-16 (distributed/parallel → thiết kế → construction).
-- **Thất bại thật (v2 xác nhận)**: QA-L3-05 (elems = 0.0), QA-L1-12 (elems = 0.0) — chi tiết probe ở Bước 4, pilot B3 ở Bước 6.
+- **Thất bại thật (v2 xác nhận)**: QA-L3-05 (elems = 0.0), QA-L1-12 (elems = 0.0) — chi tiết probe ở Bước 4, pilot B3/ablation ở Bước 6.
 - **Case judge**: QA-L1-08 (baseline SCM) corr = 0.0 dù elems 0.67 (v1) / 0.5 (v2) — answer đúng vai trò trung tâm của baseline trong SCM nhưng corr judge chấm 0.
 
 ## 5. Phân tích câu kém — nguyên nhân gốc
@@ -91,11 +91,11 @@ Bằng chứng mâu thuẫn hai chiều giữa các judge trên CÙNG một answ
 
 ### RC4 — Multi-hop xuyên chương: elems_v2 L3 = 0.434 (thấp nhất 3 level)
 
-Câu L3 có `kas_secondary` nhưng retrieval 1 query text thường chỉ phủ KA chính. **Pilot B2 (mục 6b) đã chứng minh hybrid retrieval cộng +0.108** — đây là khoảng trống retrieval thật sự, và variance run xác nhận ổn định.
+Câu L3 có `kas_secondary` nhưng retrieval 1 query text thường chỉ phủ KA chính. **Pilot B2 (mục 6b) đã chứng minh hybrid retrieval cộng +0.108** — đây là khoảng trống retrieval thật sự, và variance run xác nhận ổn định. **Ablation Bước 6 còn cho thấy hybrid hiệu lực cả L1/L2** (+0.297 trên 4 câu yếu) — gap retrieval này không riêng L3.
 
-### RC5 → RC6 — Khoảng trống graph/book BỊ BÁC; nguyên nhân thật là VI↔EN term mismatch
+### RC5 → RC6 — Khoảng trống graph/book BỊ BÁC; nguyên nhân thật là VI↔EN term mismatch (một phần)
 
-Probe (Bước 4) cho thấy nội dung của cả 2 câu true-zero đều CÓ trong chunks top_k=10; các term còn miss là cụm VI không khớp text EN của sách ('chi phí chất lượng' ↔ cost of quality, 'vòng phản hồi' ↔ feedback loop...). Không cần enrich indexing — cần **glossary VI→EN** (A2 cho metric, B3 cho retrieval — cả hai đã pilot ở Bước 5–6).
+Probe (Bước 4) cho thấy nội dung của cả 2 câu true-zero đều CÓ trong chunks top_k=10; các term còn miss là cụm VI không khớp text EN của sách ('chi phí chất lượng' ↔ cost of quality, 'vòng phản hồi' ↔ feedback loop...). Glossary (A2) xử lý phần mismatch ở tầng metric; **query expansion (B3) bị ablation bác** — gain thật của nó là hybrid chunks (xem Bước 6).
 
 ### Phân bổ nguyên nhân cho 10 câu bottom (sau khi có instrument v2 + probe)
 
@@ -103,17 +103,17 @@ Probe (Bước 4) cho thấy nội dung của cả 2 câu true-zero đều CÓ t
 |---|---|---|
 | RC1 (judge corr nhiễu) | ~4 | L1-08, L1-10, L3-02 (một phần) |
 | RC2 (elems_v1 artifact) | ~6 | L1-03, L3-11, L3-08, L1-05, L2-05, L1-06 |
-| RC4 (multi-hop thiếu KA phụ) | ~5 | L3-05, L3-06, L3-08, L3-11, L3-18 |
-| RC6 (VI↔EN term mismatch) | ~2 | L1-12, L3-05 (một phần) |
+| RC4 (retrieval thiếu chunks/KA phụ) | ~5 | L3-05, L3-06, L3-08, L3-11, L3-18 |
+| RC6 (VI↔EN term mismatch — chỉ ở tầng metric) | ~2 | L1-12, L3-05 (một phần) |
 
 ## 6. Đề xuất tối ưu (đã cập nhật sau pilot — chi tiết thực nghiệm ở mục 6b)
 
 1. ~~Sửa element judge~~ → **ĐÃ LÀM (A1)**: metric v2 deterministic, elems 0.365→0.468, adopt làm metric chuẩn.
 2. ~~Ensemble judge correctness~~ → **HẠ ƯU TIÊN**: pilot cho thấy corr noise lớn nhưng elems_v2 mới là metric phân biệt độ khó tốt; corr chỉ dùng aggregate.
 3. ~~Prompt directive chống locate-only~~ → **PARKED (B1 pilot âm)**: +0.03 chỉ, không đáng thêm 1 LLM call/câu.
-4. ~~Hybrid retrieval cho L3 (B2)~~ → **ĐÃ LÀM**: adopt sau variance run (+0.093 mean 2 runs), mode `--hybrid-l3` đã vào t7_eval.py.
-5. ~~Kiểm tra Ch12 indexing~~ → **ĐÃ PROBE**: nội dung có trong corpus; gap thật là VI↔EN term mismatch.
-6. ~~Glossary VI→EN~~ → **ĐÃ LÀM (A2 + B3)**: 65 terms LLN-dịch + spot-check; A2 metric elems 0.468→0.499; B3 query expansion +0.245 trên nhóm 6 câu yếu nhất (chi tiết Bước 5–6).
+4. ~~Hybrid retrieval cho L3 (B2)~~ → **ĐÃ LÀM + MỞ RỘNG**: adopt sau variance run (+0.093 mean 2 runs); ablation chứng minh hybrid hiệu lực cả L1/L2 (+0.297 trên 4 câu yếu) → đề xuất hybrid cho MỌI level (chờ full-bank run xác nhận).
+5. ~~Kiểm tra Ch12 indexing~~ → **ĐÃ PROBE**: nội dung có trong corpus; gap thật là retrieval + VI↔EN term mismatch (tầng metric).
+6. ~~Glossary VI→EN~~ → **A2 ĐÃ LÀM (metric)**: 65 terms, elems 0.468→0.499. **B3 query expansion KHÔNG ADOPT** — ablation cho thấy 0 lợi ích đo được so hybrid-only, 1 case làm tệ (L3-05).
 7. **Không rebuild graph** — gap chính nằm ở retrieval strategy + judge + language, không phải cấu trúc graph.
 
 ## 6b. Vòng tối ưu nâng dần — kết quả pilot (18-19/10 đêm)
@@ -159,37 +159,40 @@ Probe 2 true-zero còn lại (CHUNKS top_k=10, key-term matching — `t7_probe_z
 
 - **QA-L1-12**: 4/6 terms HIT ('quality definition', 'specified requirements', 'implied needs', 'ISO/IEC 25010') → nội dung CÓ trong corpus, zero là lỗi tầng answer-selection, không phải indexing gap. 2 terms MISS ('chi phí chất lượng', 'phát hiện sớm') là cụm VI không khớp text EN.
 - **QA-L3-05**: 3/6 terms HIT ('testability', 'operational testing', 'evaluation of tests') — đúng 3 term EN mà hybrid đã đưa vào answer (elems 0→0.333). 3 MISS là cụm VI ('vòng phản hồi', 'cải tiến', 'mối quan hệ với yêu cầu').
-- **Bằng chứng cho A2/B3 (glossary + query expansion VI→EN)**: các miss còn lại đều là mismatch ngôn ngữ, không phải thiếu dữ liệu.
+- **Bằng chứng cho A2 (glossary metric)**: các miss còn lại là mismatch ngôn ngữ, không phải thiếu dữ liệu.
 
 ### Bước 5 — A2: glossary VI→EN cho metric (Task #2): ADOPT
 
 Xây `swebok_vi_en_glossary.json` — 65 term VI trong key terms của bank, dịch sang EN SWEBOK chuẩn bằng LLM (retry 3×/batch, batch 20 terms), spot-check 100%: bản dịch đúng chuẩn ('cost of quality', 'root cause', 'corrective action', 'trade-off'...). `t7_element_v2.py` nhận `--glossary`: term HIT nếu term hoặc biến thể EN có trong answer.
 
 - elems_v2 bank: 0.468 → **0.499** (+0.031); L1 0.540 / L2 0.525 / L3 0.434 — mọi stratum tăng, mạnh nhất L2 (+0.055)
-- B2 runs rescore: 0.518→0.581, 0.490→0.552 — B2 vẫn dương (+0.082/+0.053 so baseline 0.499... baseline graph-only rescore là 0.499)
+- B2 runs rescore: 0.518→0.581, 0.490→0.552 — B2 vẫn dương so baseline rescore 0.499
 - 2 true-zero **vẫn 0.0** — cả 6 concepts (kể cả biến thể EN) đều vắng trong answer graph → xác nhận lỗi nằm ở retrieval, mở đường B3
 
-### Bước 6 — Pilot B3 (query expansion VI→EN, Task #2): ADOPT (chờ run 2 variance)
+### Bước 6 — Pilot B3 (query expansion VI→EN) + ABLATION: expansion KHÔNG ADOPT; gain thật = HYBRID mọi level
 
-Thiết kế: 6 câu yếu nhất sau A2 (2 zero + 4 câu 0.429). Mỗi câu LLM dịch question→EN (SWEBOK terms, cache per-question), query = VI + "\n\nEN: " + bản dịch, hybrid GRAPH+CHUNKS như B2, chấm v2+glossary (metric giống hệt baseline rescore → delta thuần retrieval).
+Pilot B3: 6 câu yếu nhất sau A2 (2 zero + 4 câu 0.429). LLM dịch question→EN, query = VI + EN, hybrid GRAPH+CHUNKS, chấm v2+glossary. Kết quả bề mặt: mean 0.286 → 0.531 (**+0.245, 5/6 tăng**, L1-12 0→0.333) — tưởng là breakthrough.
 
-| Câu | base | B3 | Δ |
+**Ablation phân rã** (hybrid-only, không dịch, cùng 4 câu L1/L2):
+
+| Câu | Base | Hybrid-only | Hybrid+Expansion |
 |---|---|---|---|
-| QA-L1-12 | 0.0 | 0.333 | +0.333 (true-zero recovered) |
-| QA-L3-05 | 0.0 | 0.0 | 0 — expansion không cứu được |
-| QA-L1-02 | 0.429 | 0.571 | +0.142 |
-| QA-L1-03 | 0.429 | 0.714 | +0.285 |
-| QA-L2-06 | 0.429 | 0.857 | +0.428 |
-| QA-L3-09 | 0.429 | 0.714 | +0.285 |
-| **Mean** | **0.286** | **0.531** | **+0.245** |
+| QA-L1-12 | 0.000 | 0.333 | 0.333 |
+| QA-L1-02 | 0.429 | 0.571 | 0.571 |
+| QA-L1-03 | 0.429 | 0.714 | 0.714 |
+| QA-L2-06 | 0.429 | 0.857 | 0.857 |
+| **Mean** | **0.322** | **0.619** | **0.619** |
 
-- **5/6 câu cải thiện** — gain lớn nhất trong mọi intervention đã pilot (B2 +0.108, B1 +0.033)
-- corr nhóm 6 câu: 0.533 — đồng thuận với elems (không regression)
-- Hiệu quả rõ nhất ở L1 recall: dịch chính xác term định nghĩa VI→EN giúp retrieval trúng đúng mục sách
-- **L3-05 là case tồn dư**: content có trong chunks (probe) nhưng không lọt top retrieval dù query mở rộng — cần điều tra ranking riêng
-- Chi phí: +1 LLM call/câu (~1–2s) — có thể cache; deployable trong production (không dùng gold)
+Cross-check trên L3 (có sẵn 2 runs B2): L3-05 hybrid-only 0.333 ổn định cả 2 runs nhưng hybrid+expansion = **0.0** (expansion pha loãng query — làm tệ); L3-09 0.714 = 0.714 (trung tính).
 
-### Bảng tổng hợp vòng nâng dần (6 bước)
+**Kết luận Bước 6**:
+
+- Toàn bộ gain +0.245 của B3 thực chất là **HYBRID chunks** — và hybrid hiệu lực **cả L1/L2** (+0.297 trên 4 câu yếu), không chỉ L3 như B2 ban đầu thiết kế
+- **Expansion: 0 lợi ích đo được, 1 case làm tệ, +1 LLM call vô ích → KHÔNG ADOPT**
+- Hành động thật: mở rộng hybrid cho mọi level (mode `--hybrid-l3` → `--hybrid-all`), chạy full-bank 54 câu để xác nhận gain (~1h)
+- L3-05 vẫn tồn dư: content có trong chunks (probe) nhưng ranking không kéo được vào answer — cần điều tra riêng, không phải bài toán language
+
+### Bảng tổng hợp vòng nâng dần (6 bước + ablation)
 
 | Bước | Intervention | elems Δ | corr Δ | Quyết định |
 |---|---|---|---|---|
@@ -198,9 +201,10 @@ Thiết kế: 6 câu yếu nhất sau A2 (2 zero + 4 câu 0.429). Mỗi câu LLM
 | B2 | Hybrid GRAPH+CHUNKS (18 câu L3, run 1) | +0.108 (stratum) | ~0 | ADOPT (chỉ L3) |
 | B2-r2 | Variance run 2 | −0.028 (so run 1) | −0.033 | XÁC NHẬN ổn định |
 | A2 | Glossary VI→EN cho metric (65 terms) | +0.031 (bank) | — | ADOPT (metric) |
-| B3 | Query expansion VI→EN (6 câu yếu nhất) | **+0.245** | +0.53 nhóm | **ADOPT** (chờ run 2) |
+| B3 | Query expansion VI→EN (6 câu yếu nhất) | +0.245 bề mặt | +0.53 nhóm | **KHÔNG ADOPT** (ablation: gain = hybrid) |
+| Ablation | Hybrid-only 4 câu L1/L2 yếu | **+0.297** | +0.5 nhóm | Hybrid MỞ RỘNG mọi level (chờ full-bank) |
 
-**Kết luận vòng nâng dần**: 6 bước — 2 instrument fix (A1, A2), 2 retrieval gain có bằng chứng (B2 +variance, B3 +0.245), 1 giả thuyết bị bác (B1, tiết kiệm 1 sửa đổi vô ích), 1 nguyên nhân được định vị lại 2 lần (RC5→RC6). elems_v2+glossary làm primary metric; corr secondary. Hướng còn mở: run 2 variance B3, tích hợp `--expand-vi-en` vào t7_eval.py, điều tra riêng L3-05.
+**Kết luận vòng nâng dần**: 6 bước + 1 ablation — 2 instrument fix (A1, A2), 1 retrieval gain có bằng chứng 2 runs (B2) + mở rộng được sang L1/L2, 2 giả thuyết bị bác có dữ liệu (B1 directive, B3 expansion — tiết kiệm 2 sửa đổi vô ích + 1 regression tránh được). elems_v2+glossary làm primary metric; corr secondary. Hướng còn mở: full-bank hybrid run, điều tra riêng L3-05 (ranking).
 
 ## 7. Tái hiện
 
@@ -212,23 +216,24 @@ cd /workspace && /opt/venv/bin/python src/skilltree/eval/t7_eval.py --label T7-b
 # phân tích + element v2 (metric chuẩn, có glossary)
 /opt/venv/bin/python src/skilltree/eval/t7_analyze.py --label T7-bank
 /opt/venv/bin/python src/skilltree/eval/t7_element_v2.py  # --glossary mặc định corpora/swebok-v4/swebok_vi_en_glossary.json
-# pilot B1 (parked) / B2 (+ run 2 variance) / B3 / probe zeros / variance / build glossary
+# pilot B1 (parked) / B2 (+ run 2 variance) / B3 / ablation / probe zeros / variance / build glossary
 /opt/venv/bin/python src/skilltree/eval/t7_pilot_b1.py
 /opt/venv/bin/python src/skilltree/eval/t7_pilot_b2.py --n 18
 /opt/venv/bin/python src/skilltree/eval/t7_pilot_b3.py
+/opt/venv/bin/python src/skilltree/eval/t7_ablate_b3.py
 /opt/venv/bin/python src/skilltree/eval/t7_probe_zeros.py
 /opt/venv/bin/python src/skilltree/eval/t7_variance_b2.py
 /opt/venv/bin/python src/skilltree/eval/t7_build_glossary.py
 ```
 
-**Evidence**: `reports/evidence/t7-summary.json`, `t7-analysis.json`, `t7-results-compact.jsonl`, `t7-element-v2-summary.json`, `t7-pilot-b2-element_v2.json`, `t7-variance.json`, `t7-b3-pilot.json`; container `runs/t7/T7-bank/`, `T7-pilot-b1/`, `T7-pilot-b2/`, `T7-pilot-b2-r2/`, `T7-pilot-b3/` (results + element_v2*.json mỗi label); `corpora/swebok-v4/swebok_vi_en_glossary.json`.
+**Evidence**: `reports/evidence/t7-summary.json`, `t7-analysis.json`, `t7-results-compact.jsonl`, `t7-element-v2-summary.json`, `t7-pilot-b2-element_v2.json`, `t7-variance.json`, `t7-b3-pilot.json` (kèm ablation), `t7-ablation-hybrid.json`; container `runs/t7/T7-bank/`, `T7-pilot-b1/`, `T7-pilot-b2/`, `T7-pilot-b2-r2/`, `T7-pilot-b3/`, `T7-ablate-hybrid/`; `corpora/swebok-v4/swebok_vi_en_glossary.json`.
 
 ## 8. Concerns
 
 1. **Judge noise (RC1)**: corr chỉ đáng tin ở mức aggregate (swing 0.6/câu giữa runs — L3-16); elems_v2 là metric dùng được ở mức câu (|Δ| 0.029).
 2. **Bank 54 câu chạy 1 lần** — chưa đo variance toàn bank; đề nghị giữ limitation khi so stress-set.
 3. **B2 đã đo variance (run 2)**: elems_v2 per-question |Δ| 0.029, mean 2 runs +0.093 so baseline — ổn định, đủ tin để đưa vào pipeline (`--hybrid-l3`).
-4. **B3 mới chạy 1 lần trên 6 câu** — selection bias nhóm yếu nhất; cần run 2 variance + toàn bank trước khi là mặc định. L3-05 tồn dư: content có trong chunks nhưng retrieval không kéo được — gap ranking, không phải language.
+4. **Hybrid cho L1/L2 mới pilot trên 4 câu yếu** (selection bias) — cần full-bank hybrid run trước khi là mặc định. L3-05 tồn dư: content có trong chunks nhưng retrieval không kéo được — gap ranking, không phải language.
 5. **Raw results (88KB) chỉ nằm trong container** — đã push compact + summary + analysis + element_v2 lên VFS/GitHub; raw tái tạo được bằng rerun (resume skip hết, 0 call).
 
 ## 9. Checklist
@@ -236,7 +241,7 @@ cd /workspace && /opt/venv/bin/python src/skilltree/eval/t7_eval.py --label T7-b
 - [x] Bank 54 câu (18 KA × 3 level) soạn, validate JSON, gold có trailer "Phần tử key"
 - [x] `t7_eval.py` viết, compile ok, chạy daemon, resume hoạt động; **+ mode `--hybrid-l3` (B2)**
 - [x] Eval 54/54 hoàn tất, 0 lỗi — summary có breakdown level/KA
-- [x] Phân tích bottom quintile + nguyên nhân (RC1/RC2/RC4/RC6; RC3 bị bác, RC5 được định vị lại)
-- [x] Vòng tối ưu nâng dần 6 bước: B1 parked, A1 adopt, B2 adopt + variance, probe zeros, A2 glossary adopt, B3 pilot +0.245
+- [x] Phân tích bottom quintile + nguyên nhân (RC1/RC2/RC4/RC6; RC3 + B3 bị bác có dữ liệu)
+- [x] Vòng tối ưu nâng dần 6 bước + ablation: B1 parked, A1 adopt, B2 adopt + variance, probe zeros, A2 adopt, B3 expansion bị bác — gain thật là hybrid mọi level
 - [x] Commit + push GitHub (branch agent-swebok-usecase2)
 - [x] Contract Task #1 → DONE_WITH_CONCERNS; Task #2 (B3) → DONE
