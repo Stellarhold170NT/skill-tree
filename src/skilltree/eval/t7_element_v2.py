@@ -1,11 +1,12 @@
-"""T7 A1 — element_completeness v2: deterministic key-term matching.
+"""T7 A1 — element_completeness v2: deterministic key-term matching (+ glossary VI→EN).
 
 Protocol: mỗi gold_answer trong bank T7 kết thúc bằng 'Phần tử key: t1, t2, ...'.
-v1 (ab_probe.judge_elements) là LLM judge -> nhiễu (14/54 câu elems=0.0, flip
-giữa runs, pilot B1: L1-08 0.67 -> 0.0). v2 đếm tỷ lệ key terms có mặt trong
-answer bằng fuzzy matching bất biến (không LLM, không sampling):
+v1 (ab_probe.judge_elements) là LLM judge -> nhiễu. v2 đếm tỷ lệ key terms có mặt
+trong answer bằng fuzzy matching bất biến (không LLM, không sampling):
   normalize: NFD bỏ dấu, lowercase, dấu '/' '-' '_' -> space
   match: substring HOẶC sliding-window ratio (difflib) >= 0.8 cùng độ dài token
+  glossary (--glossary): term được coi là hit nếu term hoặc biến thể EN tương đương
+  (từ swebok_vi_en_glossary.json) xuất hiện trong answer.
 
 Chạy: cwd=/workspace
   /opt/venv/bin/python src/skilltree/eval/t7_element_v2.py \
@@ -67,7 +68,13 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", type=Path, default=REPO_ROOT / "runs/t7/T7-bank/results.jsonl")
     ap.add_argument("--out", type=Path, default=REPO_ROOT / "runs/t7/T7-bank/element_v2.json")
+    ap.add_argument("--glossary", type=Path, default=REPO_ROOT / "corpora/swebok-v4/swebok_vi_en_glossary.json",
+                    help="VI→EN variants: 1 term hit nếu term hoặc biến thể EN có trong answer")
     args = ap.parse_args()
+
+    glossary: dict[str, list[str]] = {}
+    if args.glossary.exists():
+        glossary = json.loads(args.glossary.read_text(encoding="utf-8"))
 
     bank = {
         q["id"]: q
@@ -88,7 +95,11 @@ def main() -> None:
         ans_tokens = ans_norm.split()
         matched, missing = [], []
         for t in terms:
-            if term_in_answer(t, ans_norm, ans_tokens):
+            variants = [t]
+            gv = glossary.get(t) or glossary.get(norm(t))
+            if gv:
+                variants += gv
+            if any(term_in_answer(v, ans_norm, ans_tokens) for v in variants):
                 matched.append(t)
             else:
                 missing.append(t)
@@ -111,9 +122,8 @@ def main() -> None:
     v1_mean = _mean([r["elems_v1"] for r in out_rows if r["elems_v1"] is not None])
     v2_mean = _mean([r["elems_v2"] for r in out_rows if r["elems_v2"] is not None])
 
-    # mối tương quan v2 với corr (đo instrument hợp lý hơn chưa)
     pairs = [(r["corr"], r["elems_v2"]) for r in out_rows if r["corr"] is not None and r["elems_v2"] is not None]
-    if len(pairs_v := pairs) and len(pairs) > 2:  # noqa: F841
+    if len(pairs) > 2:
         n = len(pairs)
         mx = sum(p[0] for p in pairs) / n
         my = sum(p[1] for p in pairs) / n
@@ -126,6 +136,7 @@ def main() -> None:
 
     result = {
         "n": len(out_rows),
+        "glossary": bool(glossary),
         "elems_v1_mean": v1_mean,
         "elems_v2_mean": v2_mean,
         "corr_mean": corr_mean,

@@ -1,0 +1,27 @@
+{
+  "label": "B3 pilot — query expansion VI→EN (6 câu yếu nhất, metric v2+glossary)",
+  "date": "2026-10-19T00:52Z",
+  "method": "question -> LLM dịch EN (SWEBOK terms) -> query = VI + '\\n\\nEN: ' + translation; hybrid GRAPH_COMPLETION + CHUNKS top_k=8; answer raw-join cap 2500; chấm t7_element_v2 --glossary (giống hệt baseline rescore)",
+  "cost": "+1 LLM call/câu cho dịch (~1-2s, cache được per-question); retrieval không đổi",
+  "targets": ["QA-L1-12", "QA-L3-05", "QA-L1-02", "QA-L1-03", "QA-L2-06", "QA-L3-09"],
+  "baseline_mean": 0.286,
+  "b3_mean": 0.531,
+  "mean_delta": 0.245,
+  "per_question": {
+    "QA-L1-12": {"base": 0.0, "b3": 0.333, "delta": 0.333, "note": "true-zero recovered; ISO/IEC 25010 vào được answer"},
+    "QA-L3-05": {"base": 0.0, "b3": 0.0, "delta": 0.0, "note": "vẫn 0 — content testability có trong chunks (probe) nhưng không lọt top retrieval dù query mở rộng; cần điều tra riêng"},
+    "QA-L1-02": {"base": 0.429, "b3": 0.571, "delta": 0.142},
+    "QA-L1-03": {"base": 0.429, "b3": 0.714, "delta": 0.285},
+    "QA-L2-06": {"base": 0.429, "b3": 0.857, "delta": 0.428},
+    "QA-L3-09": {"base": 0.429, "b3": 0.714, "delta": 0.285}
+  },
+  "improved": "5/6",
+  "corr_mean_b3": 0.533,
+  "verdict": "ADOPT — gain lớn nhất trong các intervention đã pilot (so: B2 +0.108 stratum, B1 +0.033); hiệu quả rõ nhất ở L1 recall (dịch chính xác term định nghĩa)",
+  "caveats": [
+    "6 câu là nhóm yếu nhất (selection bias) — dự phóng toàn bank phải thận trọng hơn mean +0.245",
+    "cần run 2 đo variance như B2 trước khi đưa làm mặc định toàn bank",
+    "L3-05 cho thấy expansion không giải được mọi case — tồn dư 1 câu cần điều tra retrieval ranking"
+  ],
+  "next": "run 2 variance B3 trên 6 câu; nếu ổn định thì thêm --expand-vi-en vào t7_eval.py; điều tra riêng L3-05"
+}
