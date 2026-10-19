@@ -1,0 +1,104 @@
+{
+ "dataset": "swebok_v4_b1",
+ "generated_from": "dump graph_swebok_v4_b1.json.gz (subcommand structure của c1_traverse_eval.py; analyze_graph.py crash 'Table Entity does not exist')",
+ "nodes": 3412,
+ "edges": 13174,
+ "edge_ratio": 3.861,
+ "isolated": 0,
+ "isolated_pct": 0.0,
+ "semantic_edges": 8645,
+ "semantic_pct": 65.6,
+ "predicates": [
+  {"type": "contains", "count": 4391, "pct": 33.3},
+  {"type": "SUBTYPE_OF", "count": 3175, "pct": 24.1},
+  {"type": "PART_OF", "count": 1692, "pct": 12.8},
+  {"type": "USES", "count": 1328, "pct": 10.1},
+  {"type": "CONSTRAINS", "count": 571, "pct": 4.3},
+  {"type": "PRODUCES", "count": 525, "pct": 4.0},
+  {"type": "VERIFIES", "count": 362, "pct": 2.7},
+  {"type": "REQUIRES", "count": 226, "pct": 1.7},
+  {"type": "MITIGATES", "count": 219, "pct": 1.7},
+  {"type": "VALIDATES", "count": 168, "pct": 1.3},
+  {"type": "CAUSES", "count": 141, "pct": 1.1},
+  {"type": "made_from", "count": 138, "pct": 1.0},
+  {"type": "is_part_of", "count": 138, "pct": 1.0},
+  {"type": "TRANSFORMS_TO", "count": 99, "pct": 0.8},
+  {"type": "use_provides", "count": 1, "pct": 0.0}
+ ],
+ "predicate_samples": {
+  "SUBTYPE_OF": [
+   {"from": "software engineering", "to": "discipline"},
+   {"from": "software engineering", "to": "knowledge area"},
+   {"from": "software architecture knowledge area", "to": "knowledgearea"}
+  ],
+  "PART_OF": [
+   {"from": "software architecture knowledge area", "to": "software engineering"},
+   {"from": "software architecture knowledge area", "to": "swebok guide v4.0"},
+   {"from": "architecture review", "to": "software architecture knowledge area"}
+  ],
+  "USES": [
+   {"from": "software architecture knowledge area", "to": "software architecture review: the state of the practice (ali babar and gorton)"},
+   {"from": "software architecture knowledge area", "to": "software architecture in practice, 4th edition (bass, clements and kazman)"},
+   {"from": "software architecture knowledge area", "to": "reasoning frameworks (bass, ivers, klein and merson)"}
+  ],
+  "VERIFIES": [
+   {"from": "architecture review", "to": "software architecture"},
+   {"from": "architecture review", "to": "architecture description"},
+   {"from": "architecture review", "to": "software design quality"}
+  ],
+  "VALIDATES": [
+   {"from": "architecture review", "to": "software architecture"},
+   {"from": "architecture review", "to": "architecture drivers"},
+   {"from": "software architecture", "to": "stakeholder concern"}
+  ],
+  "REQUIRES": [
+   {"from": "architecture review", "to": "software architecture description"},
+   {"from": "software architecture description", "to": "architecture viewpoint"},
+   {"from": "architecture view", "to": "stakeholder concern"}
+  ],
+  "PRODUCES": [
+   {"from": "architecture review", "to": "risk"},
+   {"from": "architecture review", "to": "review outcomes"},
+   {"from": "software architecture", "to": "shared understanding of the system"}
+  ],
+  "TRANSFORMS_TO": [
+   {"from": "software architecture", "to": "architecture description (ad)"},
+   {"from": "software construction", "to": "software construction"},
+   {"from": "text and informal diagrams", "to": "rigorous architecture representation"}
+  ],
+  "CONSTRAINS": [
+   {"from": "software architecture", "to": "software requirements"},
+   {"from": "software architecture", "to": "team communication"},
+   {"from": "software architecture", "to": "software design"}
+  ],
+  "CAUSES": [
+   {"from": "architecture view", "to": "multiple views problem"},
+   {"from": "software construction", "to": "software construction"},
+   {"from": "stakeholder concern", "to": "architecture view"}
+  ],
+  "MITIGATES": [
+   {"from": "architecture description (ad)", "to": "loss of architectural knowledge"},
+   {"from": "software construction", "to": "software construction"},
+   {"from": "software requirements", "to": "test selection problem"}
+  ]
+ },
+ "top_degree": [
+  ["concept", 459],
+  ["artifact", 428],
+  ["technique", 332],
+  ["activity", 286],
+  ["software testing", 235],
+  ["software design", 156],
+  ["subset_Software-Architecture_Software-Design_Software-Construction_Software-Test", 138],
+  ["software construction", 131],
+  ["software architecture", 128],
+  ["test case", 120]
+ ],
+ "entity_types": [
+  ["Entity", 2890],
+  ["EntityType", 245],
+  ["TextSummary", 138],
+  ["DocumentChunk", 138],
+  ["TextDocument", 1]
+ ]
+}

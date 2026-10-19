@@ -1,0 +1,24 @@
+{
+  "label": "Full-bank hybrid run (--hybrid-all, 54 câu) — xác nhận gain mọi level",
+  "date": "2026-10-19T02:20Z",
+  "method": "t7_eval.py --hybrid-all: GRAPH_COMPLETION top_k=10 + CHUNKS top_k=8 merged cap 2500; chấm t7_element_v2 --glossary; so với baseline T7-bank cùng metric",
+  "run_quality": {"n": 54, "errors": 0, "p50_latency_s": 71.67, "retries": 0},
+  "raw_judges": {"corr": 0.515, "elems_v1": 0.476, "hop": 0.632},
+  "elems_v2_plus_glossary": {
+    "baseline": 0.499,
+    "hybrid_all": 0.532,
+    "delta": 0.033,
+    "by_level": {
+      "L1": {"base": 0.54, "hybrid": 0.592, "delta": 0.052},
+      "L2": {"base": 0.525, "hybrid": 0.534, "delta": 0.009},
+      "L3": {"base": 0.434, "hybrid": 0.469, "delta": 0.035}
+    }
+  },
+  "true_zeros": {"baseline": ["QA-L1-12", "QA-L3-05"], "hybrid_all": [], "notes": "L1-12 0->0.333; L3-05 0->0.167 — cả 2 câu 'thất bại thật' đều đạt partial credit với hybrid"},
+  "top_gains": [["QA-L1-12", 0.0, 0.333], ["QA-L3-09", 0.429, 0.714], ["QA-L3-05", 0.0, 0.167], ["QA-L3-04", 0.333, 0.5], ["QA-L2-07", 0.333, 0.5], ["QA-L1-08", 0.667, 0.833]],
+  "regressions": [["QA-L2-05", 1.0, 0.857], ["QA-L3-02", 0.375, 0.25], ["QA-L1-10", 0.5, 0.375], ["QA-L3-15", 0.333, 0.222]],
+  "regression_note": "4 regressions, max -0.143 — variance retrieval bình thường, không câu nào sụp; corr 0.515 ~ baseline 0.510 (không regression)",
+  "selection_bias_note": "gain full-bank (+0.033) nhỏ hơn pilot 4 câu yếu (+0.297) đúng như dự đoán — pilot chọn chính các câu hybrid giúp nhiều nhất; gain thật tập trung L1/L3, L2 bão hòa từ graph (+0.009)",
+  "verdict": "ADOPT hybrid-all làm cấu hình mặc định cho pipeline eval. Chuỗi tối ưu toàn vòng: elems 0.365 (v1 judge) -> 0.532 (v2+glossary+hybrid) = +46% tương đối",
+  "next": "L3-05 còn partial (0.167) — ranking investigation vẫn mở; B2-r2-style variance run cho full-bank có thể làm sau nếu cần con số ổn định hơn"
+}

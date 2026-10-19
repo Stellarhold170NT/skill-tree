@@ -1,0 +1,40 @@
+{
+  "label": "T7-bank",
+  "mode": "GRAPH_COMPLETION",
+  "dataset": "swebok_v4_full_c5",
+  "date": "2026-10-18T19:40Z",
+  "total": 54,
+  "n_scored": 54,
+  "n_errors": 0,
+  "overall": {"n": 54, "corr": 0.51, "elems": 0.365, "hop": 0.576, "p50_lat": 74.13},
+  "by_level": {
+    "L1": {"n": 18, "corr": 0.503, "elems": 0.454, "hop": 0.503, "p50_lat": 76.58},
+    "L2": {"n": 18, "corr": 0.517, "elems": 0.412, "hop": 0.671, "p50_lat": 71.71},
+    "L3": {"n": 18, "corr": 0.511, "elems": 0.231, "hop": 0.528, "p50_lat": 76.9}
+  },
+  "by_ka": {
+    "Computing Foundations": {"n": 3, "corr": 0.667, "elems": 0.047, "hop": 0.1},
+    "Engineering Foundations": {"n": 3, "corr": 0.467, "elems": 0.437, "hop": 0.75},
+    "Mathematical Foundations": {"n": 3, "corr": 0.5, "elems": 0.458, "hop": 0.25},
+    "Software Architecture": {"n": 3, "corr": 0.533, "elems": 0.573, "hop": 0.67},
+    "Software Configuration Management": {"n": 3, "corr": 0.333, "elems": 0.46, "hop": 0.635},
+    "Software Construction": {"n": 3, "corr": 0.55, "elems": 0.787, "hop": 0.617},
+    "Software Design": {"n": 3, "corr": 0.517, "elems": 0.143, "hop": 0.335},
+    "Software Engineering Economics": {"n": 3, "corr": 0.5, "elems": 0.383, "hop": 0.533},
+    "Software Engineering Management": {"n": 3, "corr": 0.433, "elems": 0.373, "hop": 0.55},
+    "Software Engineering Models and Methods": {"n": 3, "corr": 0.567, "elems": 0.0, "hop": 0.875},
+    "Software Engineering Process": {"n": 3, "corr": 0.4, "elems": 0.208, "hop": null},
+    "Software Engineering Professional Practice": {"n": 3, "corr": 0.6, "elems": 0.25, "hop": null},
+    "Software Maintenance": {"n": 3, "corr": 0.667, "elems": 0.553, "hop": 0.523},
+    "Software Operations": {"n": 3, "corr": 0.467, "elems": 0.26, "hop": 0.433},
+    "Software Quality": {"n": 3, "corr": 0.5, "elems": 0.357, "hop": 0.65},
+    "Software Requirements": {"n": 3, "corr": 0.6, "elems": 0.83, "hop": 0.933},
+    "Software Security": {"n": 3, "corr": 0.467, "elems": 0.458, "hop": 0.675},
+    "Software Testing": {"n": 3, "corr": 0.417, "elems": 0.0, "hop": 0.5}
+  },
+  "notes": [
+    "Per-row scores (id/level/ka/type/corr/elems/hop/latency) in t7-results-compact.jsonl",
+    "Full raw results with 1200-char answers in container runs/t7/T7-bank/results.jsonl (88KB, container-local)",
+    "Regenerable: /opt/venv/bin/python src/skilltree/eval/t7_eval.py --label T7-bank (resume skips all 54)"
+  ]
+}
