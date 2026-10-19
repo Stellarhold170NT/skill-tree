@@ -6,7 +6,10 @@ Rows append NGAY sau mỗi câu (resume an toàn: skip id đã có trong results
 
 Chạy: cwd=/workspace
   /opt/venv/bin/python src/skilltree/eval/t7_eval.py --label T7-bank \
-      [--mode GRAPH_COMPLETION] [--top-k 10] [--dataset swebok_v4_full_c5]
+      [--mode GRAPH_COMPLETION] [--top-k 10] [--dataset swebok_v4_full_c5] \
+      [--hybrid-l3 | --hybrid-all]
+  --hybrid-l3 : L3 merge CHUNKS top_k=8 (pilot B2, elems_v2 +0.108)
+  --hybrid-all: mọi level merge CHUNKS top_k=8 (ablation: +0.297 nhóm yếu L1/L2)
 """
 
 from __future__ import annotations
@@ -39,7 +42,7 @@ from skilltree.eval.quick_eval import (  # noqa: E402
 QUESTIONS = REPO_ROOT / "corpora" / "swebok-v4" / "questions_bank_T7.jsonl"
 
 
-async def run_eval(label: str, mode: str, top_k: int, dataset: str, hybrid_l3: bool = False) -> dict:
+async def run_eval(label: str, mode: str, top_k: int, dataset: str, hybrid_l3: bool = False, hybrid_all: bool = False) -> dict:
     load_env_file()
     keys = read_keys()
     install_key_round_robin(keys)
@@ -87,7 +90,7 @@ async def run_eval(label: str, mode: str, top_k: int, dataset: str, hybrid_l3: b
                 for item in res or []:
                     texts.extend(extract_search_texts(item))
                 retrieval_kind = mode
-                if hybrid_l3 and q.get("level") == "L3":
+                if hybrid_all or (hybrid_l3 and q.get("level") == "L3"):
                     cres = await asyncio.wait_for(
                         cognee.search(
                             query_text=q["question"],
@@ -175,6 +178,7 @@ async def run_eval(label: str, mode: str, top_k: int, dataset: str, hybrid_l3: b
     summary = {
         "label": label,
         "mode": mode,
+        "hybrid_all": hybrid_all,
         "dataset": dataset,
         "total": len(questions),
         "n_scored": len(ok),
@@ -202,8 +206,10 @@ def main() -> None:
     ap.add_argument("--dataset", default="swebok_v4_full_c5")
     ap.add_argument("--hybrid-l3", action="store_true",
                     help="L3: merge CHUNKS top_k=8 vào context (pilot B2, elems_v2 +0.108)")
+    ap.add_argument("--hybrid-all", action="store_true",
+                    help="merge CHUNKS top_k=8 cho MOI level (ablation +0.297 nhóm yếu L1/L2)")
     args = ap.parse_args()
-    asyncio.run(run_eval(args.label, args.mode, args.top_k, args.dataset, args.hybrid_l3))
+    asyncio.run(run_eval(args.label, args.mode, args.top_k, args.dataset, args.hybrid_l3, args.hybrid_all))
 
 
 if __name__ == "__main__":
