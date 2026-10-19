@@ -39,7 +39,7 @@ from skilltree.eval.quick_eval import (  # noqa: E402
 QUESTIONS = REPO_ROOT / "corpora" / "swebok-v4" / "questions_bank_T7.jsonl"
 
 
-async def run_eval(label: str, mode: str, top_k: int, dataset: str) -> dict:
+async def run_eval(label: str, mode: str, top_k: int, dataset: str, hybrid_l3: bool = False) -> dict:
     load_env_file()
     keys = read_keys()
     install_key_round_robin(keys)
@@ -86,6 +86,23 @@ async def run_eval(label: str, mode: str, top_k: int, dataset: str) -> dict:
                 texts: list[str] = []
                 for item in res or []:
                     texts.extend(extract_search_texts(item))
+                retrieval_kind = mode
+                if hybrid_l3 and q.get("level") == "L3":
+                    cres = await asyncio.wait_for(
+                        cognee.search(
+                            query_text=q["question"],
+                            query_type=cognee.SearchType.CHUNKS,
+                            datasets=[dataset],
+                            top_k=8,
+                        ),
+                        timeout=900,
+                    )
+                    ct: list[str] = []
+                    for item in cres or []:
+                        ct.extend(extract_search_texts(item))
+                    if ct:
+                        texts = texts + ["=== CHUNKS ==="] + ct
+                        retrieval_kind = f"{mode}+CHUNKS"
                 latency = round(time.perf_counter() - t0, 2)
                 answer = "\n".join(texts)[:2500]
             except Exception as exc:  # noqa: BLE001
@@ -106,6 +123,7 @@ async def run_eval(label: str, mode: str, top_k: int, dataset: str) -> dict:
                 "id": q["id"], "level": q.get("level", ""), "ka": q.get("ka", ""),
                 "type": q.get("type", ""), "topology": q.get("topology", ""),
                 "mode": mode, "dataset": dataset, "top_k": top_k,
+                "retrieval": retrieval_kind,
                 "latency_s": latency, "correctness": corr["score"],
                 "answer": answer[:1200],
             }
@@ -182,8 +200,10 @@ def main() -> None:
     ap.add_argument("--mode", default="GRAPH_COMPLETION")
     ap.add_argument("--top-k", type=int, default=10)
     ap.add_argument("--dataset", default="swebok_v4_full_c5")
+    ap.add_argument("--hybrid-l3", action="store_true",
+                    help="L3: merge CHUNKS top_k=8 vào context (pilot B2, elems_v2 +0.108)")
     args = ap.parse_args()
-    asyncio.run(run_eval(args.label, args.mode, args.top_k, args.dataset))
+    asyncio.run(run_eval(args.label, args.mode, args.top_k, args.dataset, args.hybrid_l3))
 
 
 if __name__ == "__main__":

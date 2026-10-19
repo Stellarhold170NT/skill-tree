@@ -36,7 +36,7 @@ Mỗi dòng JSONL gồm: `id` (QA-L{level}-NN), `level`, `ka`, `kas_secondary` (
 ## 3. Phương pháp eval
 
 - **Pipeline**: `src/skilltree/eval/t7_eval.py` — clone stage_b.py với 4 khác biệt: (1) đọc bank T7; (2) dataset mặc định `swebok_v4_full_c5`; (3) **resume support** — row append ngay sau mỗi câu, chạy lại skip id đã có; (4) summary có breakdown theo `level` và `ka`.
-- **Cấu hình**: `--mode GRAPH_COMPLETION --top-k 10 --dataset swebok_v4_full_c5` (winner config C5).
+- **Cấu hình**: `--mode GRAPH_COMPLETION --top-k 10 --dataset swebok_v4_full_c5` (winner config C5); mode `--hybrid-l3` mới (B2, mục 6b).
 - **Judge**: `judge_correctness`, `judge_elements`, `judge_hops` từ `ab_probe.py` — giữ nguyên so với R0→F1 để so sánh được.
 - **Chạy**: daemon nền trong container sess-93159cee, log `/tmp/t7.log`; 54 câu × ~50–290s, hoàn tất ~1h50m, **0 lỗi, 0 retry**.
 
@@ -71,14 +71,14 @@ Mỗi dòng JSONL gồm: `id` (QA-L{level}-NN), `level`, `ka`, `kas_secondary` (
 ### 4.4 Điểm đặc biệt
 
 - **Hoàn hảo (1.0)**: QA-L1-07 (4 nhóm bảo trì), QA-L3-14 (trade-off + stakeholder → đàm phán yêu cầu), QA-L3-16 (distributed/parallel → thiết kế → construction).
-- **Thất bại thật (v2 xác nhận)**: QA-L3-05 (elems_v2 = 0.0 — thiếu 'testability', 'operational testing', 'mối quan hệ với yêu cầu'), QA-L1-12 (elems_v2 = 0.0 — thiếu 'quality definition', 'specified requirements', 'implied needs').
+- **Thất bại thật (v2 xác nhận)**: QA-L3-05 (elems_v2 = 0.0), QA-L1-12 (elems_v2 = 0.0) — chi tiết probe ở Bước 4.
 - **Case judge**: QA-L1-08 (baseline SCM) corr = 0.0 dù elems 0.67 (v1) / 0.5 (v2) — answer đúng vai trò trung tâm của baseline trong SCM nhưng corr judge chấm 0.
 
 ## 5. Phân tích câu kém — nguyên nhân gốc
 
 ### RC1 — Judge correctness nhiễu ở hai cực (ảnh hưởng ~15–19% câu)
 
-Bằng chứng mâu thuẫn hai chiều giữa các judge trên CÙNG một answer: L1-08 corr=0.0 vs elems 0.67/0.5; ngược lại L3-14 corr=1.0 vs elems_v1=0.0. Corr ở mức câu có noise lớn — chỉ dùng ở mức aggregate.
+Bằng chứng mâu thuẫn hai chiều giữa các judge trên CÙNG một answer: L1-08 corr=0.0 vs elems 0.67/0.5; ngược lại L3-14 corr=1.0 vs elems_v1=0.0. Variance run (Bước 4) còn cho thấy corr swing 1.0→0.4 trên cùng câu L3-16 giữa 2 runs. Corr ở mức câu có noise lớn — chỉ dùng ở mức aggregate.
 
 ### RC2 — Element judge v1 (LLM) false-negative với style trả lời của graph (~20% câu elems_v1=0)
 
@@ -90,29 +90,30 @@ Bằng chứng mâu thuẫn hai chiều giữa các judge trên CÙNG một answ
 
 ### RC4 — Multi-hop xuyên chương: elems_v2 L3 = 0.411 (thấp nhất 3 level)
 
-Câu L3 có `kas_secondary` nhưng retrieval 1 query text thường chỉ phủ KA chính. **Pilot B2 (mục 6b) đã chứng minh hybrid retrieval récup +0.108** — đây là khoảng trống retrieval thật sự.
+Câu L3 có `kas_secondary` nhưng retrieval 1 query text thường chỉ phủ KA chính. **Pilot B2 (mục 6b) đã chứng minh hybrid retrieval cộng +0.108** — đây là khoảng trống retrieval thật sự, và variance run xác nhận ổn định.
 
-### RC5 — Khoảng trống graph/book (ít, ~1–2 câu)
+### RC5 — Khoảng trống graph/book → được probe BÁC, thay bằng language mismatch
 
-QA-L1-12 (Software Quality definition) elems_v2 = 0.0 — cần kiểm tra riêng Ch12 indexing. Ch16 (Computing Foundations) elems v1 thấp nhưng corr 0.667 — chủ yếu RC2, không cần hành động.
+Probe (Bước 4) cho thấy nội dung của cả 2 câu true-zero đều CÓ trong chunks top_k=10; các term còn miss là cụm VI không khớp text EN của sách ('chi phí chất lượng' ↔ cost of quality, 'vòng phản hồi' ↔ feedback loop...). Không cần enrich indexing — cần **query expansion VI→EN (B3)**.
 
-### Phân bổ nguyên nhân cho 10 câu bottom (sau khi có instrument v2)
+### Phân bổ nguyên nhân cho 10 câu bottom (sau khi có instrument v2 + probe)
 
 | Nguyên nhân | Số câu | Câu tiêu biểu |
 |---|---|---|
 | RC1 (judge corr nhiễu) | ~4 | L1-08, L1-10, L3-02 (một phần) |
 | RC2 (elems_v1 artifact) | ~6 | L1-03, L3-11, L3-08, L1-05, L2-05, L1-06 |
 | RC4 (multi-hop thiếu KA phụ) | ~5 | L3-05, L3-06, L3-08, L3-11, L3-18 |
-| RC5 (graph mỏng) | ~2 | L1-12, L3-05 (một phần) |
+| RC6 (VI↔EN term mismatch) | ~2 | L1-12, L3-05 (một phần) |
 
 ## 6. Đề xuất tối ưu (đã cập nhật sau pilot — chi tiết thực nghiệm ở mục 6b)
 
 1. ~~Sửa element judge~~ → **ĐÃ LÀM (A1)**: metric v2 deterministic, elems 0.365→0.468, adopt làm metric chuẩn.
 2. ~~Ensemble judge correctness~~ → **HẠ ƯU TIÊN**: pilot cho thấy corr noise lớn nhưng elems_v2 mới là metric phân biệt độ khó tốt; corr chỉ dùng aggregate.
 3. ~~Prompt directive chống locate-only~~ → **PARKED (B1 pilot âm)**: +0.03 chỉ, không đáng thêm 1 LLM call/câu.
-4. **Hybrid retrieval cho L3 (B2)** → **ADOPT**: elems_v2 L3 +0.108 (0.411→0.518), corr trung tính. Cần áp vào pipeline chính thức t7_eval (thêm mode hybrid) và đo variance.
-5. **Kiểm tra Ch12 indexing** cho QA-L1-12 và Ch5/Ch13 cho QA-L3-05: 2 true-zero còn lại.
-6. **Không rebuild graph** — gap chính nằm ở retrieval strategy + judge, không phải cấu trúc graph.
+4. ~~Hybrid retrieval cho L3 (B2)~~ → **ĐÃ LÀM**: adopt sau variance run (+0.093 mean 2 runs), mode `--hybrid-l3` đã vào t7_eval.py.
+5. ~~Kiểm tra Ch12 indexing~~ → **ĐÃ PROBE**: nội dung có trong corpus; gap thật là VI↔EN term mismatch.
+6. **B3 — query expansion VI→EN** (hướng kế tiếp, có bằng chứng từ probe): thêm glossary SWEBOK VI↔EN vào query trước retrieval.
+7. **Không rebuild graph** — gap chính nằm ở retrieval strategy + judge + language, không phải cấu trúc graph.
 
 ## 6b. Vòng tối ưu nâng dần — kết quả pilot (18/10 đêm)
 
@@ -125,7 +126,7 @@ Thiết kế: 10 câu kém nhất, cùng retrieval GRAPH_COMPLETION, answer thay
 - Kết quả bằng metric v1 (LLM elems): d_corr +0.035, d_elems −0.015 — noise-level
 - Bằng metric v2: d_elems_v2 +0.033 — marginal
 - Kết luận: RC3 (locate-only style) KHÔNG phải nguyên nhân chính. Parked.
-- Ghi chú kỹ thuật: GRAPH_COMPLETION của cognee không nhận prompt tùy chỉnh — intervención thực tế là thêm lớp LLM synthesis sau retrieval, tốn ~2.5s/câu.
+- Ghi chú kỹ thuật: GRAPH_COMPLETION của cognee không nhận prompt tùy chỉnh — can thiệp thực tế là thêm lớp LLM synthesis sau retrieval, tốn ~2.5s/câu.
 
 ### Bước 2 — A1: instrument element metric v2 (deterministic): ADOPT
 
@@ -145,45 +146,64 @@ Thiết kế isolate biến retrieval: answer = raw-join (graph texts + chunk te
 - Chi phí: +1 retrieval call/câu (~1–2s)
 - Dự phóng toàn bank nếu áp 18 câu L3: elems_v2 0.468 → ~0.504
 
+### Bước 4 — Variance B2 (run 2) + probe true-zero: B2 XÁC NHẬN ỔN ĐỊNH
+
+Chạy lại toàn bộ 18 câu L3 hybrid (run 2, label T7-pilot-b2-r2):
+
+- elems_v2: run1 0.518, run2 0.490 — **cả hai trên baseline graph-only 0.411**; per-question |delta| mean chỉ 0.029 (max 0.25); mean 2 runs = 0.504 (+0.093 so baseline)
+- corr: run1 0.494, run2 0.461; swing lớn nhất L3-16 1.0→0.4 cùng câu — đúng hiện tượng RC1; corr |delta| per-question mean 0.061
+- Kết luận: elems_v2 là metric ổn định (deterministic, |Δ| 0.029/câu); corr không ổn định ở mức câu. B2 ADOPT được xác nhận với variance thấp.
+
+Probe 2 true-zero còn lại (CHUNKS top_k=10, key-term matching — `t7_probe_zeros.py`):
+
+- **QA-L1-12**: 4/6 terms HIT ('quality definition', 'specified requirements', 'implied needs', 'ISO/IEC 25010') → nội dung CÓ trong corpus, zero là lỗi tầng answer-selection, không phải indexing gap. 2 terms MISS ('chi phí chất lượng', 'phát hiện sớm') là cụm VI không khớp text EN.
+- **QA-L3-05**: 3/6 terms HIT ('testability', 'operational testing', 'evaluation of tests') — đúng 3 term EN mà hybrid đã đưa vào answer (elems 0→0.333). 3 MISS là cụm VI ('vòng phản hồi', 'cải tiến', 'mối quan hệ với yêu cầu').
+- **Bằng chứng cho B3 (query expansion VI→EN)**: các miss còn lại đều là mismatch ngôn ngữ, không phải thiếu dữ liệu.
+
 ### Bảng tổng hợp vòng nâng dần
 
 | Bước | Intervention | elems_v2 Δ | corr Δ | Quyết định |
 |---|---|---|---|---|
 | B1 | Directive LLM synthesis (10 câu kém nhất) | +0.033 | +0.035 | PARKED |
 | A1 | Element metric v2 (instrument fix) | +0.103 (đo lại) | — | ADOPT (metric) |
-| B2 | Hybrid GRAPH+CHUNKS (18 câu L3) | +0.108 (stratum) | ~0 | ADOPT (chỉ L3) |
+| B2 | Hybrid GRAPH+CHUNKS (18 câu L3, run 1) | +0.108 (stratum) | ~0 | ADOPT (chỉ L3) |
+| B2-r2 | Variance run 2 | −0.028 (so run 1) | −0.033 | XÁC NHẬN ổn định |
+| Probe | CHUNKS key-term check 2 true-zero | — | — | RC5 → B3 (VI↔EN) |
 
-**Kết luận vòng nâng dần**: công cụ đo đã sạch (A1), hệ thống có 1 cải thiện thật có bằng chứng (B2: L3 elems 0.411→0.518). Bước tiếp theo tự nhiên: (1) chạy lại 18 câu L3 với B2 thêm 1 lần để đo variance; (2) nếu ổn định, thêm mode `hybrid` vào `t7_eval.py` làm mặc định cho L3; (3) đưa elems_v2 làm primary metric, corr làm secondary.
+**Kết luận vòng nâng dần**: đã thực hiện đủ 4 bước. Instrument sạch (A1), 1 cải thiện hệ thống có bằng chứng + variance (B2, mode `--hybrid-l3` đã vào t7_eval.py), nguyên nhân còn lại được định vị đúng (VI↔EN mismatch → B3). elems_v2 làm primary metric, corr làm secondary — được variance data ủng hộ.
 
 ## 7. Tái hiện
 
 ```bash
 # eval (daemon, resume-safe)
 cd /workspace && /opt/venv/bin/python src/skilltree/eval/t7_eval.py --label T7-bank
-# phân tích + element v2
+# hybrid cho L3 (B2 đã adopt)
+cd /workspace && /opt/venv/bin/python src/skilltree/eval/t7_eval.py --label T7-bank-hybrid --hybrid-l3
+# phân tích + element v2 (metric chuẩn)
 /opt/venv/bin/python src/skilltree/eval/t7_analyze.py --label T7-bank
 /opt/venv/bin/python src/skilltree/eval/t7_element_v2.py
-# pilot B1 (đã chạy — parked)
+# pilot B1 (parked) / B2 (+ run 2 variance) / probe zeros / variance
 /opt/venv/bin/python src/skilltree/eval/t7_pilot_b1.py
-# pilot B2 (đã chạy — adopt cho L3)
 /opt/venv/bin/python src/skilltree/eval/t7_pilot_b2.py --n 18
+/opt/venv/bin/python src/skilltree/eval/t7_probe_zeros.py
+/opt/venv/bin/python src/skilltree/eval/t7_variance_b2.py
 ```
 
-**Evidence**: `reports/evidence/t7-summary.json`, `t7-analysis.json`, `t7-results-compact.jsonl`; pilot: container `runs/t7/T7-pilot-b1/` (results, comparison.json, element_v2.json), `runs/t7/T7-pilot-b2/` (results 18 rows, element_v2.json); instrument: `runs/t7/T7-bank/element_v2.json`.
+**Evidence**: `reports/evidence/t7-summary.json`, `t7-analysis.json`, `t7-results-compact.jsonl`, `t7-element-v2-summary.json`, `t7-pilot-b2-element_v2.json`, `t7-variance.json`; container `runs/t7/T7-bank/`, `T7-pilot-b1/`, `T7-pilot-b2/`, `T7-pilot-b2-r2/` (results + element_v2.json mỗi label).
 
 ## 8. Concerns
 
-1. **Judge noise (RC1)**: corr chỉ đáng tin ở mức aggregate; elems_v2 là metric dùng được ở mức câu.
-2. **Bank 54 câu chạy 1 lần** — chưa đo variance; đề nghị giữ limitation khi so stress-set.
-3. **B2 pilot dùng retrieval non-deterministic** — mean +0.108 trên 18 câu đủ lớn để vượt noise (đã thấy per-question swing ±0.15 giữa runs), nhưng bước tiếp theo nên chạy lại 1 lần nữa để xác nhận.
+1. **Judge noise (RC1)**: corr chỉ đáng tin ở mức aggregate (swing 0.6/câu giữa runs — L3-16); elems_v2 là metric dùng được ở mức câu (|Δ| 0.029).
+2. **Bank 54 câu chạy 1 lần** — chưa đo variance toàn bank; đề nghị giữ limitation khi so stress-set.
+3. **B2 đã đo variance (run 2)**: elems_v2 per-question |Δ| 0.029, mean 2 runs +0.093 so baseline — ổn định, đủ tin để đưa vào pipeline (`--hybrid-l3`).
 4. **Raw results (88KB) chỉ nằm trong container** — đã push compact + summary + analysis + element_v2 lên VFS/GitHub; raw tái tạo được bằng rerun (resume skip hết, 0 call).
 
 ## 9. Checklist
 
 - [x] Bank 54 câu (18 KA × 3 level) soạn, validate JSON, gold có trailer "Phần tử key"
-- [x] `t7_eval.py` viết, compile ok, chạy daemon, resume hoạt động
+- [x] `t7_eval.py` viết, compile ok, chạy daemon, resume hoạt động; **+ mode `--hybrid-l3` (B2)**
 - [x] Eval 54/54 hoàn tất, 0 lỗi — summary có breakdown level/KA
-- [x] Phân tích bottom quintile + nguyên nhân (5 root causes, 2 true-zero v2)
-- [x] Đề xuất tối ưu có căn cứ + **pilot thực nghiệm 3 bước** (B1 parked, A1 adopt, B2 adopt)
+- [x] Phân tích bottom quintile + nguyên nhân (RC1/RC2/RC4/RC6; RC3 bị bác, RC5 được định vị lại)
+- [x] Vòng tối ưu nâng dần 4 bước: B1 parked, A1 adopt, B2 adopt + variance, probe zeros → B3
 - [x] Commit + push GitHub (branch agent-swebok-usecase2)
 - [x] Contract Task #1 → DONE_WITH_CONCERNS
