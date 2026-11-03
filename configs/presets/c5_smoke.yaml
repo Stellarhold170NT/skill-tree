@@ -1,0 +1,53 @@
+# C5-SMOKE v2 — re-smoke sau khi viết lại swebok.py theo contract cognee 1.6.4
+# (SWEBOKGraph kế thừa KnowledgeGraph — fix lỗi DocumentChunk.contains của lần 1,
+# xem reports/evidence/c5-smoke-FAILED.json).
+# reset:false BẮT BUỘC (sandbox chứa dataset swebok_v4_b1 — reset:true prune toàn cục).
+# Dataset MỚI swebok_v4_c5_smoke2 (tránh cache dataset smoke cũ).
+run_id: run-00-c5smoke2
+reset: false
+dataset: swebok_v4_c5_smoke2
+
+
+graph_model: skilltree.ontology.swebok.SWEBOKGraph
+
+
+chunk_size: 512
+chunks_per_batch: 25
+raise_on_error: false
+extractor: llm
+
+
+# CUSTOM_PROMPT_V2 (bản y nguyên từ src/skilltree/ontology/swebok.py)
+custom_prompt: >-
+  Bạn trích xuất đồ thị tri thức từ đoạn tài liệu SWEBOK v4 theo schema JSON đã cho (nodes + edges).
+
+  QUY TẮC CỨNG:
+  1. NODE: mỗi node gồm id, name, type, description.
+  - id là bản slug của name: chữ thường, bỏ dấu tiếng Việt, thay khoảng trắng/dấu câu bằng gạch nối (vd name "Software Architecture" → id "software-architecture").
+  - name: tên hiển thị của khái niệm, UNIQUE trong toàn bộ kết quả.
+  - type CHỈ chọn trong: KnowledgeArea, Activity, Task, Technique, Method, Principle, QualityAttribute, Artifact, Tool, Metric, Fault, FailureMode, HumanError, Concept.
+  - description: 1 câu tiếng Việt nêu vai trò của khái niệm trong quy trình kỹ thuật phần mềm.
+  2. EDGE: mỗi cạnh gồm source_node_id, target_node_id, relationship_name, description.
+  - source_node_id và target_node_id PHẢI là id của node đã liệt kê trong nodes (không bịa id ngoài danh sách).
+  - relationship_name CHỈ chọn trong: PART_OF, SUBTYPE_OF, REQUIRES, DEPENDS_ON, CONSTRAINS, VERIFIES, VALIDATES, MITIGATES, CAUSES, INJECTS, PRODUCES, CONSUMES, MEASURED_BY, USESTOOL, OTHER.
+  - VERIFIES chỉ dùng khi A là kỹ thuật/phương pháp kiểm tra B (artifact/property), KHÔNG BAO GIỜ dùng khi B là hoạt động (Activity).
+  - description: BẮT ĐẦU bằng "confidence=X.X | " (X.X từ 0.0 đến 1.0 — độ chắc chắn theo ngữ cảnh văn bản), sau đó là 1 câu mô tả quan hệ.
+  3. THUẬT NGỮ CHUẨN (IEEE 610.12): fault/defect/bug là CÙNG khái niệm → node "Fault" DUY NHẤT; failure (hiệu ứng quan sát được) → node "FailureMode" RIÊNG; error (nhầm lẫn của con người) → node "HumanError" RIÊNG. Chuỗi nhân quả: HumanError -[INJECTS]-> Fault -[CAUSES]-> FailureMode.
+  4. TIÊU ĐỀ MỤC gộp nhiều khái niệm (vd "assertions, design by contract and defensive programming") PHẢI tách thành các leaf concept riêng (Assertions, Design by Contract, Defensive Programming), KHÔNG tạo node mang nguyên tiêu đề.
+  5. Nếu quan hệ không thuộc 13 loại trên, dùng OTHER — KHÔNG bịa loại mới.
+
+
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+subsets:
+  - Software Architecture
+
+
+search_type: GRAPH_COMPLETION
+search_query: "Kiến trúc phần mềm là gì và tại sao cần nhiều view kiến trúc?"

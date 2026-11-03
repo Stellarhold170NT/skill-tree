@@ -1,0 +1,14 @@
+# DinD sandbox: host networking (bridge networks are dead in this sandbox).
+# DSH_LAUNCH=direct: bwrap khong chay duoc trong DinD (see deploy/README-dind.md).
+services:
+  skill-tree-harness:
+    container_name: skill-tree-harness-v1
+    network_mode: host
+    ports: !reset []
+    environment:
+      - NODE_ENV=production
+      - DSH_LAUNCH=direct
+      - EXTRA_TRUSTED_HOSTS=localhost:8104 127.0.0.1:8104
+      - SKILLTREE_GATEWAY_URL=http://127.0.0.1:8000
+    healthcheck:
+      disable: true

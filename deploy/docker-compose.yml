@@ -1,0 +1,323 @@
+# Per-service databases: one Postgres instance per service (no shared DB).
+# App containers share `platform-net` so they can call each other's REST APIs
+# (URI-reference principle: services integrate via APIs/events, NEVER via each
+# other's databases — DBs stay on their own private networks).
+services:
+  opencase-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: opencase
+      POSTGRES_USER: opencase
+      POSTGRES_PASSWORD: ${OPENCASE_DB_PASSWORD:-opencase_dev}
+    volumes:
+      - opencase-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opencase -d opencase"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [opencase-net]
+    restart: unless-stopped
+
+  opencase-service:
+    build: ../services/opencase-service
+    image: skill-tree/opencase-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://opencase:${OPENCASE_DB_PASSWORD:-opencase_dev}@opencase-db:5432/opencase
+      CASE_BASE_URI: ${CASE_BASE_URI:-http://localhost:8101/api/v1/case}
+    ports:
+      - "${OPENCASE_PORT:-8101}:8101"
+    depends_on:
+      opencase-db:
+        condition: service_healthy
+    networks: [opencase-net, platform-net]
+    restart: unless-stopped
+
+  quiz-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: quiz
+      POSTGRES_USER: quiz
+      POSTGRES_PASSWORD: ${QUIZ_DB_PASSWORD:-quiz_dev}
+    volumes:
+      - quiz-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quiz -d quiz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [quiz-net]
+    restart: unless-stopped
+
+  quiz-service:
+    build: ../services/quiz-service
+    image: skill-tree/quiz-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://quiz:${QUIZ_DB_PASSWORD:-quiz_dev}@quiz-db:5432/quiz
+    ports:
+      - "${QUIZ_PORT:-8102}:8102"
+    depends_on:
+      quiz-db:
+        condition: service_healthy
+    networks: [quiz-net, platform-net]
+    restart: unless-stopped
+
+  class-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: class
+      POSTGRES_USER: class
+      POSTGRES_PASSWORD: ${CLASS_DB_PASSWORD:-class_dev}
+    volumes:
+      - class-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U class -d class"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [class-net]
+    restart: unless-stopped
+
+  class-service:
+    build: ../services/class-service
+    image: skill-tree/class-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://class:${CLASS_DB_PASSWORD:-class_dev}@class-db:5432/class
+    ports:
+      - "${CLASS_PORT:-8103}:8103"
+    depends_on:
+      class-db:
+        condition: service_healthy
+    networks: [class-net, platform-net]
+    restart: unless-stopped
+
+  analytics-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: analytics
+      POSTGRES_PASSWORD: ${ANALYTICS_DB_PASSWORD:-analytics_dev}
+    volumes:
+      - analytics-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics -d analytics"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [analytics-net]
+    restart: unless-stopped
+
+  analytics-service:
+    build: ../services/analytics-service
+    image: skill-tree/analytics-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://analytics:${ANALYTICS_DB_PASSWORD:-analytics_dev}@analytics-db:5432/analytics
+    ports:
+      - "${ANALYTICS_PORT:-8104}:8104"
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+    networks: [analytics-net, platform-net]
+    restart: unless-stopped
+
+  learner-model-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: learner
+      POSTGRES_USER: learner
+      POSTGRES_PASSWORD: ${LEARNER_DB_PASSWORD:-learner_dev}
+    volumes:
+      - learner-model-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learner -d learner"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [learner-net]
+    restart: unless-stopped
+
+  learner-model-service:
+    build: ../services/learner-model-service
+    image: skill-tree/learner-model-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://learner:${LEARNER_DB_PASSWORD:-learner_dev}@learner-model-db:5432/learner
+      OPENCASE_BASE_URL: http://opencase-service:8101
+      CLASS_BASE_URL: http://class-service:8103
+    ports:
+      - "${LEARNER_PORT:-8105}:8105"
+    depends_on:
+      learner-model-db:
+        condition: service_healthy
+    networks: [learner-net, platform-net]
+    restart: unless-stopped
+
+  assignment-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: assignment
+      POSTGRES_USER: assignment
+      POSTGRES_PASSWORD: ${ASSIGNMENT_DB_PASSWORD:-assignment_dev}
+    volumes:
+      - assignment-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assignment -d assignment"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [assignment-net]
+    restart: unless-stopped
+
+  assignment-service:
+    build: ../services/assignment-service
+    image: skill-tree/assignment-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://assignment:${ASSIGNMENT_DB_PASSWORD:-assignment_dev}@assignment-db:5432/assignment
+      LEARNER_BASE_URL: http://learner-model-service:8105
+      QUIZ_BASE_URL: http://quiz-service:8102
+    ports:
+      - "${ASSIGNMENT_PORT:-8106}:8106"
+    depends_on:
+      assignment-db:
+        condition: service_healthy
+    networks: [assignment-net, platform-net]
+    restart: unless-stopped
+
+  document-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: document
+      POSTGRES_USER: document
+      POSTGRES_PASSWORD: ${DOCUMENT_DB_PASSWORD:-document_dev}
+    volumes:
+      - document-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U document -d document"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [document-net]
+    restart: unless-stopped
+
+  document-service:
+    build: ../services/document-service
+    image: skill-tree/document-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://document:${DOCUMENT_DB_PASSWORD:-document_dev}@document-db:5432/document
+      DOCUMENT_UPLOAD_DIR: /srv/app/data/uploads
+    volumes:
+      - document-uploads:/srv/app/data/uploads
+    ports:
+      - "${DOCUMENT_PORT:-8107}:8107"
+    depends_on:
+      document-db:
+        condition: service_healthy
+    networks: [document-net, platform-net]
+    restart: unless-stopped
+
+  # Stateless engine service (no DB): LaTeX → ar5iv-style HTML, arXiv's pipeline.
+  latexml-service:
+    build: ../services/latexml-service
+    image: skill-tree/latexml-service:0.1.0
+    environment:
+      RENDER_TIMEOUT_S: ${RENDER_TIMEOUT_S:-900}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-100}
+    volumes:
+      - latexml-renders:/srv/app/data
+    ports:
+      - "${LATEXML_PORT:-8110}:8103"
+    networks: [latexml-net]
+    restart: unless-stopped
+
+  # Student-notebook RAG: upload → parse (latexml) → structure chunk → FTS5 index → ask.
+  # Own SQLite file on the rag-data volume (no rag-db container — design §2/§4).
+  rag-service:
+    build: ../services/rag-service
+    image: skill-tree/rag-service:0.1.0
+    environment:
+      LATEXML_BASE_URL: http://latexml-service:8103
+      DOCUMENT_BASE_URL: http://document-service:8107
+      RAG_DB_PATH: /srv/app/data/rag.db
+      RAG_UPLOAD_DIR: /srv/app/data/uploads
+    volumes:
+      - rag-data:/srv/app/data
+    ports:
+      - "${RAG_PORT:-8109}:8109"
+    networks: [platform-net, latexml-net]   # latexml is ONLY on latexml-net
+    restart: unless-stopped
+
+  # Stateless single entry point (no DB): routes /{prefix}/* → services.
+  api-gateway:
+    build: ../services/api-gateway
+    image: skill-tree/api-gateway:0.1.0
+    environment:
+      CASE_BASE_URL: http://opencase-service:8101
+      QUIZ_BASE_URL: http://quiz-service:8102
+      CLASS_BASE_URL: http://class-service:8103
+      ANALYTICS_BASE_URL: http://analytics-service:8104
+      LEARNER_BASE_URL: http://learner-model-service:8105
+      ASSIGNMENT_BASE_URL: http://assignment-service:8106
+      DOCUMENT_BASE_URL: http://document-service:8107
+      RAG_BASE_URL: http://rag-service:8109
+      AUTH_BASE_URL: http://auth-service:8108
+      GATEWAY_RATE_LIMIT: ${GATEWAY_RATE_LIMIT:-120}
+    ports:
+      - "${GATEWAY_PORT:-8000}:8000"
+    networks: [platform-net]
+    restart: unless-stopped
+
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-auth_dev}
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [auth-net]
+    restart: unless-stopped
+
+  auth-service:
+    build: ../services/auth-service
+    image: skill-tree/auth-service:0.1.0
+    environment:
+      DATABASE_URL: postgresql+psycopg://auth:${AUTH_DB_PASSWORD:-auth_dev}@auth-db:5432/auth
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret-change-me}
+      AUTH_TOKEN_TTL: ${AUTH_TOKEN_TTL:-3600}
+      ADMIN_REGISTRATION_TOKEN: ${ADMIN_REGISTRATION_TOKEN:-}
+    ports:
+      - "${AUTH_PORT:-8108}:8108"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks: [auth-net, platform-net]
+    restart: unless-stopped
+
+volumes:
+  opencase-data:
+  quiz-data:
+  class-data:
+  analytics-data:
+  learner-model-data:
+  assignment-data:
+  document-data:
+  document-uploads:
+  latexml-renders:
+  rag-data:
+  auth-data:
+
+networks:
+  platform-net:
+  opencase-net:
+  quiz-net:
+  class-net:
+  analytics-net:
+  learner-net:
+  assignment-net:
+  document-net:
+  latexml-net:
+  auth-net:

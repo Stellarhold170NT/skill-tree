@@ -1,0 +1,22 @@
+{
+  "name": "skilltree-teacher-ui",
+  "version": "0.1.0",
+  "description": "SkillTree teacher dashboard (M5 learner-model + M7 assignment + M4 analytics + M6 class + M1 opencase via M10 api-gateway): class heatmap (students x concepts, RAG), contrastive teaching plan, one-click targeted assignment, per-student drill-down, Class Ask.",
+  "type": "module",
+  "main": "lib/index.js",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": ["dsh-plugin", "skilltree", "teacher", "heatmap", "teaching-plan", "class-ask"],
+  "license": "MIT"
+}

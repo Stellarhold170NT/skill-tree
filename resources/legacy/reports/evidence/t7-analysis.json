@@ -1,0 +1,33 @@
+{
+  "label": "T7-bank",
+  "date": "2026-10-18T19:44Z",
+  "total": 54, "scored": 54, "errors": 0,
+  "overall": {"corr": 0.51, "elems": 0.365, "hop": 0.576, "p50_lat": 74.13},
+  "bottom_quintile": [
+    {"id": "QA-L1-08", "level": "L1", "ka": "Software Configuration Management", "type": "recall", "corr": 0.0, "elems": 0.67, "hop": null, "answer_head": "## 1. Vi tri: baseline nam o trung tam cua Ch 08 — SCM. Baseline xuat hien xuyen suot lifecycle tu duy cua Ch 08, xuyen qua cac muc trong yeu cua cau truc KA..."},
+    {"id": "QA-L3-05", "level": "L3", "ka": "Software Testing", "type": "multi_hop", "corr": 0.25, "elems": 0.0, "hop": 0.33, "answer_head": "## 1. Nguyen tac nen: 1.3 Relationship of Testing to Other Activities — 'related to but different from'. Testing KA (Ch 05) mo dau chu de 1.3 bang mot tuyen bo phan dinh rang gioi... (trich verbatim tu sach)"},
+    {"id": "QA-L1-09", "level": "L1", "ka": "Software Engineering Management", "type": "recall", "corr": 0.3, "elems": 0.3, "hop": 0.6, "answer_head": "## 1. Vi tri: Ch 09, Figure 9-1. Ch 09 to chuc quan ly du an phan mem thanh bay chu de theo activity-based breakdown, voi luu y: 'activity-based breakdown shows what happens but does not imply when, how or how many times'..."},
+    {"id": "QA-L1-10", "level": "L1", "ka": "Software Engineering Process", "type": "recall", "corr": 0.3, "elems": 0.625, "hop": null, "answer_head": "## 1. Vi tri: Ch 10. Cau truc ToC cua KA tach hai khai niem thanh hai tang — Section 1 Fundamentals (1.2 Process Definition) va Section 2 Life Cycles (2.1 Life cycle definition)..."},
+    {"id": "QA-L3-11", "level": "L3", "ka": "Software Engineering Models and Methods", "type": "multi_hop", "corr": 0.3, "elems": 0.0, "hop": null, "answer_head": "## 1. Vi tri: Ch 11, Section 4 — Software Engineering Methods. ToC liet ke bon ho phuong phap: 4.1 Heuristic, 4.2 Formal, 4.3 Prototyping, 4.4 Agile..."},
+    {"id": "QA-L2-14", "level": "L2", "ka": "Software Engineering Professional Practice", "type": "analysis", "corr": 0.3, "elems": 0.25, "hop": null, "answer_head": "## 1. Vi tri: Ch 14, Section 2 — Group Dynamics and Psychology. Tuyen bo nen: 'Engineering work is often conducted in teams. A software engineer should interact cooperatively and constructively...'"},
+    {"id": "QA-L3-02", "level": "L3", "ka": "Software Architecture", "type": "multi_hop", "corr": 0.4, "elems": 0.5, "hop": null, "answer_head": "## 0. Vi tri hai chu de trong Ch 02 va cau noi tuong minh. 2.4 Architecture as Significant Decisions khép vong sang Section 4 bang cau lap lai hai lan: 'Decision analysis provides one approach to architecture evaluation.'"},
+    {"id": "QA-L1-03", "level": "L1", "ka": "Software Design", "type": "recall", "corr": 0.4, "elems": 0.0, "hop": 0.0, "answer_head": "## 1. Dinh nghia — Software Design KA (Ch 03). Doi tuong dinh nghia: software components, interfaces, internal structure; thiet ke vua la qua trinh (problem-solving, wicked problem) vua la san pham..."},
+    {"id": "QA-L3-06", "level": "L3", "ka": "Software Operations", "type": "multi_hop", "corr": 0.4, "elems": 0.35, "hop": 0.6, "answer_head": "## 1. Vi tri: hai quy trinh lien ke trong Operations Delivery (Section 3, Ch 06). Theo Figure 6.2: 3.1 Operational Testing → 3.2 Deployment/Release → 3.3 Rollback and Data Migration → 3.4 Change Management → 3.5 Problem Management."},
+    {"id": "QA-L3-08", "level": "L3", "ka": "Software Configuration Management", "type": "multi_hop", "corr": 0.4, "elems": 0.0, "hop": 0.6, "answer_head": "## 1. Software Building — Ch 08, muc 6.1. Bon tru cot: Reproducibility duoi SCM control ('build instructions must be under SCM control'), ..."}
+  ],
+  "ka_weakspots": [
+    {"ka": "Software Configuration Management", "corr": 0.333, "note": "L1-08 baseline recall = 0.0 trotz elems=0.67 — judge mismatch; L3-08 elems=0.0"},
+    {"ka": "Software Testing", "corr": 0.417, "note": "elems=0.0 ca 3 câu — element judge không khớp cách trả lời cấu trúc-mục-lục của graph"},
+    {"ka": "Software Engineering Process", "corr": 0.4, "note": "L1-10 corr=0.3 trong khi elems=0.625 — judge severity bất nhất"},
+    {"ka": "Software Operations", "corr": 0.467, "note": "elems trung bình thấp (0.26)"},
+    {"ka": "Software Engineering Management", "corr": 0.433, "note": "L1-09 corr=0.3, L2-09 elems=0.25"}
+  ],
+  "judge_inconsistency_cases": [
+    {"id": "QA-L1-08", "corr": 0.0, "elems": 0.67, "note": "corr thấp nhất bank nhưng elems cao — hai judge đánh giá mâu thuẫn"},
+    {"id": "QA-L1-10", "corr": 0.3, "elems": 0.625, "note": "elems cao, corr thấp"},
+    {"id": "QA-L1-03", "corr": 0.4, "elems": 0.0, "hop": 0.0, "note": "answer có định nghĩa đúng 'components, interfaces, internal structure' nhưng element judge = 0"},
+    {"id": "QA-L3-14", "corr": 1.0, "elems": 0.0, "note": "corr hoàn hảo nhưng elems=0 — chiều ngược lại cũng xảy ra"},
+    {"id": "QA-L3-16", "corr": 1.0, "elems": 0.0, "hop": 0.0, "note": "tương tự"}
+  ],
+  "answer_style_pattern": "9/10 câu bottom mở đầu bằng '## 1. Vị trí: Ch XX ...' — GRAPH_COMPLETION trả lời theo style định vị-cấu-trúc (locate-in-book) hơn là trực tiếp liệt kê nội dung mà gold yêu cầu"
+}

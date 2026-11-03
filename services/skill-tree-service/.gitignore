@@ -1,0 +1,11 @@
+# runtime state — tự sinh khi chạy, KHÔNG commit
+runtime/
+
+# secrets & env thật
+.env
+
+# artifacts
+node_modules/
+__pycache__/
+*.pyc
+*.log

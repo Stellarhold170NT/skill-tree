@@ -1,0 +1,11 @@
+/* Vendor'd stylesheets making the rendered output look like arxiv.org/html.
+   Downloaded from https://arxiv.org/static/browse/0.3.4/css/ — LaTeXML output
+   uses the same ltx_* class names, so these apply unchanged. */
+@import "ar5iv.0.9.1.min.css" layer(ar5iv);
+@import "arxiv-html-papers-theme.css" layer(arxiv-theme);
+@layer ar5iv, arxiv-theme;
+
+@layer arxiv-theme {
+  /* arXiv serves its HTML without LaTeXML's generated page footer; match that. */
+  .ltx_page_footer { display: none; }
+}

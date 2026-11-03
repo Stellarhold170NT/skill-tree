@@ -1,0 +1,22 @@
+{
+  "name": "skilltree-class-ui",
+  "version": "1.0.0",
+  "description": "SkillTree teacher class management UI: personal classes, anonymous student identities and enrollments over class-service (M6, OneRoster v1.2 subset) via the api-gateway (M10)",
+  "type": "module",
+  "main": "lib/index.js",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": ["dsh-plugin", "skilltree", "classroom", "oneroster"],
+  "license": "MIT"
+}

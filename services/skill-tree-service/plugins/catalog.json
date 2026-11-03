@@ -1,0 +1,104 @@
+[
+  {
+    "s": "calc-tool",
+    "o": "SkillTree",
+    "n": "vAi Financial Calculator Tool",
+    "vr": "1.0.0",
+    "c": "tools",
+    "t": [
+      "calculator",
+      "finance",
+      "math",
+      "gitea"
+    ],
+    "f": [
+      "Tính toán tài chính",
+      "Phân tích số liệu",
+      "Hosted trên Gitea ${DEV_HOST}"
+    ],
+    "d": "Plugin tính toán tài chính & toán học nội bộ, được lưu trữ và quản lý trực tiếp trên Gitea Server.",
+    "r": "http://${DEV_HOST}:3000/${GITEA_REPO_CALC}.git",
+    "wi": true,
+    "v": "verified",
+    "u": "2026-09-17",
+    "a": "2026-09-17",
+    "sg": 150,
+    "fk": 20
+  },
+  {
+    "s": "vai-platform-core",
+    "o": "SkillTree",
+    "n": "SkillTree Core Plugin",
+    "vr": "1.0.0",
+    "c": "platform",
+    "t": [
+      "core",
+      "ai",
+      "skilltree"
+    ],
+    "f": [
+      "Agent Management",
+      "Custom Branding",
+      "Internal Hub Integration"
+    ],
+    "d": "Plugin hệ thống lõi tích hợp SkillTree, quản lý Agent và kho Plugin nội bộ.",
+    "r": "${INTERNAL_CORE_PLUGIN}",
+    "wi": true,
+    "v": "verified",
+    "u": "2026-09-17",
+    "a": "2026-09-17",
+    "sg": 120,
+    "fk": 15
+  },
+  {
+    "s": "custom-branding",
+    "o": "SkillTree",
+    "n": "SkillTree Branding Theme",
+    "vr": "1.0.0",
+    "c": "theme",
+    "t": [
+      "branding",
+      "theme",
+      "logo"
+    ],
+    "f": [
+      "Vector SVG Logo",
+      "Custom Color #FD505A",
+      "Zero-Lag Pure CSS"
+    ],
+    "d": "Bộ nhận diện thương hiệu SkillTree với Logo vector SVG và giao diện màu đỏ #FD505A.",
+    "r": "SkillTree/custom-branding",
+    "wi": true,
+    "v": "verified",
+    "u": "2026-09-17",
+    "a": "2026-09-17",
+    "sg": 85,
+    "fk": 8
+  },
+  {
+    "s": "${GITEA_REPO_MEMORY}",
+    "o": "SkillTree",
+    "n": "vAi Agent Memory (Cognee GraphRAG)",
+    "vr": "1.0.0",
+    "c": "tools",
+    "t": [
+      "memory",
+      "cognee",
+      "graphrag",
+      "knowledge-base"
+    ],
+    "f": [
+      "Luu tri thuc vinh vien",
+      "Q&A GraphRAG",
+      "Health + ingestion status"
+    ],
+    "d": "Plugin bo nho agent: memory_ask / memory_context / memory_remember / memory_status / memory_forget / memory_health tren Cognee MCP ${DEV_HOST}:8011.",
+    "r": "http://${DEV_HOST}:3000/${GITEA_REPO_MEMORY}.git",
+    "wi": true,
+    "v": "verified",
+    "u": "2026-10-12",
+    "a": "2026-10-12",
+    "sg": 95,
+    "fk": 10
+  }
+]

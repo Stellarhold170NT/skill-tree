@@ -1,0 +1,89 @@
+# SkillTree Harness (M4) — plugin loader entries
+# Docs: https://deepseek-harness.github.io/deepseek-harness/en/develop/basic/
+#
+# QUY TẮC THÊM PLUGIN (2 bước):
+#   1. Thả source plugin vào plugins/<tên>/ (phải commit cả lib/ — plugin cài qua
+#      git không được build lúc install).
+#   2. Thêm 1 row vào `- insert:` bên dưới, path là ĐƯỜNG DẪN TUYỆT ĐỐI theo
+#      góc nhìn in-sandbox: name: '/app/plugins/<tên>/lib/index.js'
+#   → docker compose restart. Row nào tạm không dùng: disabled: true (KHÔNG xóa id).
+#
+# Row nào đỉnh level-root (ngoài - insert:) là patch đè lên entry sẵn có theo id.
+- insert:
+    # === Core chạy hình (bắt buộc) ===
+    - id: vai-hmr
+      name: '@deepseek-ai/cordis-plugin-hmr'
+      config:
+        root: ['/app/plugins']
+    # === Mẫu plugin (pattern tham chiếu khi viết plugin SkillTree) ===
+    # Bare name: entrypoint symlink plugin vao profile node_modules de
+    # client-half duoc compose (tab Settings hien).
+    - id: secret
+      name: 'secret'
+
+    # === UI GV: Quan ly lop hoc ca nhan (M6 qua gateway; sourcedId an danh) ===
+    - id: skilltree-class-ui
+      name: 'skilltree-class-ui'
+
+    # === UI GV: Dashboard giáo viên (M5 heatmap/teaching-plan + M7 giao bài + M4 drill-down + Class Ask) ===
+    - id: skilltree-teacher-ui
+      name: 'skilltree-teacher-ui'
+
+    # === Brand: SkillTree (theme tokens xanh la #27A95F + logo + favicon) ===
+    - id: skilltree-brand
+      name: '/app/plugins/skilltree-brand/lib/index.js'
+
+    # === Auth UI: đăng nhập/đăng ký (M11 auth-service qua gateway M10, JWT localStorage) ===
+    - id: skilltree-auth-ui
+      name: '/app/plugins/skilltree-auth-ui/lib/index.js'
+
+    # === UI học sinh: lớp + lộ trình + upload tài liệu (rag) + kiểm tra nhanh ===
+    # Slot shell.overlay order 57; JWT từ skilltree-auth-ui (localStorage).
+    - id: skilltree-student-ui
+      name: 'skilltree-student-ui'
+
+    # === Dashboard graph CASE kieu roadmap (M1 graph + M9 materials + M5 mastery) ===
+    # Slot shell.overlay order 51; routes same-origin nhu cac UI khac.
+    - id: skilltree-graph-dashboard
+      name: 'skilltree-graph-dashboard'
+
+    # === Roadmap viewer (recolor theo token DESIGN.md, bo accent legacy) ===
+    - id: roadmap-viewer
+      name: 'roadmap-viewer'
+
+    # === MCP: Cognee — Graph RAG cho đồ án (truy xuất/kho tri thức đồ thị) ===
+    # Chỉnh URL theo môi trường: server dev hiện có cognee-mcp-v2 tại :8021
+    - id: mcp-cognee-memory
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        transport: streamable-http
+        serverName: cognee-memory
+        url: http://${DEV_HOST}:8021/mcp
+
+    # === SkillTree: classroom memory — Cognee per-student (3 tools) ===
+    # memory_ingest / memory_ask / memory_evolve — dataset student-<candidateId>
+    - id: skilltree-memory
+      name: '/app/plugins/skilltree-memory/lib/index.js'
+
+    # === Tools chuẩn (kèm theo @deepseek-ai/dsh) ===
+    - id: tool-ask-user
+      name: '@deepseek-ai/dsh-tool-ask-user'
+    - id: tool-cordis
+      name: '@deepseek-ai/dsh-tool-cordis'
+    - id: terminal
+      name: '@deepseek-ai/dsh-terminal'
+    - id: terminal-bash
+      name: '@deepseek-ai/dsh-terminal-bash'
+
+# Patch đè lên entry sẵn có của dsh: tắt brand mặc định
+- id: ui-brand-official
+  disabled: true
+
+# Skills cho agent (đồ án: skill DAG / node-contract / risk-tiers)
+# Thả skill vào plugins/skilltree/skills/<tên>/SKILL.md — agent tự thấy, không cần restart.
+- id: skill-filesystem
+  disabled: false
+  config:
+    customSkillDirs: ['/app/plugins/skilltree/skills']
+- id: tool-skill
+  disabled: false

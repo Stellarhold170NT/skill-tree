@@ -1,0 +1,22 @@
+{
+  "label": "F1-full-c5",
+  "mode": "GRAPH_COMPLETION",
+  "top_k": 10,
+  "structured_rag": false,
+  "generated_at": "2026-10-18T17:05:15.372188+00:00",
+  "n_scored": 24,
+  "n_errors": 0,
+  "correctness_mean": 0.544,
+  "element_completeness_mean": 0.331,
+  "hop_precision_mean": 0.69,
+  "latency_p50": 51.81,
+  "by_topology": {
+    "lineage": {"n": 2, "corr": 0.5},
+    "linear": {"n": 13, "corr": 0.542},
+    "negative": {"n": 1, "corr": 0.5},
+    "paradox": {"n": 1, "corr": 0.65},
+    "reverse": {"n": 3, "corr": 0.433},
+    "tree": {"n": 4, "corr": 0.637}
+  },
+  "note": "Transfer check trên graph FULL-BOOK swebok_v4_full_c5 (11275 nodes / 48382 edges) — stage_b.py --label F1-full-c5 --dataset swebok_v4_full_c5; results.jsonl đầy đủ nằm trong container sess-93159cee (TTL 19/10)"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "roadmap-viewer",
+  "version": "0.1.0",
+  "description": "SkillTree roadmap viewer (V1): renders the M1 concept graph as a learning path with a done/next/locked progression — recolored to DESIGN.md tokens (legacy accent removed); same-origin route to fetch the graph, no direct service access from the page.",
+  "type": "module",
+  "main": "lib/index.js",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "skilltree",
+    "roadmap",
+    "recolor"
+  ],
+  "license": "MIT"
+}

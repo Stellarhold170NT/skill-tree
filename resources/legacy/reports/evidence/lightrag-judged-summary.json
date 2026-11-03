@@ -1,0 +1,171 @@
+{
+ "n": 26,
+ "correctness_mean": 0.49,
+ "element_completeness_mean": 0.273,
+ "hop_precision_mean": 0.612,
+ "latency_p50": 44.5,
+ "negative": {
+  "SWEBOK-S21": {
+   "score": 1.0,
+   "fabricated": false
+  }
+ },
+ "per_question": {
+  "SWEBOK-S01/hybrid": {
+   "corr": 0.5,
+   "elems": 0.2,
+   "hop": 0.0,
+   "lat": 61.5
+  },
+  "SWEBOK-S02/hybrid": {
+   "corr": 0.5,
+   "elems": 0.5,
+   "hop": 1.0,
+   "lat": 74.1
+  },
+  "SWEBOK-S03/hybrid": {
+   "corr": 0.5,
+   "elems": 0.55,
+   "hop": 0.67,
+   "lat": 36.8
+  },
+  "SWEBOK-S04/hybrid": {
+   "corr": 0.5,
+   "elems": null,
+   "hop": 0.5,
+   "lat": 60.3
+  },
+  "SWEBOK-S05/hybrid": {
+   "corr": 0.5,
+   "elems": 0.6,
+   "hop": 0.8,
+   "lat": 23.3
+  },
+  "SWEBOK-S06/hybrid": {
+   "corr": 0.5,
+   "elems": 0.2,
+   "hop": null,
+   "lat": 38.6
+  },
+  "SWEBOK-S07/hybrid": {
+   "corr": 0.5,
+   "elems": 0.3,
+   "hop": 1.0,
+   "lat": 103.5
+  },
+  "SWEBOK-S08/hybrid": {
+   "corr": 0.5,
+   "elems": 0.35,
+   "hop": 0.67,
+   "lat": 26.0
+  },
+  "SWEBOK-S09/hybrid": {
+   "corr": 0.5,
+   "elems": 0.4,
+   "hop": 0.5,
+   "lat": 36.9
+  },
+  "SWEBOK-S10/hybrid": {
+   "corr": 0.5,
+   "elems": 0.4,
+   "hop": null,
+   "lat": 35.8
+  },
+  "SWEBOK-S11/hybrid": {
+   "corr": 0.5,
+   "elems": 0.4,
+   "hop": 1.0,
+   "lat": 15.7
+  },
+  "SWEBOK-S12/hybrid": {
+   "corr": 0.5,
+   "elems": 0.3,
+   "hop": 0.33,
+   "lat": 66.1
+  },
+  "SWEBOK-S13/hybrid": {
+   "corr": 0.45,
+   "elems": 0.25,
+   "hop": 0.33,
+   "lat": 40.6
+  },
+  "SWEBOK-S14/hybrid": {
+   "corr": 0.3,
+   "elems": 0.15,
+   "hop": 0.5,
+   "lat": 81.2
+  },
+  "SWEBOK-S15/hybrid": {
+   "corr": 0.5,
+   "elems": 0.15,
+   "hop": 0.33,
+   "lat": 32.6
+  },
+  "SWEBOK-S16/hybrid": {
+   "corr": 0.5,
+   "elems": 0.4,
+   "hop": 1.0,
+   "lat": 58.5
+  },
+  "SWEBOK-S17/hybrid": {
+   "corr": 0.5,
+   "elems": 0.25,
+   "hop": 0.67,
+   "lat": 30.7
+  },
+  "SWEBOK-S18/hybrid": {
+   "corr": 0.5,
+   "elems": 0.1,
+   "hop": 0.5,
+   "lat": 66.2
+  },
+  "SWEBOK-S19/hybrid": {
+   "corr": 0.5,
+   "elems": 0.35,
+   "hop": 0.67,
+   "lat": 38.3
+  },
+  "SWEBOK-S20/hybrid": {
+   "corr": 0.5,
+   "elems": 0.4,
+   "hop": 1.0,
+   "lat": 63.6
+  },
+  "SWEBOK-S21/hybrid": {
+   "corr": 0.5,
+   "elems": null,
+   "hop": null,
+   "lat": 14.9
+  },
+  "SWEBOK-S22/hybrid": {
+   "corr": 0.5,
+   "elems": 0.15,
+   "hop": 0.4,
+   "lat": 46.8
+  },
+  "SWEBOK-S23/hybrid": {
+   "corr": 0.5,
+   "elems": 0.1,
+   "hop": 0.25,
+   "lat": 84.0
+  },
+  "SWEBOK-S24/hybrid": {
+   "corr": 0.5,
+   "elems": 0.3,
+   "hop": 0.67,
+   "lat": 44.5
+  },
+  "SWEBOK-S21/naive": {
+   "corr": 0.5,
+   "elems": null,
+   "hop": null,
+   "lat": 11.5
+  },
+  "SWEBOK-S24/naive": {
+   "corr": 0.5,
+   "elems": 0.3,
+   "hop": 0.67,
+   "lat": 320.0
+  }
+ }
+}

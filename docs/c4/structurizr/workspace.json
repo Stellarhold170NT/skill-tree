@@ -1,0 +1,1364 @@
+{
+  "configuration" : { },
+  "description" : "Description",
+  "documentation" : { },
+  "id" : 0,
+  "model" : {
+    "people" : [ {
+      "description" : "Owns classes; authors CASE concept graph, QTI quizzes, assignments; reads class heatmap and teaching plan",
+      "id" : "1",
+      "name" : "Teacher (GV)",
+      "properties" : {
+        "structurizr.dsl.identifier" : "teacher"
+      },
+      "relationships" : [ {
+        "description" : "Teaches and monitors classes",
+        "destinationId" : "4",
+        "id" : "48",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "HTTPS :8104 (Harness UI)"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Learns: roadmap progress, adaptive quizzes, notebook RAG Q&A over own uploads",
+      "id" : "2",
+      "name" : "Student (HS)",
+      "properties" : {
+        "structurizr.dsl.identifier" : "student"
+      },
+      "relationships" : [ {
+        "description" : "Learns and asks questions",
+        "destinationId" : "4",
+        "id" : "49",
+        "sourceId" : "2",
+        "tags" : "Relationship",
+        "technology" : "HTTPS :8104 (Harness UI)"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "First registered user; operates accounts, roles and deployment",
+      "id" : "3",
+      "name" : "Admin / Platform owner",
+      "properties" : {
+        "structurizr.dsl.identifier" : "admin"
+      },
+      "relationships" : [ {
+        "description" : "Registers users, operates deployment",
+        "destinationId" : "4",
+        "id" : "50",
+        "sourceId" : "3",
+        "tags" : "Relationship",
+        "technology" : "HTTPS :8104 / :8000"
+      } ],
+      "tags" : "Element,Person"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "components" : [ {
+          "description" : "Session UI + control API, token-gated (stable launch token)",
+          "documentation" : { },
+          "id" : "6",
+          "name" : "DSH web UI/API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "webui"
+          },
+          "relationships" : [ {
+            "description" : "Serves UI, drives agent turns",
+            "destinationId" : "7",
+            "id" : "80",
+            "sourceId" : "6",
+            "tags" : "Relationship",
+            "technology" : "in-process"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "node :3080 (host :8104)"
+        }, {
+          "description" : "Runs agent turns isolated; firewall blocks metadata endpoints and LAN scan",
+          "documentation" : { },
+          "id" : "7",
+          "name" : "Agent runtime + sandbox",
+          "properties" : {
+            "structurizr.dsl.identifier" : "agentrt"
+          },
+          "tags" : "Element,Component",
+          "technology" : "bwrap, iptables, node user 1000"
+        }, {
+          "description" : "Insert and patch rows; plugins bound read-only; custom skill dirs",
+          "documentation" : { },
+          "id" : "8",
+          "name" : "Plugin loader",
+          "properties" : {
+            "structurizr.dsl.identifier" : "loader"
+          },
+          "relationships" : [ {
+            "description" : "Loads row skilltree",
+            "destinationId" : "10",
+            "id" : "81",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "patch.yml - insert:"
+          }, {
+            "description" : "Loads row skilltree-brand",
+            "destinationId" : "11",
+            "id" : "82",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "patch.yml - insert:"
+          }, {
+            "description" : "Loads row mcp-cognee-memory",
+            "destinationId" : "9",
+            "id" : "83",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "patch.yml - insert:"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "plugins/patch.yml"
+        }, {
+          "description" : "streamable-http to cognee MCP :8021",
+          "documentation" : { },
+          "id" : "9",
+          "name" : "MCP client (mcp-cognee-memory)",
+          "properties" : {
+            "structurizr.dsl.identifier" : "mcpclient"
+          },
+          "relationships" : [ {
+            "description" : "MCP calls",
+            "destinationId" : "47",
+            "id" : "84",
+            "sourceId" : "9",
+            "tags" : "Relationship",
+            "technology" : "streamable-http"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "@deepseek-ai/dsh-mcp-client"
+        }, {
+          "description" : "Atomic tools: opencase_next_concepts, quiz_adaptive, cognee_ask (skeleton today)",
+          "documentation" : { },
+          "id" : "10",
+          "name" : "[V1 planned] skilltree business plugin",
+          "properties" : {
+            "structurizr.dsl.identifier" : "bizTools"
+          },
+          "relationships" : [ {
+            "description" : "opencase_next_concepts",
+            "destinationId" : "14",
+            "id" : "85",
+            "sourceId" : "10",
+            "tags" : "Relationship",
+            "technology" : "REST /api/v1"
+          }, {
+            "description" : "quiz_adaptive",
+            "destinationId" : "16",
+            "id" : "86",
+            "sourceId" : "10",
+            "tags" : "Relationship",
+            "technology" : "REST /api/v1"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "plugin pattern: lib/index.js + client/"
+        }, {
+          "description" : "Green #27A95F rebrand + logo; legacy indigo #4136d6 retired by DESIGN.md",
+          "documentation" : { },
+          "id" : "11",
+          "name" : "skilltree-brand plugin",
+          "properties" : {
+            "structurizr.dsl.identifier" : "brand"
+          },
+          "tags" : "Element,Component",
+          "technology" : "theme token lib"
+        }, {
+          "description" : "open_session / submit_prompt / poll_session for e2e control",
+          "documentation" : { },
+          "id" : "12",
+          "name" : "dsh_web_sdk (out-of-band)",
+          "properties" : {
+            "structurizr.dsl.identifier" : "sdk"
+          },
+          "relationships" : [ {
+            "description" : "open_session / submit_prompt / poll",
+            "destinationId" : "6",
+            "id" : "87",
+            "sourceId" : "12",
+            "tags" : "Relationship",
+            "technology" : "HTTPS DSH_BASE_URL"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Python async SDK"
+        } ],
+        "description" : "Agent harness: web UI/API host :8104 -> container :3080; sessions, plugin loader (patch.yml), per-student workspace",
+        "documentation" : { },
+        "id" : "5",
+        "name" : "skill-tree-harness (M4)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "harness"
+        },
+        "relationships" : [ {
+          "description" : "Agent reads CASE graph, picks next concepts",
+          "destinationId" : "14",
+          "id" : "53",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "REST OPENCASE_URL /api/v1"
+        }, {
+          "description" : "Agent fetches QTI items, records attempts",
+          "destinationId" : "16",
+          "id" : "54",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "REST QUIZ_URL /api/v1"
+        }, {
+          "description" : "Student memory ingest / ask",
+          "destinationId" : "47",
+          "id" : "55",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "MCP streamable-http :8021"
+        }, {
+          "description" : "Agent LLM completions",
+          "destinationId" : "46",
+          "id" : "56",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS, env-configured"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Node.js @deepseek-ai/dsh 0.1.5-rc.3, bwrap sandbox, iptables"
+      }, {
+        "description" : "Single REST entry :8000; forwards prefix routes to upstream APIs under /api/v1; rate limit + optional bearer token",
+        "documentation" : { },
+        "id" : "13",
+        "name" : "api-gateway (M10)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "gateway"
+        },
+        "relationships" : [ {
+          "description" : "Forwards /case/*",
+          "destinationId" : "14",
+          "id" : "57",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "HTTP /api/v1"
+        }, {
+          "description" : "Forwards /quiz/*",
+          "destinationId" : "16",
+          "id" : "58",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "HTTP /api/v1"
+        }, {
+          "description" : "Forwards /class/*",
+          "destinationId" : "18",
+          "id" : "59",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "HTTP /api/v1"
+        }, {
+          "description" : "Forwards /events/*",
+          "destinationId" : "20",
+          "id" : "60",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "HTTP /api/v1"
+        }, {
+          "description" : "Forwards /learner/*",
+          "destinationId" : "22",
+          "id" : "61",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "HTTP /api/v1"
+        }, {
+          "description" : "Forwards /assignments/*",
+          "destinationId" : "24",
+          "id" : "62",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "HTTP /api/v1"
+        }, {
+          "description" : "Forwards /documents/*",
+          "destinationId" : "26",
+          "id" : "63",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "HTTP /api/v1"
+        }, {
+          "description" : "[V1 planned] JWT verification wiring",
+          "destinationId" : "29",
+          "id" : "64",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "AUTH_BASE_URL env set; no auth prefix in UPSTREAMS yet"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + httpx, stateless"
+      }, {
+        "description" : "CASE v1.1 concept graph, packages, topological order :8101",
+        "documentation" : { },
+        "id" : "14",
+        "name" : "opencase-service (M1)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "opencase"
+        },
+        "relationships" : [ {
+          "description" : "Owns",
+          "destinationId" : "15",
+          "id" : "72",
+          "sourceId" : "14",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "CFDocument, CFItem, CFAssociation",
+        "documentation" : { },
+        "id" : "15",
+        "name" : "opencase-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "opencaseDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "description" : "QTI v3.0 item bank, test assembly, attempts :8102",
+        "documentation" : { },
+        "id" : "16",
+        "name" : "quiz-service (M2)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "quiz"
+        },
+        "relationships" : [ {
+          "description" : "Owns",
+          "destinationId" : "17",
+          "id" : "73",
+          "sourceId" : "16",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "Items, tests, attempts",
+        "documentation" : { },
+        "id" : "17",
+        "name" : "quiz-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "quizDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "description" : "OneRoster subset: orgs, classes, pseudonymous users, enrollments :8103",
+        "documentation" : { },
+        "id" : "18",
+        "name" : "class-service (M6)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "classSvc"
+        },
+        "relationships" : [ {
+          "description" : "Owns",
+          "destinationId" : "19",
+          "id" : "74",
+          "sourceId" : "18",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "Orgs, classes, users, enrollments",
+        "documentation" : { },
+        "id" : "19",
+        "name" : "class-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "classDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "description" : "Caliper-aligned learning events, append-only :8104",
+        "documentation" : { },
+        "id" : "20",
+        "name" : "analytics-service (events)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "analytics"
+        },
+        "relationships" : [ {
+          "description" : "Owns",
+          "destinationId" : "21",
+          "id" : "75",
+          "sourceId" : "20",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "Events (append-only)",
+        "documentation" : { },
+        "id" : "21",
+        "name" : "analytics-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "analyticsDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "description" : "Glicko-2 mastery, Ebbinghaus rusty states, frontier, class heatmap :8105",
+        "documentation" : { },
+        "id" : "22",
+        "name" : "learner-model-service (M5)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "learner"
+        },
+        "relationships" : [ {
+          "description" : "Reads concept graph for frontier",
+          "destinationId" : "14",
+          "id" : "65",
+          "sourceId" : "22",
+          "tags" : "Relationship",
+          "technology" : "HTTP OPENCASE_BASE_URL"
+        }, {
+          "description" : "Resolves pseudonymous students",
+          "destinationId" : "18",
+          "id" : "66",
+          "sourceId" : "22",
+          "tags" : "Relationship",
+          "technology" : "HTTP CLASS_BASE_URL"
+        }, {
+          "description" : "Owns",
+          "destinationId" : "23",
+          "id" : "76",
+          "sourceId" : "22",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "Mastery per student and concept",
+        "documentation" : { },
+        "id" : "23",
+        "name" : "learner-model-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "learnerDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "description" : "Targeted practice from Red/Rusty groups :8106",
+        "documentation" : { },
+        "id" : "24",
+        "name" : "assignment-service (M7)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "assignment"
+        },
+        "relationships" : [ {
+          "description" : "Targets Red/Rusty groups",
+          "destinationId" : "22",
+          "id" : "67",
+          "sourceId" : "24",
+          "tags" : "Relationship",
+          "technology" : "HTTP LEARNER_BASE_URL"
+        }, {
+          "description" : "Pulls practice items",
+          "destinationId" : "16",
+          "id" : "68",
+          "sourceId" : "24",
+          "tags" : "Relationship",
+          "technology" : "HTTP QUIZ_BASE_URL"
+        }, {
+          "description" : "Owns",
+          "destinationId" : "25",
+          "id" : "77",
+          "sourceId" : "24",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "Assignments",
+        "documentation" : { },
+        "id" : "25",
+        "name" : "assignment-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "assignmentDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "description" : "LRMI documents, chunks, alignments, file store :8107",
+        "documentation" : { },
+        "id" : "26",
+        "name" : "document-service (M3)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "document"
+        },
+        "relationships" : [ {
+          "description" : "Owns",
+          "destinationId" : "27",
+          "id" : "78",
+          "sourceId" : "26",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "Documents, chunks, alignments",
+        "documentation" : { },
+        "id" : "27",
+        "name" : "document-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "documentDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "description" : "LaTeX to ar5iv-style HTML; container :8103, host :8110; isolated on latexml-net",
+        "documentation" : { },
+        "id" : "28",
+        "name" : "latexml-service (M3 engine)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "latexml"
+        },
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + LaTeXML (ar5ivist), stateless"
+      }, {
+        "description" : "Accounts, JWT HS256, roles teacher/student/admin :8108",
+        "documentation" : { },
+        "id" : "29",
+        "name" : "auth-service (M11)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "auth"
+        },
+        "relationships" : [ {
+          "description" : "Owns",
+          "destinationId" : "30",
+          "id" : "79",
+          "sourceId" : "29",
+          "tags" : "Relationship",
+          "technology" : "TCP 5432, private net"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "FastAPI + SQLAlchemy"
+      }, {
+        "description" : "Accounts, roles",
+        "documentation" : { },
+        "id" : "30",
+        "name" : "auth-db",
+        "properties" : {
+          "structurizr.dsl.identifier" : "authDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 16"
+      }, {
+        "components" : [ {
+          "description" : "upload (202 + jobId), jobs, documents CRUD, reingest, ask, metrics, health",
+          "documentation" : { },
+          "id" : "32",
+          "name" : "REST API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "ragApi"
+          },
+          "relationships" : [ {
+            "description" : "Enqueues ingest job",
+            "destinationId" : "33",
+            "id" : "88",
+            "sourceId" : "32",
+            "tags" : "Relationship",
+            "technology" : "202 jobId + statusUrl"
+          }, {
+            "description" : "ask -> top-k citations",
+            "destinationId" : "37",
+            "id" : "95",
+            "sourceId" : "32",
+            "tags" : "Relationship",
+            "technology" : "in-process"
+          }, {
+            "description" : "mode = answer",
+            "destinationId" : "38",
+            "id" : "97",
+            "sourceId" : "32",
+            "tags" : "Relationship",
+            "technology" : "optional"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "FastAPI /api/v1"
+        }, {
+          "description" : "store raw (sha256) -> parse -> chunk -> mirror -> index; job states; no LLM at ingest",
+          "documentation" : { },
+          "id" : "33",
+          "name" : "Ingest worker",
+          "properties" : {
+            "structurizr.dsl.identifier" : "ingest"
+          },
+          "relationships" : [ {
+            "description" : "Parse uploaded source",
+            "destinationId" : "34",
+            "id" : "89",
+            "sourceId" : "33",
+            "tags" : "Relationship",
+            "technology" : "in-process"
+          }, {
+            "description" : "Mirror canonical data",
+            "destinationId" : "36",
+            "id" : "93",
+            "sourceId" : "33",
+            "tags" : "Relationship",
+            "technology" : "best effort"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "asyncio in-process"
+        }, {
+          "description" : ".tex/.tar.gz/.zip via latexml render; .md/.txt/.html direct",
+          "documentation" : { },
+          "id" : "34",
+          "name" : "Parsers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "parsers"
+          },
+          "relationships" : [ {
+            "description" : "Render LaTeX family",
+            "destinationId" : "28",
+            "id" : "90",
+            "sourceId" : "34",
+            "tags" : "Relationship",
+            "technology" : "HTTP POST /api/v1/render"
+          }, {
+            "description" : "Parsed HTML / markdown",
+            "destinationId" : "35",
+            "id" : "91",
+            "sourceId" : "34",
+            "tags" : "Relationship",
+            "technology" : "in-process"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "latexml client + direct readers"
+        }, {
+          "description" : "ltx_section / h1-h6 headings -> sections; MAX/MIN section chars; paragraph split",
+          "documentation" : { },
+          "id" : "35",
+          "name" : "Structure chunker",
+          "properties" : {
+            "structurizr.dsl.identifier" : "chunker"
+          },
+          "relationships" : [ {
+            "description" : "Writes sections + chunks + fts",
+            "destinationId" : "39",
+            "id" : "92",
+            "sourceId" : "35",
+            "tags" : "Relationship",
+            "technology" : "SQL"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "ToC tree builder (STAIR-inspired)"
+        }, {
+          "description" : "best-effort canonical copy of Document + chunks; failure recorded, not fatal",
+          "documentation" : { },
+          "id" : "36",
+          "name" : "document-service mirror",
+          "properties" : {
+            "structurizr.dsl.identifier" : "mirror"
+          },
+          "relationships" : [ {
+            "description" : "POST documents + chunks",
+            "destinationId" : "26",
+            "id" : "94",
+            "sourceId" : "36",
+            "tags" : "Relationship",
+            "technology" : "REST /api/v1"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "REST client"
+        }, {
+          "description" : "bm25(heading 8, path 4, body 1) + section-path boost; section-path citations",
+          "documentation" : { },
+          "id" : "37",
+          "name" : "Retrieval",
+          "properties" : {
+            "structurizr.dsl.identifier" : "retrieval"
+          },
+          "relationships" : [ {
+            "description" : "MATCH + bm25 rank",
+            "destinationId" : "39",
+            "id" : "96",
+            "sourceId" : "37",
+            "tags" : "Relationship",
+            "technology" : "SQL"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "SQLite FTS5 BM25"
+        }, {
+          "description" : "NetMind chat with retry-on-empty; falls back to retrieval payload",
+          "documentation" : { },
+          "id" : "38",
+          "name" : "Answer mode",
+          "properties" : {
+            "structurizr.dsl.identifier" : "answer"
+          },
+          "relationships" : [ {
+            "description" : "Chat completion",
+            "destinationId" : "46",
+            "id" : "98",
+            "sourceId" : "38",
+            "tags" : "Relationship",
+            "technology" : "HTTPS, retry-on-empty"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "optional LLM synthesis"
+        }, {
+          "description" : "docs, sections, chunks, chunks_fts (external content), jobs",
+          "documentation" : { },
+          "id" : "39",
+          "name" : "SQLite store",
+          "properties" : {
+            "structurizr.dsl.identifier" : "ragStore"
+          },
+          "tags" : "Element,Component,V1 planned,Database",
+          "technology" : "SQLite + FTS5"
+        } ],
+        "description" : "Student notebook RAG :8109: upload, parse, structure chunk, index, ask (design on branch agent-v1-rag-design)",
+        "documentation" : { },
+        "id" : "31",
+        "name" : "rag-service",
+        "properties" : {
+          "structurizr.dsl.identifier" : "rag"
+        },
+        "relationships" : [ {
+          "description" : "[V1 planned] Renders LaTeX uploads",
+          "destinationId" : "28",
+          "id" : "69",
+          "sourceId" : "31",
+          "tags" : "Relationship",
+          "technology" : "HTTP LATEXML_BASE_URL http://latexml-service:8103"
+        }, {
+          "description" : "[V1 planned] Mirrors canonical docs + chunks, best effort",
+          "destinationId" : "26",
+          "id" : "70",
+          "sourceId" : "31",
+          "tags" : "Relationship",
+          "technology" : "HTTP DOCUMENT_BASE_URL"
+        }, {
+          "description" : "[V1 planned] Optional answer synthesis",
+          "destinationId" : "46",
+          "id" : "71",
+          "sourceId" : "31",
+          "tags" : "Relationship",
+          "technology" : "HTTPS, retry-on-empty"
+        } ],
+        "tags" : "Element,Container,V1 planned",
+        "technology" : "FastAPI + SQLite FTS5"
+      }, {
+        "components" : [ {
+          "description" : "Class dashboard: classes, roster, Red/Amber/Green heatmap, concept graph, assignments",
+          "documentation" : { },
+          "id" : "41",
+          "name" : "Views",
+          "properties" : {
+            "structurizr.dsl.identifier" : "views"
+          },
+          "relationships" : [ {
+            "description" : "Reads and writes view state",
+            "destinationId" : "42",
+            "id" : "99",
+            "sourceId" : "41",
+            "tags" : "Relationship",
+            "technology" : "in-browser"
+          }, {
+            "description" : "Requests data",
+            "destinationId" : "43",
+            "id" : "100",
+            "sourceId" : "41",
+            "tags" : "Relationship",
+            "technology" : "in-browser"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "React (React.createElement)"
+        }, {
+          "description" : "per-view data cache and selection state",
+          "documentation" : { },
+          "id" : "42",
+          "name" : "State",
+          "properties" : {
+            "structurizr.dsl.identifier" : "state"
+          },
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "component state + cache"
+        }, {
+          "description" : "typed calls from UI to host half",
+          "documentation" : { },
+          "id" : "43",
+          "name" : "API client",
+          "properties" : {
+            "structurizr.dsl.identifier" : "apiClient"
+          },
+          "relationships" : [ {
+            "description" : "Package-private RPC",
+            "destinationId" : "44",
+            "id" : "101",
+            "sourceId" : "43",
+            "tags" : "Relationship",
+            "technology" : "host.call"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "client-half RPC wrapper"
+        }, {
+          "description" : "package-private RPC, e.g. skilltree.getClassHeatmap",
+          "documentation" : { },
+          "id" : "44",
+          "name" : "Host RPC half",
+          "properties" : {
+            "structurizr.dsl.identifier" : "hostRpc"
+          },
+          "relationships" : [ {
+            "description" : "RPC handler fetches",
+            "destinationId" : "45",
+            "id" : "102",
+            "sourceId" : "44",
+            "tags" : "Relationship",
+            "technology" : "ctx.web.fetch"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "harness.handle methods"
+        }, {
+          "description" : "server-side fetch to api-gateway :8000 (page never calls services directly)",
+          "documentation" : { },
+          "id" : "45",
+          "name" : "Outbound fetcher",
+          "properties" : {
+            "structurizr.dsl.identifier" : "fetcher"
+          },
+          "relationships" : [ {
+            "description" : "REST /api/v1",
+            "destinationId" : "13",
+            "id" : "103",
+            "sourceId" : "45",
+            "tags" : "Relationship",
+            "technology" : "HTTP :8000"
+          } ],
+          "tags" : "Element,Component,V1 planned",
+          "technology" : "ctx.web.fetch"
+        } ],
+        "description" : "Class dashboard inside the harness UI: classes, roster, Red/Amber/Green heatmap, concept graph, assignments",
+        "documentation" : { },
+        "id" : "40",
+        "name" : "skilltree-teacher-ui (plugin)",
+        "properties" : {
+          "structurizr.dsl.identifier" : "teacherUi"
+        },
+        "relationships" : [ {
+          "description" : "REST /api/v1",
+          "destinationId" : "13",
+          "id" : "104",
+          "linkedRelationshipId" : "103",
+          "sourceId" : "40",
+          "technology" : "HTTP :8000"
+        } ],
+        "tags" : "Element,Container,V1 planned",
+        "technology" : "DSH client plugin (pattern per roadmap-viewer)"
+      } ],
+      "description" : "Graph RAG learning platform: standards-based microservices + DeepSeek-Harness agent UI on :8104 + single REST entry on :8000",
+      "documentation" : { },
+      "id" : "4",
+      "name" : "SkillTree Platform",
+      "properties" : {
+        "structurizr.dsl.identifier" : "skilltree"
+      },
+      "relationships" : [ {
+        "description" : "Agent reasoning, practice generation, answer synthesis",
+        "destinationId" : "46",
+        "id" : "51",
+        "sourceId" : "4",
+        "tags" : "Relationship",
+        "technology" : "HTTPS chat completions, key via env only"
+      }, {
+        "description" : "Per-student memory ingest / ask",
+        "destinationId" : "47",
+        "id" : "52",
+        "sourceId" : "4",
+        "tags" : "Relationship",
+        "technology" : "MCP streamable-http :8021"
+      } ],
+      "tags" : "Element,Software System"
+    }, {
+      "description" : "OpenAI-compatible chat completions (MiniMax-M3, GLM-5.3-Flash); embeddings endpoint is blocked; key via env only",
+      "documentation" : { },
+      "id" : "46",
+      "name" : "NetMind LLM Gateway",
+      "properties" : {
+        "structurizr.dsl.identifier" : "netmind"
+      },
+      "tags" : "Element,Software System,External"
+    }, {
+      "description" : "Cognee graph + vector memory over MCP; per-student datasets (student-<candidateId>); currently dev host :8021",
+      "documentation" : { },
+      "id" : "47",
+      "name" : "cognee-memory (M8)",
+      "properties" : {
+        "structurizr.dsl.identifier" : "cogneeMcp"
+      },
+      "tags" : "Element,Software System,External"
+    } ]
+  },
+  "name" : "Name",
+  "properties" : {
+    "structurizr.inspection.error" : "3",
+    "structurizr.dsl" : "Ly8gU2tpbGxUcmVlIFBsYXRmb3JtIOKAlCBDNCBtb2RlbCBmb3IgaHR0cHM6Ly9wbGF5Z3JvdW5kLnN0cnVjdHVyaXpyLmNvbS8NCi8vIFBhc3RlIHRoaXMgZmlsZSBpbnRvIHRoZSBwbGF5Z3JvdW5kIChEU0wgdGFiKSBhbmQgdGhlIGZpdmUgdmlld3MgYmVsb3cgcmVuZGVyDQovLyBhcyBzZWxlY3RhYmxlIGRpYWdyYW1zOiBMMSBjb250ZXh0LCBMMiBjb250YWluZXJzLCBhbmQgdGhyZWUgTDMgY29tcG9uZW50IHpvb21zLg0KLy8NCi8vIFNvdXJjZSBvZiB0cnV0aDogZG9jcy9jNC9sMS1jb250ZXh0Lm1kLCBsMi1jb250YWluZXIubWQsIGwzLWNvbXBvbmVudC5tZA0KLy8gKFBsYW50VU1MIEM0IHZlcnNpb25zLCBncm91bmQgdHJ1dGggbWFpbkA0OWMwZWUyZWJkKS4NCi8vIFRhZyAiVjEgcGxhbm5lZCIgPSBkZXNpZ25lZCBidXQgbm90IHlldCBpbXBsZW1lbnRlZCBvbiBtYWluLg0KLy8NCi8vIFJlcHJlc2VudGF0aW9uIG5vdGU6IGluIHRoZSBQbGFudFVNTCBMMSB0aGUgY29nbmVlIE1DUCBzZXJ2ZXIgaXMgZHJhd24gYXMgYW4NCi8vIGV4dGVybmFsIHN5c3RlbSB3aGlsZSBMMiBkcmF3cyBpdCBpbnNpZGUgdGhlIHBsYXRmb3JtIGJvdW5kYXJ5LiBJbiB0aGlzDQovLyB3b3Jrc3BhY2UgaXQgaXMgbW9kZWxsZWQgb25jZSBhcyBhbiBleHRlcm5hbCBzb2Z0d2FyZVN5c3RlbSAoVGFnICJFeHRlcm5hbCIpDQovLyBzbyBib3RoIHRoZSBMMSBhbmQgTDIgdmlld3MgY29tcGlsZSBmcm9tIHRoZSBzYW1lIG1vZGVsOyB0aGUgTDIgdmlldyBzaG93cyBpdA0KLy8gb3V0c2lkZSB0aGUgcGxhdGZvcm0gYm94LCBjb25uZWN0ZWQgdG8gdGhlIGhhcm5lc3MgdmlhIE1DUC4NCg0Kd29ya3NwYWNlIHsNCiAgICBtb2RlbCB7DQogICAgICAgIHRlYWNoZXIgPSBwZXJzb24gIlRlYWNoZXIgKEdWKSIgIk93bnMgY2xhc3NlczsgYXV0aG9ycyBDQVNFIGNvbmNlcHQgZ3JhcGgsIFFUSSBxdWl6emVzLCBhc3NpZ25tZW50czsgcmVhZHMgY2xhc3MgaGVhdG1hcCBhbmQgdGVhY2hpbmcgcGxhbiINCiAgICAgICAgc3R1ZGVudCA9IHBlcnNvbiAiU3R1ZGVudCAoSFMpIiAiTGVhcm5zOiByb2FkbWFwIHByb2dyZXNzLCBhZGFwdGl2ZSBxdWl6emVzLCBub3RlYm9vayBSQUcgUSZBIG92ZXIgb3duIHVwbG9hZHMiDQogICAgICAgIGFkbWluID0gcGVyc29uICJBZG1pbiAvIFBsYXRmb3JtIG93bmVyIiAiRmlyc3QgcmVnaXN0ZXJlZCB1c2VyOyBvcGVyYXRlcyBhY2NvdW50cywgcm9sZXMgYW5kIGRlcGxveW1lbnQiDQoNCiAgICAgICAgc2tpbGx0cmVlID0gc29mdHdhcmVTeXN0ZW0gIlNraWxsVHJlZSBQbGF0Zm9ybSIgIkdyYXBoIFJBRyBsZWFybmluZyBwbGF0Zm9ybTogc3RhbmRhcmRzLWJhc2VkIG1pY3Jvc2VydmljZXMgKyBEZWVwU2Vlay1IYXJuZXNzIGFnZW50IFVJIG9uIDo4MTA0ICsgc2luZ2xlIFJFU1QgZW50cnkgb24gOjgwMDAiIHsNCg0KICAgICAgICAgICAgaGFybmVzcyA9IGNvbnRhaW5lciAic2tpbGwtdHJlZS1oYXJuZXNzIChNNCkiICJBZ2VudCBoYXJuZXNzOiB3ZWIgVUkvQVBJIGhvc3QgOjgxMDQgLT4gY29udGFpbmVyIDozMDgwOyBzZXNzaW9ucywgcGx1Z2luIGxvYWRlciAocGF0Y2gueW1sKSwgcGVyLXN0dWRlbnQgd29ya3NwYWNlIiAiTm9kZS5qcyBAZGVlcHNlZWstYWkvZHNoIDAuMS41LXJjLjMsIGJ3cmFwIHNhbmRib3gsIGlwdGFibGVzIiB7DQogICAgICAgICAgICAgICAgd2VidWkgPSBjb21wb25lbnQgIkRTSCB3ZWIgVUkvQVBJIiAiU2Vzc2lvbiBVSSArIGNvbnRyb2wgQVBJLCB0b2tlbi1nYXRlZCAoc3RhYmxlIGxhdW5jaCB0b2tlbikiICJub2RlIDozMDgwIChob3N0IDo4MTA0KSINCiAgICAgICAgICAgICAgICBhZ2VudHJ0ID0gY29tcG9uZW50ICJBZ2VudCBydW50aW1lICsgc2FuZGJveCIgIlJ1bnMgYWdlbnQgdHVybnMgaXNvbGF0ZWQ7IGZpcmV3YWxsIGJsb2NrcyBtZXRhZGF0YSBlbmRwb2ludHMgYW5kIExBTiBzY2FuIiAiYndyYXAsIGlwdGFibGVzLCBub2RlIHVzZXIgMTAwMCINCiAgICAgICAgICAgICAgICBsb2FkZXIgPSBjb21wb25lbnQgIlBsdWdpbiBsb2FkZXIiICJJbnNlcnQgYW5kIHBhdGNoIHJvd3M7IHBsdWdpbnMgYm91bmQgcmVhZC1vbmx5OyBjdXN0b20gc2tpbGwgZGlycyIgInBsdWdpbnMvcGF0Y2gueW1sIg0KICAgICAgICAgICAgICAgIG1jcGNsaWVudCA9IGNvbXBvbmVudCAiTUNQIGNsaWVudCAobWNwLWNvZ25lZS1tZW1vcnkpIiAic3RyZWFtYWJsZS1odHRwIHRvIGNvZ25lZSBNQ1AgOjgwMjEiICJAZGVlcHNlZWstYWkvZHNoLW1jcC1jbGllbnQiDQogICAgICAgICAgICAgICAgYml6VG9vbHMgPSBjb21wb25lbnQgIltWMSBwbGFubmVkXSBza2lsbHRyZWUgYnVzaW5lc3MgcGx1Z2luIiAiQXRvbWljIHRvb2xzOiBvcGVuY2FzZV9uZXh0X2NvbmNlcHRzLCBxdWl6X2FkYXB0aXZlLCBjb2duZWVfYXNrIChza2VsZXRvbiB0b2RheSkiICJwbHVnaW4gcGF0dGVybjogbGliL2luZGV4LmpzICsgY2xpZW50LyIgew0KICAgICAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkIg0KICAgICAgICAgICAgICAgIH0NCiAgICAgICAgICAgICAgICBicmFuZCA9IGNvbXBvbmVudCAic2tpbGx0cmVlLWJyYW5kIHBsdWdpbiIgIkdyZWVuICMyN0E5NUYgcmVicmFuZCArIGxvZ287IGxlZ2FjeSBpbmRpZ28gIzQxMzZkNiByZXRpcmVkIGJ5IERFU0lHTi5tZCIgInRoZW1lIHRva2VuIGxpYiINCiAgICAgICAgICAgICAgICBzZGsgPSBjb21wb25lbnQgImRzaF93ZWJfc2RrIChvdXQtb2YtYmFuZCkiICJvcGVuX3Nlc3Npb24gLyBzdWJtaXRfcHJvbXB0IC8gcG9sbF9zZXNzaW9uIGZvciBlMmUgY29udHJvbCIgIlB5dGhvbiBhc3luYyBTREsiDQogICAgICAgICAgICB9DQoNCiAgICAgICAgICAgIGdhdGV3YXkgPSBjb250YWluZXIgImFwaS1nYXRld2F5IChNMTApIiAiU2luZ2xlIFJFU1QgZW50cnkgOjgwMDA7IGZvcndhcmRzIHByZWZpeCByb3V0ZXMgdG8gdXBzdHJlYW0gQVBJcyB1bmRlciAvYXBpL3YxOyByYXRlIGxpbWl0ICsgb3B0aW9uYWwgYmVhcmVyIHRva2VuIiAiRmFzdEFQSSArIGh0dHB4LCBzdGF0ZWxlc3MiDQoNCiAgICAgICAgICAgIG9wZW5jYXNlID0gY29udGFpbmVyICJvcGVuY2FzZS1zZXJ2aWNlIChNMSkiICJDQVNFIHYxLjEgY29uY2VwdCBncmFwaCwgcGFja2FnZXMsIHRvcG9sb2dpY2FsIG9yZGVyIDo4MTAxIiAiRmFzdEFQSSArIFNRTEFsY2hlbXkiDQogICAgICAgICAgICBvcGVuY2FzZURiID0gY29udGFpbmVyICJvcGVuY2FzZS1kYiIgIkNGRG9jdW1lbnQsIENGSXRlbSwgQ0ZBc3NvY2lhdGlvbiIgIlBvc3RncmVTUUwgMTYiIHsNCiAgICAgICAgICAgICAgICB0YWdzICJEYXRhYmFzZSINCiAgICAgICAgICAgIH0NCg0KICAgICAgICAgICAgcXVpeiA9IGNvbnRhaW5lciAicXVpei1zZXJ2aWNlIChNMikiICJRVEkgdjMuMCBpdGVtIGJhbmssIHRlc3QgYXNzZW1ibHksIGF0dGVtcHRzIDo4MTAyIiAiRmFzdEFQSSArIFNRTEFsY2hlbXkiDQogICAgICAgICAgICBxdWl6RGIgPSBjb250YWluZXIgInF1aXotZGIiICJJdGVtcywgdGVzdHMsIGF0dGVtcHRzIiAiUG9zdGdyZVNRTCAxNiIgew0KICAgICAgICAgICAgICAgIHRhZ3MgIkRhdGFiYXNlIg0KICAgICAgICAgICAgfQ0KDQogICAgICAgICAgICBjbGFzc1N2YyA9IGNvbnRhaW5lciAiY2xhc3Mtc2VydmljZSAoTTYpIiAiT25lUm9zdGVyIHN1YnNldDogb3JncywgY2xhc3NlcywgcHNldWRvbnltb3VzIHVzZXJzLCBlbnJvbGxtZW50cyA6ODEwMyIgIkZhc3RBUEkgKyBTUUxBbGNoZW15Ig0KICAgICAgICAgICAgY2xhc3NEYiA9IGNvbnRhaW5lciAiY2xhc3MtZGIiICJPcmdzLCBjbGFzc2VzLCB1c2VycywgZW5yb2xsbWVudHMiICJQb3N0Z3JlU1FMIDE2IiB7DQogICAgICAgICAgICAgICAgdGFncyAiRGF0YWJhc2UiDQogICAgICAgICAgICB9DQoNCiAgICAgICAgICAgIGFuYWx5dGljcyA9IGNvbnRhaW5lciAiYW5hbHl0aWNzLXNlcnZpY2UgKGV2ZW50cykiICJDYWxpcGVyLWFsaWduZWQgbGVhcm5pbmcgZXZlbnRzLCBhcHBlbmQtb25seSA6ODEwNCIgIkZhc3RBUEkgKyBTUUxBbGNoZW15Ig0KICAgICAgICAgICAgYW5hbHl0aWNzRGIgPSBjb250YWluZXIgImFuYWx5dGljcy1kYiIgIkV2ZW50cyAoYXBwZW5kLW9ubHkpIiAiUG9zdGdyZVNRTCAxNiIgew0KICAgICAgICAgICAgICAgIHRhZ3MgIkRhdGFiYXNlIg0KICAgICAgICAgICAgfQ0KDQogICAgICAgICAgICBsZWFybmVyID0gY29udGFpbmVyICJsZWFybmVyLW1vZGVsLXNlcnZpY2UgKE01KSIgIkdsaWNrby0yIG1hc3RlcnksIEViYmluZ2hhdXMgcnVzdHkgc3RhdGVzLCBmcm9udGllciwgY2xhc3MgaGVhdG1hcCA6ODEwNSIgIkZhc3RBUEkgKyBTUUxBbGNoZW15Ig0KICAgICAgICAgICAgbGVhcm5lckRiID0gY29udGFpbmVyICJsZWFybmVyLW1vZGVsLWRiIiAiTWFzdGVyeSBwZXIgc3R1ZGVudCBhbmQgY29uY2VwdCIgIlBvc3RncmVTUUwgMTYiIHsNCiAgICAgICAgICAgICAgICB0YWdzICJEYXRhYmFzZSINCiAgICAgICAgICAgIH0NCg0KICAgICAgICAgICAgYXNzaWdubWVudCA9IGNvbnRhaW5lciAiYXNzaWdubWVudC1zZXJ2aWNlIChNNykiICJUYXJnZXRlZCBwcmFjdGljZSBmcm9tIFJlZC9SdXN0eSBncm91cHMgOjgxMDYiICJGYXN0QVBJICsgU1FMQWxjaGVteSINCiAgICAgICAgICAgIGFzc2lnbm1lbnREYiA9IGNvbnRhaW5lciAiYXNzaWdubWVudC1kYiIgIkFzc2lnbm1lbnRzIiAiUG9zdGdyZVNRTCAxNiIgew0KICAgICAgICAgICAgICAgIHRhZ3MgIkRhdGFiYXNlIg0KICAgICAgICAgICAgfQ0KDQogICAgICAgICAgICBkb2N1bWVudCA9IGNvbnRhaW5lciAiZG9jdW1lbnQtc2VydmljZSAoTTMpIiAiTFJNSSBkb2N1bWVudHMsIGNodW5rcywgYWxpZ25tZW50cywgZmlsZSBzdG9yZSA6ODEwNyIgIkZhc3RBUEkgKyBTUUxBbGNoZW15Ig0KICAgICAgICAgICAgZG9jdW1lbnREYiA9IGNvbnRhaW5lciAiZG9jdW1lbnQtZGIiICJEb2N1bWVudHMsIGNodW5rcywgYWxpZ25tZW50cyIgIlBvc3RncmVTUUwgMTYiIHsNCiAgICAgICAgICAgICAgICB0YWdzICJEYXRhYmFzZSINCiAgICAgICAgICAgIH0NCg0KICAgICAgICAgICAgbGF0ZXhtbCA9IGNvbnRhaW5lciAibGF0ZXhtbC1zZXJ2aWNlIChNMyBlbmdpbmUpIiAiTGFUZVggdG8gYXI1aXYtc3R5bGUgSFRNTDsgY29udGFpbmVyIDo4MTAzLCBob3N0IDo4MTEwOyBpc29sYXRlZCBvbiBsYXRleG1sLW5ldCIgIkZhc3RBUEkgKyBMYVRlWE1MIChhcjVpdmlzdCksIHN0YXRlbGVzcyINCg0KICAgICAgICAgICAgYXV0aCA9IGNvbnRhaW5lciAiYXV0aC1zZXJ2aWNlIChNMTEpIiAiQWNjb3VudHMsIEpXVCBIUzI1Niwgcm9sZXMgdGVhY2hlci9zdHVkZW50L2FkbWluIDo4MTA4IiAiRmFzdEFQSSArIFNRTEFsY2hlbXkiDQogICAgICAgICAgICBhdXRoRGIgPSBjb250YWluZXIgImF1dGgtZGIiICJBY2NvdW50cywgcm9sZXMiICJQb3N0Z3JlU1FMIDE2IiB7DQogICAgICAgICAgICAgICAgdGFncyAiRGF0YWJhc2UiDQogICAgICAgICAgICB9DQoNCiAgICAgICAgICAgIHJhZyA9IGNvbnRhaW5lciAicmFnLXNlcnZpY2UiICJTdHVkZW50IG5vdGVib29rIFJBRyA6ODEwOTogdXBsb2FkLCBwYXJzZSwgc3RydWN0dXJlIGNodW5rLCBpbmRleCwgYXNrIChkZXNpZ24gb24gYnJhbmNoIGFnZW50LXYxLXJhZy1kZXNpZ24pIiAiRmFzdEFQSSArIFNRTGl0ZSBGVFM1IiB7DQogICAgICAgICAgICAgICAgdGFncyAiVjEgcGxhbm5lZCINCiAgICAgICAgICAgICAgICByYWdBcGkgPSBjb21wb25lbnQgIlJFU1QgQVBJIiAidXBsb2FkICgyMDIgKyBqb2JJZCksIGpvYnMsIGRvY3VtZW50cyBDUlVELCByZWluZ2VzdCwgYXNrLCBtZXRyaWNzLCBoZWFsdGgiICJGYXN0QVBJIC9hcGkvdjEiIHsNCiAgICAgICAgICAgICAgICAgICAgdGFncyAiVjEgcGxhbm5lZCINCiAgICAgICAgICAgICAgICB9DQogICAgICAgICAgICAgICAgaW5nZXN0ID0gY29tcG9uZW50ICJJbmdlc3Qgd29ya2VyIiAic3RvcmUgcmF3IChzaGEyNTYpIC0+IHBhcnNlIC0+IGNodW5rIC0+IG1pcnJvciAtPiBpbmRleDsgam9iIHN0YXRlczsgbm8gTExNIGF0IGluZ2VzdCIgImFzeW5jaW8gaW4tcHJvY2VzcyIgew0KICAgICAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkIg0KICAgICAgICAgICAgICAgIH0NCiAgICAgICAgICAgICAgICBwYXJzZXJzID0gY29tcG9uZW50ICJQYXJzZXJzIiAiLnRleC8udGFyLmd6Ly56aXAgdmlhIGxhdGV4bWwgcmVuZGVyOyAubWQvLnR4dC8uaHRtbCBkaXJlY3QiICJsYXRleG1sIGNsaWVudCArIGRpcmVjdCByZWFkZXJzIiB7DQogICAgICAgICAgICAgICAgICAgIHRhZ3MgIlYxIHBsYW5uZWQiDQogICAgICAgICAgICAgICAgfQ0KICAgICAgICAgICAgICAgIGNodW5rZXIgPSBjb21wb25lbnQgIlN0cnVjdHVyZSBjaHVua2VyIiAibHR4X3NlY3Rpb24gLyBoMS1oNiBoZWFkaW5ncyAtPiBzZWN0aW9uczsgTUFYL01JTiBzZWN0aW9uIGNoYXJzOyBwYXJhZ3JhcGggc3BsaXQiICJUb0MgdHJlZSBidWlsZGVyIChTVEFJUi1pbnNwaXJlZCkiIHsNCiAgICAgICAgICAgICAgICAgICAgdGFncyAiVjEgcGxhbm5lZCINCiAgICAgICAgICAgICAgICB9DQogICAgICAgICAgICAgICAgbWlycm9yID0gY29tcG9uZW50ICJkb2N1bWVudC1zZXJ2aWNlIG1pcnJvciIgImJlc3QtZWZmb3J0IGNhbm9uaWNhbCBjb3B5IG9mIERvY3VtZW50ICsgY2h1bmtzOyBmYWlsdXJlIHJlY29yZGVkLCBub3QgZmF0YWwiICJSRVNUIGNsaWVudCIgew0KICAgICAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkIg0KICAgICAgICAgICAgICAgIH0NCiAgICAgICAgICAgICAgICByZXRyaWV2YWwgPSBjb21wb25lbnQgIlJldHJpZXZhbCIgImJtMjUoaGVhZGluZyA4LCBwYXRoIDQsIGJvZHkgMSkgKyBzZWN0aW9uLXBhdGggYm9vc3Q7IHNlY3Rpb24tcGF0aCBjaXRhdGlvbnMiICJTUUxpdGUgRlRTNSBCTTI1IiB7DQogICAgICAgICAgICAgICAgICAgIHRhZ3MgIlYxIHBsYW5uZWQiDQogICAgICAgICAgICAgICAgfQ0KICAgICAgICAgICAgICAgIGFuc3dlciA9IGNvbXBvbmVudCAiQW5zd2VyIG1vZGUiICJOZXRNaW5kIGNoYXQgd2l0aCByZXRyeS1vbi1lbXB0eTsgZmFsbHMgYmFjayB0byByZXRyaWV2YWwgcGF5bG9hZCIgIm9wdGlvbmFsIExMTSBzeW50aGVzaXMiIHsNCiAgICAgICAgICAgICAgICAgICAgdGFncyAiVjEgcGxhbm5lZCINCiAgICAgICAgICAgICAgICB9DQogICAgICAgICAgICAgICAgcmFnU3RvcmUgPSBjb21wb25lbnQgIlNRTGl0ZSBzdG9yZSIgImRvY3MsIHNlY3Rpb25zLCBjaHVua3MsIGNodW5rc19mdHMgKGV4dGVybmFsIGNvbnRlbnQpLCBqb2JzIiAiU1FMaXRlICsgRlRTNSIgew0KICAgICAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkLCBEYXRhYmFzZSINCiAgICAgICAgICAgICAgICB9DQogICAgICAgICAgICB9DQoNCiAgICAgICAgICAgIHRlYWNoZXJVaSA9IGNvbnRhaW5lciAic2tpbGx0cmVlLXRlYWNoZXItdWkgKHBsdWdpbikiICJDbGFzcyBkYXNoYm9hcmQgaW5zaWRlIHRoZSBoYXJuZXNzIFVJOiBjbGFzc2VzLCByb3N0ZXIsIFJlZC9BbWJlci9HcmVlbiBoZWF0bWFwLCBjb25jZXB0IGdyYXBoLCBhc3NpZ25tZW50cyIgIkRTSCBjbGllbnQgcGx1Z2luIChwYXR0ZXJuIHBlciByb2FkbWFwLXZpZXdlcikiIHsNCiAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkIg0KICAgICAgICAgICAgICAgIHZpZXdzID0gY29tcG9uZW50ICJWaWV3cyIgIkNsYXNzIGRhc2hib2FyZDogY2xhc3Nlcywgcm9zdGVyLCBSZWQvQW1iZXIvR3JlZW4gaGVhdG1hcCwgY29uY2VwdCBncmFwaCwgYXNzaWdubWVudHMiICJSZWFjdCAoUmVhY3QuY3JlYXRlRWxlbWVudCkiIHsNCiAgICAgICAgICAgICAgICAgICAgdGFncyAiVjEgcGxhbm5lZCINCiAgICAgICAgICAgICAgICB9DQogICAgICAgICAgICAgICAgc3RhdGUgPSBjb21wb25lbnQgIlN0YXRlIiAicGVyLXZpZXcgZGF0YSBjYWNoZSBhbmQgc2VsZWN0aW9uIHN0YXRlIiAiY29tcG9uZW50IHN0YXRlICsgY2FjaGUiIHsNCiAgICAgICAgICAgICAgICAgICAgdGFncyAiVjEgcGxhbm5lZCINCiAgICAgICAgICAgICAgICB9DQogICAgICAgICAgICAgICAgYXBpQ2xpZW50ID0gY29tcG9uZW50ICJBUEkgY2xpZW50IiAidHlwZWQgY2FsbHMgZnJvbSBVSSB0byBob3N0IGhhbGYiICJjbGllbnQtaGFsZiBSUEMgd3JhcHBlciIgew0KICAgICAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkIg0KICAgICAgICAgICAgICAgIH0NCiAgICAgICAgICAgICAgICBob3N0UnBjID0gY29tcG9uZW50ICJIb3N0IFJQQyBoYWxmIiAicGFja2FnZS1wcml2YXRlIFJQQywgZS5nLiBza2lsbHRyZWUuZ2V0Q2xhc3NIZWF0bWFwIiAiaGFybmVzcy5oYW5kbGUgbWV0aG9kcyIgew0KICAgICAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkIg0KICAgICAgICAgICAgICAgIH0NCiAgICAgICAgICAgICAgICBmZXRjaGVyID0gY29tcG9uZW50ICJPdXRib3VuZCBmZXRjaGVyIiAic2VydmVyLXNpZGUgZmV0Y2ggdG8gYXBpLWdhdGV3YXkgOjgwMDAgKHBhZ2UgbmV2ZXIgY2FsbHMgc2VydmljZXMgZGlyZWN0bHkpIiAiY3R4LndlYi5mZXRjaCIgew0KICAgICAgICAgICAgICAgICAgICB0YWdzICJWMSBwbGFubmVkIg0KICAgICAgICAgICAgICAgIH0NCiAgICAgICAgICAgIH0NCiAgICAgICAgfQ0KDQogICAgICAgIG5ldG1pbmQgPSBzb2Z0d2FyZVN5c3RlbSAiTmV0TWluZCBMTE0gR2F0ZXdheSIgIk9wZW5BSS1jb21wYXRpYmxlIGNoYXQgY29tcGxldGlvbnMgKE1pbmlNYXgtTTMsIEdMTS01LjMtRmxhc2gpOyBlbWJlZGRpbmdzIGVuZHBvaW50IGlzIGJsb2NrZWQ7IGtleSB2aWEgZW52IG9ubHkiIHsNCiAgICAgICAgICAgIHRhZ3MgIkV4dGVybmFsIg0KICAgICAgICB9DQoNCiAgICAgICAgY29nbmVlTWNwID0gc29mdHdhcmVTeXN0ZW0gImNvZ25lZS1tZW1vcnkgKE04KSIgIkNvZ25lZSBncmFwaCArIHZlY3RvciBtZW1vcnkgb3ZlciBNQ1A7IHBlci1zdHVkZW50IGRhdGFzZXRzIChzdHVkZW50LTxjYW5kaWRhdGVJZD4pOyBjdXJyZW50bHkgZGV2IGhvc3QgOjgwMjEiIHsNCiAgICAgICAgICAgIHRhZ3MgIkV4dGVybmFsIg0KICAgICAgICB9DQoNCiAgICAgICAgLy8gLS0tLSBMMTogdXNlcnMgPC0+IHBsYXRmb3JtLCBwbGF0Zm9ybSA8LT4gZXh0ZXJuYWxzIC0tLS0NCiAgICAgICAgdGVhY2hlciAtPiBza2lsbHRyZWUgIlRlYWNoZXMgYW5kIG1vbml0b3JzIGNsYXNzZXMiICJIVFRQUyA6ODEwNCAoSGFybmVzcyBVSSkiDQogICAgICAgIHN0dWRlbnQgLT4gc2tpbGx0cmVlICJMZWFybnMgYW5kIGFza3MgcXVlc3Rpb25zIiAiSFRUUFMgOjgxMDQgKEhhcm5lc3MgVUkpIg0KICAgICAgICBhZG1pbiAtPiBza2lsbHRyZWUgIlJlZ2lzdGVycyB1c2Vycywgb3BlcmF0ZXMgZGVwbG95bWVudCIgIkhUVFBTIDo4MTA0IC8gOjgwMDAiDQogICAgICAgIHNraWxsdHJlZSAtPiBuZXRtaW5kICJBZ2VudCByZWFzb25pbmcsIHByYWN0aWNlIGdlbmVyYXRpb24sIGFuc3dlciBzeW50aGVzaXMiICJIVFRQUyBjaGF0IGNvbXBsZXRpb25zLCBrZXkgdmlhIGVudiBvbmx5Ig0KICAgICAgICBza2lsbHRyZWUgLT4gY29nbmVlTWNwICJQZXItc3R1ZGVudCBtZW1vcnkgaW5nZXN0IC8gYXNrIiAiTUNQIHN0cmVhbWFibGUtaHR0cCA6ODAyMSINCg0KICAgICAgICAvLyAtLS0tIEwyOiBoYXJuZXNzIG91dGJvdW5kIC0tLS0NCiAgICAgICAgaGFybmVzcyAtPiBvcGVuY2FzZSAiQWdlbnQgcmVhZHMgQ0FTRSBncmFwaCwgcGlja3MgbmV4dCBjb25jZXB0cyIgIlJFU1QgT1BFTkNBU0VfVVJMIC9hcGkvdjEiDQogICAgICAgIGhhcm5lc3MgLT4gcXVpeiAiQWdlbnQgZmV0Y2hlcyBRVEkgaXRlbXMsIHJlY29yZHMgYXR0ZW1wdHMiICJSRVNUIFFVSVpfVVJMIC9hcGkvdjEiDQogICAgICAgIGhhcm5lc3MgLT4gY29nbmVlTWNwICJTdHVkZW50IG1lbW9yeSBpbmdlc3QgLyBhc2siICJNQ1Agc3RyZWFtYWJsZS1odHRwIDo4MDIxIg0KICAgICAgICBoYXJuZXNzIC0+IG5ldG1pbmQgIkFnZW50IExMTSBjb21wbGV0aW9ucyIgIkhUVFBTLCBlbnYtY29uZmlndXJlZCINCg0KICAgICAgICAvLyAtLS0tIEwyOiBnYXRld2F5IHByZWZpeCBmb3J3YXJkaW5nIC0tLS0NCiAgICAgICAgZ2F0ZXdheSAtPiBvcGVuY2FzZSAiRm9yd2FyZHMgL2Nhc2UvKiIgIkhUVFAgL2FwaS92MSINCiAgICAgICAgZ2F0ZXdheSAtPiBxdWl6ICJGb3J3YXJkcyAvcXVpei8qIiAiSFRUUCAvYXBpL3YxIg0KICAgICAgICBnYXRld2F5IC0+IGNsYXNzU3ZjICJGb3J3YXJkcyAvY2xhc3MvKiIgIkhUVFAgL2FwaS92MSINCiAgICAgICAgZ2F0ZXdheSAtPiBhbmFseXRpY3MgIkZvcndhcmRzIC9ldmVudHMvKiIgIkhUVFAgL2FwaS92MSINCiAgICAgICAgZ2F0ZXdheSAtPiBsZWFybmVyICJGb3J3YXJkcyAvbGVhcm5lci8qIiAiSFRUUCAvYXBpL3YxIg0KICAgICAgICBnYXRld2F5IC0+IGFzc2lnbm1lbnQgIkZvcndhcmRzIC9hc3NpZ25tZW50cy8qIiAiSFRUUCAvYXBpL3YxIg0KICAgICAgICBnYXRld2F5IC0+IGRvY3VtZW50ICJGb3J3YXJkcyAvZG9jdW1lbnRzLyoiICJIVFRQIC9hcGkvdjEiDQogICAgICAgIGdhdGV3YXkgLT4gYXV0aCAiW1YxIHBsYW5uZWRdIEpXVCB2ZXJpZmljYXRpb24gd2lyaW5nIiAiQVVUSF9CQVNFX1VSTCBlbnYgc2V0OyBubyBhdXRoIHByZWZpeCBpbiBVUFNUUkVBTVMgeWV0Ig0KDQogICAgICAgIC8vIC0tLS0gTDI6IHNlcnZpY2UtdG8tc2VydmljZSBSRVNUIC0tLS0NCiAgICAgICAgbGVhcm5lciAtPiBvcGVuY2FzZSAiUmVhZHMgY29uY2VwdCBncmFwaCBmb3IgZnJvbnRpZXIiICJIVFRQIE9QRU5DQVNFX0JBU0VfVVJMIg0KICAgICAgICBsZWFybmVyIC0+IGNsYXNzU3ZjICJSZXNvbHZlcyBwc2V1ZG9ueW1vdXMgc3R1ZGVudHMiICJIVFRQIENMQVNTX0JBU0VfVVJMIg0KICAgICAgICBhc3NpZ25tZW50IC0+IGxlYXJuZXIgIlRhcmdldHMgUmVkL1J1c3R5IGdyb3VwcyIgIkhUVFAgTEVBUk5FUl9CQVNFX1VSTCINCiAgICAgICAgYXNzaWdubWVudCAtPiBxdWl6ICJQdWxscyBwcmFjdGljZSBpdGVtcyIgIkhUVFAgUVVJWl9CQVNFX1VSTCINCg0KICAgICAgICAvLyAtLS0tIEwyOiByYWctc2VydmljZSAocGxhbm5lZCkgLS0tLQ0KICAgICAgICByYWcgLT4gbGF0ZXhtbCAiW1YxIHBsYW5uZWRdIFJlbmRlcnMgTGFUZVggdXBsb2FkcyIgIkhUVFAgTEFURVhNTF9CQVNFX1VSTCBodHRwOi8vbGF0ZXhtbC1zZXJ2aWNlOjgxMDMiDQogICAgICAgIHJhZyAtPiBkb2N1bWVudCAiW1YxIHBsYW5uZWRdIE1pcnJvcnMgY2Fub25pY2FsIGRvY3MgKyBjaHVua3MsIGJlc3QgZWZmb3J0IiAiSFRUUCBET0NVTUVOVF9CQVNFX1VSTCINCiAgICAgICAgcmFnIC0+IG5ldG1pbmQgIltWMSBwbGFubmVkXSBPcHRpb25hbCBhbnN3ZXIgc3ludGhlc2lzIiAiSFRUUFMsIHJldHJ5LW9uLWVtcHR5Ig0KDQogICAgICAgIC8vIC0tLS0gTDI6IGRhdGFiYXNlIG93bmVyc2hpcCAoREItcGVyLXNlcnZpY2UpIC0tLS0NCiAgICAgICAgb3BlbmNhc2UgLT4gb3BlbmNhc2VEYiAiT3ducyIgIlRDUCA1NDMyLCBwcml2YXRlIG5ldCINCiAgICAgICAgcXVpeiAtPiBxdWl6RGIgIk93bnMiICJUQ1AgNTQzMiwgcHJpdmF0ZSBuZXQiDQogICAgICAgIGNsYXNzU3ZjIC0+IGNsYXNzRGIgIk93bnMiICJUQ1AgNTQzMiwgcHJpdmF0ZSBuZXQiDQogICAgICAgIGFuYWx5dGljcyAtPiBhbmFseXRpY3NEYiAiT3ducyIgIlRDUCA1NDMyLCBwcml2YXRlIG5ldCINCiAgICAgICAgbGVhcm5lciAtPiBsZWFybmVyRGIgIk93bnMiICJUQ1AgNTQzMiwgcHJpdmF0ZSBuZXQiDQogICAgICAgIGFzc2lnbm1lbnQgLT4gYXNzaWdubWVudERiICJPd25zIiAiVENQIDU0MzIsIHByaXZhdGUgbmV0Ig0KICAgICAgICBkb2N1bWVudCAtPiBkb2N1bWVudERiICJPd25zIiAiVENQIDU0MzIsIHByaXZhdGUgbmV0Ig0KICAgICAgICBhdXRoIC0+IGF1dGhEYiAiT3ducyIgIlRDUCA1NDMyLCBwcml2YXRlIG5ldCINCiAgICAgICAgLy8gbm90ZTogcmFnJ3MgU1FMaXRlIHN0b3JlIGlzIGEgY29tcG9uZW50IGluc2lkZSByYWcgKHNlZSBMMy1SYWcgdmlldyksDQogICAgICAgIC8vIHNvIHRoZXJlIGlzIG5vIGNvbnRhaW5lci1sZXZlbCByYWcgLT4gc3RvcmUgcmVsYXRpb25zaGlwIGhlcmUuDQoNCiAgICAgICAgLy8gLS0tLSBMMzogaGFybmVzcyBpbnRlcm5hbHMgLS0tLQ0KICAgICAgICB3ZWJ1aSAtPiBhZ2VudHJ0ICJTZXJ2ZXMgVUksIGRyaXZlcyBhZ2VudCB0dXJucyIgImluLXByb2Nlc3MiDQogICAgICAgIGxvYWRlciAtPiBiaXpUb29scyAiTG9hZHMgcm93IHNraWxsdHJlZSIgInBhdGNoLnltbCAtIGluc2VydDoiDQogICAgICAgIGxvYWRlciAtPiBicmFuZCAiTG9hZHMgcm93IHNraWxsdHJlZS1icmFuZCIgInBhdGNoLnltbCAtIGluc2VydDoiDQogICAgICAgIGxvYWRlciAtPiBtY3BjbGllbnQgIkxvYWRzIHJvdyBtY3AtY29nbmVlLW1lbW9yeSIgInBhdGNoLnltbCAtIGluc2VydDoiDQogICAgICAgIG1jcGNsaWVudCAtPiBjb2duZWVNY3AgIk1DUCBjYWxscyIgInN0cmVhbWFibGUtaHR0cCINCiAgICAgICAgYml6VG9vbHMgLT4gb3BlbmNhc2UgIm9wZW5jYXNlX25leHRfY29uY2VwdHMiICJSRVNUIC9hcGkvdjEiDQogICAgICAgIGJpelRvb2xzIC0+IHF1aXogInF1aXpfYWRhcHRpdmUiICJSRVNUIC9hcGkvdjEiDQogICAgICAgIHNkayAtPiB3ZWJ1aSAib3Blbl9zZXNzaW9uIC8gc3VibWl0X3Byb21wdCAvIHBvbGwiICJIVFRQUyBEU0hfQkFTRV9VUkwiDQoNCiAgICAgICAgLy8gLS0tLSBMMzogcmFnLXNlcnZpY2UgcGlwZWxpbmUgKHBsYW5uZWQpIC0tLS0NCiAgICAgICAgcmFnQXBpIC0+IGluZ2VzdCAiRW5xdWV1ZXMgaW5nZXN0IGpvYiIgIjIwMiBqb2JJZCArIHN0YXR1c1VybCINCiAgICAgICAgaW5nZXN0IC0+IHBhcnNlcnMgIlBhcnNlIHVwbG9hZGVkIHNvdXJjZSIgImluLXByb2Nlc3MiDQogICAgICAgIHBhcnNlcnMgLT4gbGF0ZXhtbCAiUmVuZGVyIExhVGVYIGZhbWlseSIgIkhUVFAgUE9TVCAvYXBpL3YxL3JlbmRlciINCiAgICAgICAgcGFyc2VycyAtPiBjaHVua2VyICJQYXJzZWQgSFRNTCAvIG1hcmtkb3duIiAiaW4tcHJvY2VzcyINCiAgICAgICAgY2h1bmtlciAtPiByYWdTdG9yZSAiV3JpdGVzIHNlY3Rpb25zICsgY2h1bmtzICsgZnRzIiAiU1FMIg0KICAgICAgICBpbmdlc3QgLT4gbWlycm9yICJNaXJyb3IgY2Fub25pY2FsIGRhdGEiICJiZXN0IGVmZm9ydCINCiAgICAgICAgbWlycm9yIC0+IGRvY3VtZW50ICJQT1NUIGRvY3VtZW50cyArIGNodW5rcyIgIlJFU1QgL2FwaS92MSINCiAgICAgICAgcmFnQXBpIC0+IHJldHJpZXZhbCAiYXNrIC0+IHRvcC1rIGNpdGF0aW9ucyIgImluLXByb2Nlc3MiDQogICAgICAgIHJldHJpZXZhbCAtPiByYWdTdG9yZSAiTUFUQ0ggKyBibTI1IHJhbmsiICJTUUwiDQogICAgICAgIHJhZ0FwaSAtPiBhbnN3ZXIgIm1vZGUgPSBhbnN3ZXIiICJvcHRpb25hbCINCiAgICAgICAgYW5zd2VyIC0+IG5ldG1pbmQgIkNoYXQgY29tcGxldGlvbiIgIkhUVFBTLCByZXRyeS1vbi1lbXB0eSINCg0KICAgICAgICAvLyAtLS0tIEwzOiB0ZWFjaGVyLXVpIHBsdWdpbiBpbnRlcm5hbHMgKHBsYW5uZWQpIC0tLS0NCiAgICAgICAgdmlld3MgLT4gc3RhdGUgIlJlYWRzIGFuZCB3cml0ZXMgdmlldyBzdGF0ZSIgImluLWJyb3dzZXIiDQogICAgICAgIHZpZXdzIC0+IGFwaUNsaWVudCAiUmVxdWVzdHMgZGF0YSIgImluLWJyb3dzZXIiDQogICAgICAgIGFwaUNsaWVudCAtPiBob3N0UnBjICJQYWNrYWdlLXByaXZhdGUgUlBDIiAiaG9zdC5jYWxsIg0KICAgICAgICBob3N0UnBjIC0+IGZldGNoZXIgIlJQQyBoYW5kbGVyIGZldGNoZXMiICJjdHgud2ViLmZldGNoIg0KICAgICAgICBmZXRjaGVyIC0+IGdhdGV3YXkgIlJFU1QgL2FwaS92MSIgIkhUVFAgOjgwMDAiDQogICAgfQ0KDQogICAgdmlld3Mgew0KICAgICAgICBzeXN0ZW1Db250ZXh0IHNraWxsdHJlZSAiTDEtQ29udGV4dCIgIkMxIFN5c3RlbSBDb250ZXh0IChWMSkiIHsNCiAgICAgICAgICAgIGluY2x1ZGUgKg0KICAgICAgICAgICAgYXV0b0xheW91dA0KICAgICAgICB9DQoNCiAgICAgICAgY29udGFpbmVyIHNraWxsdHJlZSAiTDItQ29udGFpbmVyIiAiQzIgQ29udGFpbmVycyAoVjEpIOKAlCBbVjEgcGxhbm5lZF0gYm94ZXMgYXJlIGRlc2lnbmVkLCBub3QgeWV0IG9uIG1haW4iIHsNCiAgICAgICAgICAgIGluY2x1ZGUgKg0KICAgICAgICAgICAgYXV0b0xheW91dA0KICAgICAgICB9DQoNCiAgICAgICAgY29tcG9uZW50IGhhcm5lc3MgIkwzLUhhcm5lc3MiICJDMyDigJQgaW5zaWRlIHNraWxsLXRyZWUtaGFybmVzcyAoTTQsIHJlYWwgY29kZSkiIHsNCiAgICAgICAgICAgIGluY2x1ZGUgKg0KICAgICAgICAgICAgYXV0b0xheW91dA0KICAgICAgICB9DQoNCiAgICAgICAgY29tcG9uZW50IHJhZyAiTDMtUmFnIiAiQzMg4oCUIGluc2lkZSByYWctc2VydmljZSAoW1YxIHBsYW5uZWRdLCBkZXNpZ24gb24gYWdlbnQtdjEtcmFnLWRlc2lnbikiIHsNCiAgICAgICAgICAgIGluY2x1ZGUgKg0KICAgICAgICAgICAgYXV0b0xheW91dA0KICAgICAgICB9DQoNCiAgICAgICAgY29tcG9uZW50IHRlYWNoZXJVaSAiTDMtVGVhY2hlclVpIiAiQzMg4oCUIGluc2lkZSBza2lsbHRyZWUtdGVhY2hlci11aSBwbHVnaW4gKFtWMSBwbGFubmVkXSkiIHsNCiAgICAgICAgICAgIGluY2x1ZGUgKg0KICAgICAgICAgICAgYXV0b0xheW91dA0KICAgICAgICB9DQoNCiAgICAgICAgc3R5bGVzIHsNCiAgICAgICAgICAgIGVsZW1lbnQgIkRhdGFiYXNlIiB7DQogICAgICAgICAgICAgICAgc2hhcGUgY3lsaW5kZXINCiAgICAgICAgICAgIH0NCiAgICAgICAgICAgIGVsZW1lbnQgIkV4dGVybmFsIiB7DQogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjOTU5NTk1DQogICAgICAgICAgICAgICAgY29sb3IgI2ZmZmZmZg0KICAgICAgICAgICAgfQ0KICAgICAgICAgICAgZWxlbWVudCAiVjEgcGxhbm5lZCIgew0KICAgICAgICAgICAgICAgIGJvcmRlciBkYXNoZWQNCiAgICAgICAgICAgIH0NCiAgICAgICAgfQ0KICAgIH0NCn0=",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "componentViews" : [ {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "containerId" : "5",
+      "description" : "C3 — inside skill-tree-harness (M4, real code)",
+      "elements" : [ {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "47",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "L3-Harness",
+      "name" : "Component View: SkillTree Platform - skill-tree-harness (M4)",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "80"
+      }, {
+        "id" : "81"
+      }, {
+        "id" : "82"
+      }, {
+        "id" : "83"
+      }, {
+        "id" : "84"
+      }, {
+        "id" : "85"
+      }, {
+        "id" : "86"
+      }, {
+        "id" : "87"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "containerId" : "31",
+      "description" : "C3 — inside rag-service ([V1 planned], design on agent-v1-rag-design)",
+      "elements" : [ {
+        "id" : "26",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "28",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "33",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "34",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "35",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "36",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "37",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "38",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "39",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "46",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "L3-Rag",
+      "name" : "Component View: SkillTree Platform - rag-service",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "88"
+      }, {
+        "id" : "89"
+      }, {
+        "id" : "90"
+      }, {
+        "id" : "91"
+      }, {
+        "id" : "92"
+      }, {
+        "id" : "93"
+      }, {
+        "id" : "94"
+      }, {
+        "id" : "95"
+      }, {
+        "id" : "96"
+      }, {
+        "id" : "97"
+      }, {
+        "id" : "98"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "containerId" : "40",
+      "description" : "C3 — inside skilltree-teacher-ui plugin ([V1 planned])",
+      "elements" : [ {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "41",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "42",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "43",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "44",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "45",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "L3-TeacherUi",
+      "name" : "Component View: SkillTree Platform - skilltree-teacher-ui (plugin)",
+      "order" : 5,
+      "relationships" : [ {
+        "id" : "100"
+      }, {
+        "id" : "101"
+      }, {
+        "id" : "102"
+      }, {
+        "id" : "103"
+      }, {
+        "id" : "99"
+      } ]
+    } ],
+    "configuration" : {
+      "branding" : { },
+      "styles" : {
+        "elements" : [ {
+          "shape" : "Cylinder",
+          "tag" : "Database"
+        }, {
+          "background" : "#959595",
+          "color" : "#ffffff",
+          "tag" : "External"
+        }, {
+          "border" : "Dashed",
+          "tag" : "V1 planned"
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "description" : "C2 Containers (V1) — [V1 planned] boxes are designed, not yet on main",
+      "elements" : [ {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "18",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "19",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "21",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "23",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "24",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "26",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "27",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "28",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "29",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "30",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "31",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "40",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "46",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "47",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "L2-Container",
+      "name" : "Container View: SkillTree Platform",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "104"
+      }, {
+        "id" : "53"
+      }, {
+        "id" : "54"
+      }, {
+        "id" : "55"
+      }, {
+        "id" : "56"
+      }, {
+        "id" : "57"
+      }, {
+        "id" : "58"
+      }, {
+        "id" : "59"
+      }, {
+        "id" : "60"
+      }, {
+        "id" : "61"
+      }, {
+        "id" : "62"
+      }, {
+        "id" : "63"
+      }, {
+        "id" : "64"
+      }, {
+        "id" : "65"
+      }, {
+        "id" : "66"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "68"
+      }, {
+        "id" : "69"
+      }, {
+        "id" : "70"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      }, {
+        "id" : "73"
+      }, {
+        "id" : "74"
+      }, {
+        "id" : "75"
+      }, {
+        "id" : "76"
+      }, {
+        "id" : "77"
+      }, {
+        "id" : "78"
+      }, {
+        "id" : "79"
+      } ],
+      "softwareSystemId" : "4"
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "description" : "C1 System Context (V1)",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "46",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "47",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "L1-Context",
+      "name" : "System Context View: SkillTree Platform",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "48"
+      }, {
+        "id" : "49"
+      }, {
+        "id" : "50"
+      }, {
+        "id" : "51"
+      }, {
+        "id" : "52"
+      } ],
+      "softwareSystemId" : "4"
+    } ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "n": 18,
+  "label": "T7-pilot-b2 (hybrid GRAPH+CHUNKS, 18 câu L3)",
+  "elems_v2_mean": 0.518,
+  "corr_mean": 0.494,
+  "bank_L3_baseline_elems_v2": 0.411,
+  "mean_delta_elems_v2": 0.108,
+  "rows_summary": [
+    {"id": "QA-L3-05", "v2": 0.333, "base": 0.0, "corr_h": 0.3, "corr_b": 0.25},
+    {"id": "QA-L3-16", "v2": 0.5, "base": 0.25, "corr_h": 1.0, "corr_b": 1.0},
+    {"id": "QA-L3-17", "v2": 0.429, "base": 0.286, "corr_h": 0.5, "corr_b": 0.5},
+    {"id": "QA-L3-04", "v2": 0.5, "base": 0.333, "corr_h": 0.5, "corr_b": 0.5},
+    {"id": "QA-L3-15", "v2": 0.444, "base": 0.333, "corr_h": 0.5, "corr_b": 0.5},
+    {"id": "QA-L3-02", "v2": 0.5, "base": 0.375, "corr_h": 0.5, "corr_b": 0.4},
+    {"id": "QA-L3-03", "v2": 0.375, "base": 0.375, "corr_h": 0.5, "corr_b": 0.65},
+    {"id": "QA-L3-07", "v2": 0.5, "base": 0.375, "corr_h": 0.5, "corr_b": 0.5},
+    {"id": "QA-L3-13", "v2": 0.5, "base": 0.375, "corr_h": 0.45, "corr_b": 0.4},
+    {"id": "QA-L3-09", "v2": 0.429, "base": 0.429, "corr_h": 0.5, "corr_b": 0.5},
+    {"id": "QA-L3-12", "v2": 0.429, "base": 0.429, "corr_h": 0.4, "corr_b": 0.5},
+    {"id": "QA-L3-14", "v2": 0.571, "base": 0.429, "corr_h": 0.5, "corr_b": 1.0},
+    {"id": "QA-L3-18", "v2": 0.556, "base": 0.444, "corr_h": 0.4, "corr_b": 0.4},
+    {"id": "QA-L3-06", "v2": 0.375, "base": 0.5, "corr_h": 0.5, "corr_b": 0.4},
+    {"id": "QA-L3-01", "v2": 0.857, "base": 0.571, "corr_h": 0.6, "corr_b": 0.5},
+    {"id": "QA-L3-08", "v2": 0.571, "base": 0.571, "corr_h": 0.4, "corr_b": 0.4},
+    {"id": "QA-L3-11", "v2": 0.714, "base": 0.571, "corr_h": 0.5, "corr_b": 0.3},
+    {"id": "QA-L3-10", "v2": 0.75, "base": 0.375, "corr_h": 0.35, "corr_b": 0.3}
+  ],
+  "verdict": "ADOPT cho stratum L3: elems_v2 +0.108 (0.411->0.518), 10/18 cải thiện, corr trung tính",
+  "next": "chạy lại 1 lần để đo variance trước khi đưa vào t7_eval mode hybrid mặc định"
+}

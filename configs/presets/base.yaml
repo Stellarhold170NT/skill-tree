@@ -1,0 +1,29 @@
+# Preset baseline — vòng 0 (Run run-00): cấu hình MẶC ĐỊNH của cognee 1.6.4,
+# full Corpus SWEBOK v4. Đây là chuẩn so sánh cho 10 vòng tinh chỉnh sau.
+#
+# Pipeline: ingest (add) -> cognify -> index, đầy đủ 1.31M ký tự corpus (~2,809 chunk).
+# chunk_size để trống -> cognee tự resolve = 126 tokens (bị ghim bởi fastembed
+# MiniLM tokenizer window, KHÔNG phải 1500 như docstring — xem task-3-report.md).
+run_id: run-00
+reset: true            # prune_data + prune_system(metadata=True) trước build
+dataset: swebok_v4     # tên Dataset cognee (partition)
+
+chunks_per_batch: 100  # 2,809 chunk -> ~29 wave; 2000 concurrent là quá tải gateway
+# chunk_size: null     # để trống = auto (126 tokens với embedding MiniLM hiện tại)
+# custom_prompt: null
+# graph_model: null
+
+extractor: llm         # trích xuất entity bằng LLM (GLM-5.3-Flash qua gateway)
+
+# Xoay vòng 3 key gateway (giá trị đọc từ .env lúc chạy, KHÔNG ghi key vào file này)
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+files:                 # Corpus input (glob tương đối repo root)
+  - corpora/swebok-v4/swebok-v4.md
+
+# Truy vấn kiểm chứng sau build (bắt buộc sau baseline)
+search_type: GRAPH_COMPLETION
+search_query: "Software requirements là gì?"

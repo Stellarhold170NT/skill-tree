@@ -1,0 +1,47 @@
+# M4 — SkillTree Agent Harness (mini DSH)
+# Web UI + API: host 8104 → container 3080 (dsh web trong bwrap)
+services:
+  skill-tree-harness:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: skilltree/harness:latest
+    container_name: skill-tree-harness
+    restart: unless-stopped
+    ports:
+      - "8104:3080"   # Web UI + API (SDK dsh_web_sdk trỏ DSH_BASE_URL vào đây)
+      - "8105:3082"   # Webhook ingress (đã tắt mặc định trong patch.yml — bật khi cần)
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 4G
+          pids: 400
+    volumes:
+      - ./runtime/data:/app/data
+      - ./runtime/logs:/app/data/logs
+      - ./runtime/workspace:/app/workspace
+      - ./runtime/dsh-home:/root/.dsh
+      - ./plugins:/app/plugins:ro
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    environment:
+      - NODE_ENV=production
+      # Host được phép truy cập Web UI (phân tách bằng dấu cách).
+      # Ví dụ thêm máy dev LAN: EXTRA_TRUSTED_HOSTS=localhost:8104 192.168.1.50:8104
+      - EXTRA_TRUSTED_HOSTS=${EXTRA_TRUSTED_HOSTS:-localhost:8104 127.0.0.1:8104}
+      # Gateway (M10) cho plugin skilltree-auth-ui gọi auth-service (M11) — xem plugins/skilltree-auth-ui/README.md
+      - SKILLTREE_GATEWAY_URL=${SKILLTREE_GATEWAY_URL:-http://localhost:8000}
+    healthcheck:
+      # 401 (chưa auth) vẫn tính là sống — chỉ cần HTTP server trả lời.
+      # /api/v1/health theo contract chung của services/ sẽ thêm sau bằng plugin.
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://127.0.0.1:3080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 90s

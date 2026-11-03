@@ -1,0 +1,60 @@
+{
+ "variant": "c2",
+ "generated_at": "2026-10-17T11:16:28.189058+00:00",
+ "note": "C2 = C1 traversal + entity merge (57 nhóm exact áp lên bản sao graph: 3412→3350 nodes, 13174→13128 edges). Merge node-duplicate KHÔNG cải thiện điểm — nghẽn cổ chai là context name-only, không phải node dup.",
+ "n_scored": 21,
+ "n_errors": 3,
+ "gateway_calls": 87,
+ "correctness_mean": 0.067,
+ "element_completeness_mean": 0.031,
+ "hop_precision_mean": 0.053,
+ "latency_p50": 2.38,
+ "merge_stats": {
+  "n_proposals": 57,
+  "n_heading_splits": 191,
+  "n_applied": 57,
+  "applied_top10": [
+   {"canonical": "abstraction", "kept_name": "abstraction", "merged_variants": [{"name": "abstraction"}], "n_edges_after": 13162},
+   {"canonical": "application", "kept_name": "application", "merged_variants": [{"name": "application"}], "n_edges_after": 13162},
+   {"canonical": "application domain", "kept_name": "application domain", "merged_variants": [{"name": "application domain"}], "n_edges_after": 13162},
+   {"canonical": "architecture view", "kept_name": "architecture view", "merged_variants": [{"name": "architecture view"}], "n_edges_after": 13162},
+   {"canonical": "assertions, design by contract and defensive programming", "kept_name": "assertions, design by contract and defensive programming", "merged_variants": [{"name": "assertions, design by contract, and defensive programming"}], "n_edges_after": 13161},
+   {"canonical": "assurance, security and safety", "kept_name": "assurance, security and safety", "merged_variants": [{"name": "assurance, security, and safety"}], "n_edges_after": 13160},
+   {"canonical": "change", "kept_name": "change", "merged_variants": [{"name": "change"}], "n_edges_after": 13160},
+   {"canonical": "component", "kept_name": "component", "merged_variants": [{"name": "component"}], "n_edges_after": 13160},
+   {"canonical": "concern", "kept_name": "concern", "merged_variants": [{"name": "concern"}], "n_edges_after": 13160},
+   {"canonical": "constraint", "kept_name": "constraint", "merged_variants": [{"name": "constraint"}], "n_edges_after": 13160}
+  ]
+ },
+ "per_question": [
+  {"id": "SWEBOK-S01", "mode": "verify", "start_node": "maintenance", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 5.03},
+  {"id": "SWEBOK-S02", "mode": "overview", "start_node": "failure", "n_ctx_nodes": 458, "n_ctx_edges": 457, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.24},
+  {"id": "SWEBOK-S03", "mode": "verify", "start_node": "software testing", "n_ctx_nodes": 20, "n_ctx_edges": 21, "correctness": 0.3, "element_completeness": 0.0, "hop_precision": 1.0, "fabricated": null, "latency_total_s": 4.33},
+  {"id": "SWEBOK-S04", "mode": "overview", "start_node": "atomicity", "n_ctx_nodes": 38, "n_ctx_edges": 37, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 5.11},
+  {"id": "SWEBOK-S05", "mode": "verify", "start_node": "structure-based techniques", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.34},
+  {"id": "SWEBOK-S06", "mode": "lineage", "start_node": "software design", "n_ctx_nodes": 6, "n_ctx_edges": 5, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.06},
+  {"id": "SWEBOK-S07", "mode": "overview", "start_node": "maintenance", "n_ctx_nodes": 286, "n_ctx_edges": 285, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.38},
+  {"id": "SWEBOK-S08", "mode": "overview", "start_node": "testing", "n_ctx_nodes": 287, "n_ctx_edges": 287, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.05},
+  {"id": "SWEBOK-S09", "mode": "overview", "start_node": "software configuration management", "n_ctx_nodes": 34, "n_ctx_edges": 33, "correctness": 0.0, "element_completeness": 0.1, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.61},
+  {"id": "SWEBOK-S10", "mode": "lineage", "start_node": "fault", "n_ctx_nodes": 3, "n_ctx_edges": 2, "correctness": 0.1, "element_completeness": 0.1, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.99},
+  {"id": "SWEBOK-S11", "mode": "overview", "start_node": "testing", "n_ctx_nodes": 287, "n_ctx_edges": 287, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.65},
+  {"id": "SWEBOK-S12", "mode": "verify", "start_node": "test case", "n_ctx_nodes": 13, "n_ctx_edges": 13, "correctness": 0.0, "element_completeness": 0.08, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 3.41},
+  {"id": "SWEBOK-S13", "mode": "lineage", "start_node": "requirement", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.1, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.31},
+  {"id": "SWEBOK-S14", "mode": "overview", "start_node": null, "n_ctx_nodes": null, "n_ctx_edges": null, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": null, "fabricated": null, "latency_total_s": null},
+  {"id": "SWEBOK-S15", "mode": "overview", "start_node": null, "n_ctx_nodes": null, "n_ctx_edges": null, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": null, "fabricated": null, "latency_total_s": null},
+  {"id": "SWEBOK-S16", "mode": "lineage", "start_node": "testing", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.74},
+  {"id": "SWEBOK-S17", "mode": "lineage", "start_node": null, "n_ctx_nodes": null, "n_ctx_edges": null, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": null, "fabricated": null, "latency_total_s": null},
+  {"id": "SWEBOK-S18", "mode": "verify", "start_node": "quality assurance", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.23},
+  {"id": "SWEBOK-S19", "mode": "verify", "start_node": "testing", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.125, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.43},
+  {"id": "SWEBOK-S20", "mode": "overview", "start_node": "testing", "n_ctx_nodes": 287, "n_ctx_edges": 287, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.62},
+  {"id": "SWEBOK-S21", "mode": "overview", "start_node": "formal methods", "n_ctx_nodes": 38, "n_ctx_edges": 38, "correctness": 0.5, "element_completeness": null, "hop_precision": null, "fabricated": false, "latency_total_s": 2.39},
+  {"id": "SWEBOK-S22", "mode": "lineage", "start_node": "detailed design", "n_ctx_nodes": 13, "n_ctx_edges": 12, "correctness": 0.3, "element_completeness": 0.0, "hop_precision": null, "fabricated": null, "latency_total_s": 3.78},
+  {"id": "SWEBOK-S23", "mode": "lineage", "start_node": "regression testing", "n_ctx_nodes": 3, "n_ctx_edges": 2, "correctness": 0.2, "element_completeness": 0.15, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.62},
+  {"id": "SWEBOK-S24", "mode": "overview", "start_node": "minimizing complexity", "n_ctx_nodes": 71, "n_ctx_edges": 70, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.68}
+ ],
+ "comparison_3_columns": {
+  "b1_baseline": {"correctness": 0.456, "elements": 0.322, "hop": 0.73, "source": "docs/adr/0003"},
+  "c1_traverse": {"correctness": 0.114, "elements": 0.029, "hop": 0.087},
+  "c2_traverse_merge": {"correctness": 0.067, "elements": 0.031, "hop": 0.053}
+ }
+}

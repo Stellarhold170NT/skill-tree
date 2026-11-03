@@ -1,0 +1,49 @@
+# C5b — Ontology rebuild FULL-BOOK (413 trang, 18 KA): chỉ chạy khi C5a (S2) WIN
+# theo gate ADR 0004. Schema/prompt y hệt c5_ontology (Kế thừa KnowledgeGraph đã fix).
+# Chạy trong sandbox 16GiB (bài học OOMKill trần 8GiB — build full vượt 8Gi cgroup).
+# reset:false, dataset riêng swebok_v4_full_c5.
+run_id: run-00-c5full
+reset: false
+dataset: swebok_v4_full_c5
+
+graph_model: skilltree.ontology.swebok.SWEBOKGraph
+
+chunk_size: 512
+chunks_per_batch: 25
+raise_on_error: false
+extractor: llm
+
+# CUSTOM_PROMPT_V2 (bản kế thừa KnowledgeGraph — id slug + tham chiếu source_node_id/
+# target_node_id; y nguyên src/skilltree/ontology/swebok.py sau khi subagent áp fix A)
+custom_prompt: >-
+  Bạn trích xuất đồ thị tri thức từ đoạn tài liệu SWEBOK v4. QUY TẮC CỨNG:
+  1. Node type CHỈ chọn trong: KnowledgeArea, Activity, Task, Technique, Method,
+  Principle, QualityAttribute, Artifact, Tool, Metric, Fault, FailureMode,
+  HumanError, Concept.
+  2. Quan hệ CHỈ chọn trong: PART_OF, SUBTYPE_OF, REQUIRES, DEPENDS_ON, CONSTRAINS,
+  VERIFIES, VALIDATES, MITIGATES, CAUSES, INJECTS, PRODUCES, CONSUMES, MEASURED_BY,
+  USESTOOL, OTHER. VERIFIES chỉ dùng khi A là kỹ thuật/phương pháp kiểm tra B
+  (artifact/property), KHÔNG BAO GIỜ dùng khi B là hoạt động (Activity).
+  3. THUẬT NGỮ CHUẨN (IEEE 610.12): fault/defect/bug là CÙNG khái niệm → node "Fault"
+  DUY NHẤT; failure → node "FailureMode" RIÊNG; error → node "HumanError" RIÊNG.
+  Chuỗi nhân quả: HumanError -[INJECTS]-> Fault -[CAUSES]-> FailureMode.
+  4. TIÊU ĐỀ MỤC gộp nhiều khái niệm PHẢI tách thành các leaf concept riêng,
+  KHÔNG tạo node mang nguyên tiêu đề.
+  5. Mỗi cạnh có confidence 0.0–1.0 ghi dạng "confidence=X.X | <mô tả>" trong
+  description của cạnh.
+  6. Nếu quan hệ không thuộc 13 loại trên, dùng OTHER — KHÔNG bịa loại mới.
+  7. Mỗi node: id = slugify(name) (lowercase, gạch nối, không khoảng trắng),
+  description 1 câu nêu vai trò; cạnh tham chiếu node qua source_node_id và
+  target_node_id khớp id của node.
+
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+# subsets: BỎ → toàn bộ 413 trang
+
+search_type: GRAPH_COMPLETION
+search_query: "Kiến trúc phần mềm là gì và tại sao cần nhiều view kiến trúc?"

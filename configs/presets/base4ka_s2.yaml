@@ -1,0 +1,30 @@
+# Preset baseline Giai đoạn A — subset S2 (candidate thứ 2 so sánh với S1).
+# Cùng cấu hình baseline với base4ka.yaml (chunk 512, batch 25, reset, extractor llm).
+#
+# S2 = Software Architecture p67-82 | Software Design p83-99 |
+#      Software Construction p100-117 | Software Testing p118-152
+# CHỒNG LẤP KA Testing với S1 -> anchor so sánh trực tiếp (câu hỏi Testing dùng cho cả hai).
+run_id: run-00-s2
+reset: true
+dataset: swebok_v4
+
+chunk_size: 512
+chunks_per_batch: 25   # chống OOM, giống S1 để so sánh công bằng
+raise_on_error: false
+extractor: llm
+
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+subsets:
+  - Software Architecture
+  - Software Design
+  - Software Construction
+  - Software Testing
+
+search_type: GRAPH_COMPLETION
+search_query: "Kiến trúc phần mềm là gì và tại sao cần nhiều view kiến trúc?"

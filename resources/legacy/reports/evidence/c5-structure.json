@@ -1,0 +1,62 @@
+{
+ "dataset": "swebok_v4_c5",
+ "generated_from": "dump graph_swebok_v4_c5.json.gz (2438 nodes/10167 edges, 213KB gz) + Ladybug properties (mirror format structure-s2-b1.json)",
+ "nodes": 2438,
+ "edges": 10167,
+ "edge_ratio": 4.17,
+ "entity_nodes": 2147,
+ "nodes_desc_nonempty": 2146,
+ "nodes_desc_pct": 100.0,
+ "semantic_edges": 3897,
+ "semantic_pct": 38.3,
+ "semantic_in_15enum": 3897,
+ "semantic_enum_pct": 100.0,
+ "infra_edges": {"made_from": 138, "is_part_of": 138, "contains": 3720, "is_a": 2274},
+ "predicates": [
+  {"type": "contains", "count": 3720, "pct": 36.6},
+  {"type": "is_a", "count": 2274, "pct": 22.4},
+  {"type": "part_of", "count": 1117, "pct": 11.0},
+  {"type": "subtype_of", "count": 551, "pct": 5.4},
+  {"type": "other", "count": 478, "pct": 4.7},
+  {"type": "depends_on", "count": 365, "pct": 3.6},
+  {"type": "produces", "count": 266, "pct": 2.6},
+  {"type": "consumes", "count": 228, "pct": 2.2},
+  {"type": "constrains", "count": 202, "pct": 2.0},
+  {"type": "verifies", "count": 172, "pct": 1.7},
+  {"type": "made_from", "count": 138, "pct": 1.4},
+  {"type": "is_part_of", "count": 138, "pct": 1.4},
+  {"type": "requires", "count": 119, "pct": 1.2},
+  {"type": "usestool", "count": 101, "pct": 1.0},
+  {"type": "mitigates", "count": 91, "pct": 0.9},
+  {"type": "validates", "count": 87, "pct": 0.9},
+  {"type": "measured_by", "count": 78, "pct": 0.8},
+  {"type": "causes", "count": 28, "pct": 0.3},
+  {"type": "injects", "count": 14, "pct": 0.1}
+ ],
+ "semantic_distribution": {
+  "PART_OF": 1117, "SUBTYPE_OF": 551, "OTHER": 478, "DEPENDS_ON": 365, "PRODUCES": 266,
+  "CONSUMES": 228, "CONSTRAINS": 202, "VERIFIES": 172, "REQUIRES": 119, "USESTOOL": 101,
+  "MITIGATES": 91, "VALIDATES": 87, "MEASURED_BY": 78, "CAUSES": 28, "INJECTS": 14
+ },
+ "confidence": {"n_parseable": 3897, "pct_of_semantic": 100.0, "mean": 0.805, "min": 0.3, "max": 1.0},
+ "node_types": {"TextSummary": 138, "DocumentChunk": 138, "TextDocument": 1, "Entity": 2147, "EntityType": 14},
+ "entity_type_dist_via_is_a": {
+  "concept": 692, "technique": 409, "artifact": 313, "activity": 251, "tool": 154,
+  "method": 96, "qualityattribute": 93, "metric": 93, "principle": 62, "task": 60,
+  "knowledgearea": 19, "fault": 15, "failuremode": 14, "humanerror": 3
+ },
+ "top_degree": [
+  ["concept", 692], ["technique", 409], ["artifact", 313], ["activity", 251],
+  ["software design", 203], ["software testing", 182], ["software architecture", 162],
+  ["tool", 154], ["subset_Software-Architecture_Software-Design_Software-Construction_Software-Testing_p67-152", 138],
+  ["test case", 123]
+ ],
+ "comparison_note_vs_b1": "B1: 3412 nodes / 13174 edges / semantic 8645 (65.6%) voi predicate TU DO (USES 1328, TRANSFORMS_TO 99, use_provided 1 — ngoai bo 15-enum cua C5). C5: graph nho hon (2438/10167) nhung 100% canh semantic thuoc 15 enum, 100% co description + confidence; chunks 138 = 138 cua B1 (cung corpus S2). Chuoi nhan qua IEEE 610.12 co mat: HumanError 3 -INJECTS-> Fault 15 -CAUSES-> FailureMode 14.",
+ "build": {
+  "run_id": "run-00-c5",
+  "total_s": 4290.7,
+  "sandbox": "sess-8706a67a 16GiB",
+  "preset": "configs/presets/c5_ontology.yaml (swebok.py ban 2 subclass cognee KnowledgeGraph + CUSTOM_PROMPT_V2 1922 chars)",
+  "note": "cognee luu relationship_name lowercase — bang nay UPPERCASE lai cho dung khuon B1"
+ }
+}

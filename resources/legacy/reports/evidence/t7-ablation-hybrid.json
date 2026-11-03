@@ -1,0 +1,14 @@
+{
+  "label": "B2 hybrid mở rộng mọi level — 4 câu yếu L1/L2 (ablation arm của B3)",
+  "date": "2026-10-19T01:04Z",
+  "method": "hybrid GRAPH+CHUNKS top_k=8, query gốc (không expansion), chấm v2+glossary",
+  "per_question": {
+    "QA-L1-12": {"base": 0.0, "hybrid": 0.333},
+    "QA-L1-02": {"base": 0.429, "hybrid": 0.571},
+    "QA-L1-03": {"base": 0.429, "hybrid": 0.714},
+    "QA-L2-06": {"base": 0.429, "hybrid": 0.857}
+  },
+  "mean": {"base": 0.322, "hybrid": 0.619, "delta": 0.297},
+  "verdict": "HYBRID có hiệu lực cả L1/L2 (+0.297 trên 4 câu yếu) — đề xuất mở rộng hybrid cho mọi level, chạy full-bank 54 câu để xác nhận",
+  "expansion_verdict": "KHÔNG ADOPT — 0 lợi ích đo được so hybrid-only, 1 case làm tệ (L3-05 0.333→0.0)"
+}

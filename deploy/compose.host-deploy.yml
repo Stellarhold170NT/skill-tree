@@ -1,0 +1,138 @@
+# deploy/compose.host-deploy.yml — DinD/VM sandbox override (bridge networks are
+# dead there: DNS 127.0.0.11 refused). Host networking + localhost DB ports.
+# Postgres instances get unique listen ports; every cross-service URL points at
+# 127.0.0.1. Apply:
+#   docker compose -f docker-compose.yml -f compose.host-deploy.yml up -d
+x-host: &host
+  network_mode: host
+  ports: !reset []
+  networks: !reset []
+
+services:
+  # ---------- databases (unique ports 5433..5440) ----------
+  opencase-db:
+    <<: *host
+    command: ["postgres", "-p", "5433"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opencase -d opencase -p 5433"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  quiz-db:
+    <<: *host
+    command: ["postgres", "-p", "5434"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quiz -d quiz -p 5434"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  class-db:
+    <<: *host
+    command: ["postgres", "-p", "5435"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U class -d class -p 5435"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  analytics-db:
+    <<: *host
+    command: ["postgres", "-p", "5436"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics -d analytics -p 5436"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  learner-model-db:
+    <<: *host
+    command: ["postgres", "-p", "5437"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learner -d learner -p 5437"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  assignment-db:
+    <<: *host
+    command: ["postgres", "-p", "5438"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assignment -d assignment -p 5438"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  document-db:
+    <<: *host
+    command: ["postgres", "-p", "5439"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U document -d document -p 5439"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  auth-db:
+    <<: *host
+    command: ["postgres", "-p", "5440"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth -p 5440"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ---------- services (own ports, direct on host) ----------
+  opencase-service:
+    <<: *host
+    environment:
+      DATABASE_URL: postgresql+psycopg://opencase:${OPENCASE_DB_PASSWORD:-opencase_dev}@127.0.0.1:5433/opencase
+      CASE_BASE_URI: ${CASE_BASE_URI:-http://127.0.0.1:8101/api/v1/case}
+  quiz-service:
+    <<: *host
+    environment:
+      DATABASE_URL: postgresql+psycopg://quiz:${QUIZ_DB_PASSWORD:-quiz_dev}@127.0.0.1:5434/quiz
+  class-service:
+    <<: *host
+    environment:
+      DATABASE_URL: postgresql+psycopg://class:${CLASS_DB_PASSWORD:-class_dev}@127.0.0.1:5435/class
+  analytics-service:
+    <<: *host
+    # host-net: 8104 is the harness UI port → analytics moves to 8111
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8111"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://analytics:${ANALYTICS_DB_PASSWORD:-analytics_dev}@127.0.0.1:5436/analytics
+  learner-model-service:
+    <<: *host
+    environment:
+      DATABASE_URL: postgresql+psycopg://learner:${LEARNER_DB_PASSWORD:-learner_dev}@127.0.0.1:5437/learner
+      OPENCASE_BASE_URL: http://127.0.0.1:8101
+      CLASS_BASE_URL: http://127.0.0.1:8103
+  assignment-service:
+    <<: *host
+    environment:
+      DATABASE_URL: postgresql+psycopg://assignment:${ASSIGNMENT_DB_PASSWORD:-assignment_dev}@127.0.0.1:5438/assignment
+      LEARNER_BASE_URL: http://127.0.0.1:8105
+      QUIZ_BASE_URL: http://127.0.0.1:8102
+  document-service:
+    <<: *host
+    environment:
+      DATABASE_URL: postgresql+psycopg://document:${DOCUMENT_DB_PASSWORD:-document_dev}@127.0.0.1:5439/document
+  latexml-service:
+    <<: *host
+    # host-net: 8103 clashes with class-service → bind 8110
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8110"]
+  rag-service:
+    <<: *host
+    environment:
+      LATEXML_BASE_URL: http://127.0.0.1:8110
+      DOCUMENT_BASE_URL: http://127.0.0.1:8107
+  api-gateway:
+    <<: *host
+    environment:
+      CASE_BASE_URL: http://127.0.0.1:8101
+      QUIZ_BASE_URL: http://127.0.0.1:8102
+      CLASS_BASE_URL: http://127.0.0.1:8103
+      ANALYTICS_BASE_URL: http://127.0.0.1:8111
+      LEARNER_BASE_URL: http://127.0.0.1:8105
+      ASSIGNMENT_BASE_URL: http://127.0.0.1:8106
+      DOCUMENT_BASE_URL: http://127.0.0.1:8107
+      RAG_BASE_URL: http://127.0.0.1:8109
+      AUTH_BASE_URL: http://127.0.0.1:8108
+  auth-service:
+    <<: *host
+    environment:
+      DATABASE_URL: postgresql+psycopg://auth:${AUTH_DB_PASSWORD:-auth_dev}@127.0.0.1:5440/auth

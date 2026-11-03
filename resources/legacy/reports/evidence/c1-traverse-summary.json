@@ -1,0 +1,53 @@
+{
+  "variant": "c1",
+  "generated_at": "2026-10-17T11:07:32.535237+00:00",
+  "note": "C1 constrained traversal (traverse.py CONTEXT_MODES, dump graph_swebok_v4_b1.json.gz, name-only nodes) vs B1 baseline. Kết quả: THUA baseline rõ — ngữ cảnh chỉ gồm TÊN node + cạnh (dump không có description), start-node heuristic trượt ở nhiều câu, hub-nodes (testing) phình subgraph 288 cạnh nhiễu.",
+  "n_scored": 21,
+  "n_errors": 3,
+  "gateway_calls": 92,
+  "correctness_mean": 0.114,
+  "element_completeness_mean": 0.029,
+  "hop_precision_mean": 0.087,
+  "fabrication_count": 0,
+  "latency_p50": 2.15,
+  "per_question": [
+    {"id": "SWEBOK-S01", "mode": "verify", "start_node": "maintenance", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 9.53},
+    {"id": "SWEBOK-S02", "mode": "overview", "start_node": "failure", "n_ctx_nodes": 461, "n_ctx_edges": 460, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.14},
+    {"id": "SWEBOK-S03", "mode": "verify", "start_node": "software testing", "n_ctx_nodes": 20, "n_ctx_edges": 21, "correctness": 0.5, "element_completeness": 0.0, "hop_precision": 1.0, "fabricated": null, "latency_total_s": 4.8},
+    {"id": "SWEBOK-S04", "mode": "overview", "start_node": "atomicity", "n_ctx_nodes": 38, "n_ctx_edges": 37, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 4.49},
+    {"id": "SWEBOK-S05", "mode": "verify", "start_node": "structure-based techniques", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.2, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.27},
+    {"id": "SWEBOK-S06", "mode": "lineage", "start_node": "software design", "n_ctx_nodes": 6, "n_ctx_edges": 7, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.86},
+    {"id": "SWEBOK-S07", "mode": "overview", "start_node": "maintenance", "n_ctx_nodes": 287, "n_ctx_edges": 286, "correctness": 0.0, "element_completeness": 0.14, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.6},
+    {"id": "SWEBOK-S08", "mode": "overview", "start_node": "testing", "n_ctx_nodes": 288, "n_ctx_edges": 288, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.96},
+    {"id": "SWEBOK-S09", "mode": "overview", "start_node": "software configuration management", "n_ctx_nodes": 39, "n_ctx_edges": 38, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.91},
+    {"id": "SWEBOK-S10", "mode": "lineage", "start_node": "fault", "n_ctx_nodes": 4, "n_ctx_edges": 3, "correctness": 1.0, "element_completeness": 0.0, "hop_precision": 0.5, "fabricated": null, "latency_total_s": 2.15},
+    {"id": "SWEBOK-S11", "mode": "overview", "start_node": "testing", "n_ctx_nodes": 288, "n_ctx_edges": 288, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.11},
+    {"id": "SWEBOK-S12", "mode": "verify", "start_node": "test case", "n_ctx_nodes": 13, "n_ctx_edges": 13, "correctness": 0.0, "element_completeness": 0.08, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 69.03},
+    {"id": "SWEBOK-S13", "mode": "lineage", "start_node": "requirement", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 62.01},
+    {"id": "SWEBOK-S14", "mode": "overview", "start_node": null, "n_ctx_nodes": null, "n_ctx_edges": null, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": null, "fabricated": null, "latency_total_s": null},
+    {"id": "SWEBOK-S15", "mode": "overview", "start_node": null, "n_ctx_nodes": null, "n_ctx_edges": null, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": null, "fabricated": null, "latency_total_s": null},
+    {"id": "SWEBOK-S16", "mode": "lineage", "start_node": "testing", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.59},
+    {"id": "SWEBOK-S17", "mode": "lineage", "start_node": null, "n_ctx_nodes": null, "n_ctx_edges": null, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": null, "fabricated": null, "latency_total_s": null},
+    {"id": "SWEBOK-S18", "mode": "verify", "start_node": "quality assurance", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.3},
+    {"id": "SWEBOK-S19", "mode": "verify", "start_node": "testing", "n_ctx_nodes": 1, "n_ctx_edges": 0, "correctness": 0.0, "element_completeness": 0.125, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 1.02},
+    {"id": "SWEBOK-S20", "mode": "overview", "start_node": "testing", "n_ctx_nodes": 288, "n_ctx_edges": 288, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.06},
+    {"id": "SWEBOK-S21", "mode": "overview", "start_node": "formal methods", "n_ctx_nodes": 38, "n_ctx_edges": 38, "correctness": 0.5, "element_completeness": null, "hop_precision": null, "fabricated": false, "latency_total_s": 2.12},
+    {"id": "SWEBOK-S22", "mode": "lineage", "start_node": "detailed design", "n_ctx_nodes": 13, "n_ctx_edges": 14, "correctness": 0.4, "element_completeness": 0.0, "hop_precision": 0.25, "fabricated": null, "latency_total_s": 3.24},
+    {"id": "SWEBOK-S23", "mode": "lineage", "start_node": "regression testing", "n_ctx_nodes": 3, "n_ctx_edges": 2, "correctness": 0.0, "element_completeness": 0.06, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 2.4},
+    {"id": "SWEBOK-S24", "mode": "overview", "start_node": "minimizing complexity", "n_ctx_nodes": 71, "n_ctx_edges": 70, "correctness": 0.0, "element_completeness": 0.0, "hop_precision": 0.0, "fabricated": null, "latency_total_s": 187.31}
+  ],
+  "baseline_b1": {
+    "name": "B1_semantic_boost (cognee GRAPH_COMPLETION)",
+    "correctness_mean": 0.456,
+    "element_completeness_mean": 0.322,
+    "hop_precision_mean": 0.73,
+    "source": "docs/adr/0003-stage-b-config-tuning.md"
+  },
+  "win_rule": "correctness_mean > 0.5 hoặc hop_precision_mean > 0.78",
+  "win": false,
+  "delta_vs_baseline": {
+    "correctness": -0.342,
+    "element_completeness": -0.293,
+    "hop_precision": -0.643
+  }
+}

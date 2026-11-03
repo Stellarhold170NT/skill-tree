@@ -1,0 +1,8 @@
+# Test image for the SkillTree services pytest suite (d_test).
+# Build: docker build -t py-test -f Dockerfile.test .
+# Run:   docker run --rm -v $(pwd):/repo -w /repo py-test sh -c "cd services/<svc> && python -m pytest -q"
+FROM python:3.11-slim
+
+RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy pydantic "psycopg[binary]>=3.1,<4" pytest httpx python-multipart beautifulsoup4
+
+WORKDIR /repo

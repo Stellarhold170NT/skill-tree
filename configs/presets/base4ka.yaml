@@ -1,0 +1,34 @@
+# Preset baseline agent-first (Run run-00) — Giai đoạn A: subset S1 (4 Knowledge Areas),
+# chunk 512 (hợp lệ từ khi pivot embedding sang e5-large window 512).
+#
+# Chiến lược 2 giai đoạn (CONTEXT.md mục PIVOT, user duyệt 16/10):
+# - Giai đoạn A: so sánh S1 vs S2 cùng cấu hình baseline -> chọn bằng số đo.
+# - Giai đoạn B: 10 vòng tuning chạy trên winner subset.
+# - run-final: build full sách 1 lần với winner config (configs/presets/base.yaml).
+#
+# S1 = Software Requirements p43-66 | Software Testing p118-152 |
+#      Software Quality p248-265    | Software Security p266-275
+run_id: run-00
+reset: true
+dataset: swebok_v4
+
+chunk_size: 512
+chunks_per_batch: 25   # chống OOM (đã chết 2 sandbox với batch 50+); an toàn hơn
+raise_on_error: false  # chunk fail sau retry bị log + bỏ qua, không chết Run
+extractor: llm
+
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+subsets:
+  - Software Requirements
+  - Software Testing
+  - Software Quality
+  - Software Security
+
+search_type: GRAPH_COMPLETION
+search_query: "Software security là gì và tại sao cần thiết kế security ngay từ đầu trong phát triển phần mềm?"

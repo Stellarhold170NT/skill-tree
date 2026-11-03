@@ -1,0 +1,26 @@
+# Preset smoke — test nhanh Pipeline end-to-end (~8-10 phút) trên 1 Knowledge Area.
+# Subset: chỉ trang 266-275 (KA "Software Security", chapter 13) trích từ
+# corpora/swebok-v4/swebok-v4.md theo marker `=== [p. N] ===` + metadata.json.
+# Batch 25 + raise_on_error=false = STABILITY PROBE chống OOM trước build lớn.
+run_id: smoke-003
+reset: true
+dataset: swebok_v4
+
+chunk_size: 512        # giống baseline S1/S2 (resolved 510 với e5-large)
+chunks_per_batch: 25   # chống OOM (đã chết 2 sandbox với batch 50+)
+raise_on_error: false  # chunk fail sau retry bị log + bỏ qua, không chết Run
+extractor: llm
+
+# Xoay vòng 3 key gateway (giá trị đọc từ .env lúc chạy)
+llm_api_keys_env:
+  - LLM_API_KEY
+  - LLM_API_KEY_2
+  - LLM_API_KEY_3
+
+files:
+  - corpora/swebok-v4/swebok-v4.md
+subsets:               # lọc theo KA từ metadata.json (test nhanh, KHÔNG dùng cho baseline)
+  - Software Security
+
+search_type: GRAPH_COMPLETION
+search_query: "Software security là gì và tại sao nó quan trọng trong phát triển phần mềm?"

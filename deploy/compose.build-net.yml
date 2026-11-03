@@ -1,0 +1,15 @@
+# Build-time override: use host network for BuildKit steps (dind bridge quirk).
+x-build-host: &build-host
+  build:
+    network: host
+services:
+  opencase-service: *build-host
+  quiz-service: *build-host
+  class-service: *build-host
+  analytics-service: *build-host
+  learner-model-service: *build-host
+  assignment-service: *build-host
+  document-service: *build-host
+  latexml-service: *build-host
+  rag-service: *build-host
+  api-gateway: *build-host

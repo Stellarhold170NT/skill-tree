@@ -1,0 +1,19 @@
+{
+  "brandName": "SkillTree",
+  "theme": {
+    "primaryColor": "#27A95F",
+    "brandPrimaryInvert": "#FFFFFF",
+    "boot": "#167F4D"
+  },
+  "ui": {
+    "heroTitle": "SkillTree — Decode the invisible thread",
+    "logoWidth": "120px",
+    "logoHeight": "26px"
+  },
+  "browser": {
+    "replaceTitle": true,
+    "setFavicon": true,
+    "titleFormat": "suffix",
+    "titleSeparator": " — "
+  }
+}

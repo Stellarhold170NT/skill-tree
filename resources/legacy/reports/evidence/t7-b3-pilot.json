@@ -1,0 +1,34 @@
+{
+  "label": "B3 pilot — query expansion VI→EN + ABLATION phân rã gain",
+  "date": "2026-10-19T01:05Z",
+  "method": "question -> LLM dịch EN -> query = VI + EN; hybrid GRAPH+CHUNKS top_k=8; chấm t7_element_v2 --glossary. Ablation: hybrid-only (không dịch) trên cùng 4 câu L1/L2",
+  "b3_pilot": {
+    "targets": ["QA-L1-12", "QA-L3-05", "QA-L1-02", "QA-L1-03", "QA-L2-06", "QA-L3-09"],
+    "baseline_mean": 0.286,
+    "b3_mean": 0.531,
+    "mean_delta": 0.245,
+    "improved": "5/6",
+    "per_question": {
+      "QA-L1-12": 0.333, "QA-L3-05": 0.0, "QA-L1-02": 0.571,
+      "QA-L1-03": 0.714, "QA-L2-06": 0.857, "QA-L3-09": 0.714
+    }
+  },
+  "ablation_hybrid_only_4_cau": {
+    "note": "phân rã: gain đến từ HYBRID hay từ EXPANSION?",
+    "per_question": {
+      "QA-L1-12": {"base": 0.0, "hybrid_only": 0.333, "hyb_exp": 0.333},
+      "QA-L1-02": {"base": 0.429, "hybrid_only": 0.571, "hyb_exp": 0.571},
+      "QA-L1-03": {"base": 0.429, "hybrid_only": 0.714, "hyb_exp": 0.714},
+      "QA-L2-06": {"base": 0.429, "hybrid_only": 0.857, "hyb_exp": 0.857}
+    },
+    "mean": {"base": 0.322, "hybrid_only": 0.619, "hyb_exp": 0.619},
+    "result": "hybrid-only == hybrid+expansion trên TẤT CẢ 4 câu — expansion góp 0"
+  },
+  "L3_cross_check": {
+    "QA-L3-05": {"B2_hybrid_only": "0.333 (ổn định cả 2 runs)", "B3_hyb_exp": 0.0, "note": "expansion PHA LOÃNG query — làm tệ"},
+    "QA-L3-09": {"B2_hybrid_only": "0.714 (ổn định cả 2 runs)", "B3_hyb_exp": 0.714, "note": "trung tính"}
+  },
+  "verdict": "REVISED — KHÔNG ADOPT expansion. Toàn bộ gain B3 (+0.245) thực chất là HYBRID chunks (B2) tác động cả lên L1/L2 (chưa từng áp trước đó). Expansion: 0 lợi ích đo được, 1 case làm tệ (L3-05), +1 LLM call/câu vô ích.",
+  "real_actionable": "Mở rộng HYBRID cho MỌI level (không chỉ L3): trên 4 câu yếu L1/L2, hybrid-only 0.322→0.619 (+0.297). Đề xuất: full-bank hybrid run 54 câu để xác nhận trước khi mặc định.",
+  "next": "1) full-bank hybrid (54 câu) đo gain thật toàn bank; 2) bỏ expansion khỏi pipeline; 3) L3-05 vẫn cần điều tra ranking riêng"
+}

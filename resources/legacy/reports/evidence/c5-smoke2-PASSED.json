@@ -1,0 +1,23 @@
+{
+  "verdict": "RE-SMOKE_PASSED_ALL_CHECKS",
+  "timestamp": "2026-10-17T12:40Z",
+  "sandbox": "sess-f762161c (swebok-cognee)",
+  "run": "run-00-c5smoke2 | preset configs/presets/c5_smoke.yaml | dataset swebok_v4_c5_smoke2 | reset:false | 1 KA Software Architecture (subset p67-82, 52204 chars)",
+  "fix_applied": "src/skilltree/ontology/swebok.py bản 2: SWEBOKGraph/SWEBOKNode/SWEBOKEdge kế thừa cognee.shared.data_models.KnowledgeGraph/Node/Edge (duong construct chinh thuc); relationship_name Literal 15 enum (before-validator case-insensitive); type Literal 14 enum; id default '' + fill slugify(name); validator graph normalize endpoint (khop id hoac name, case/slug-insensitive), bo canh rách; confidence nhung vao edge description 'confidence=X.X | ...' (parse CONFIDENCE_RE); source_chunks bo; CUSTOM_PROMPT_V2 moi 1922 chars (id slug + tham chieu source_node_id/target_node_id)",
+  "duration": {"total_s": 1417.9, "cognify_s": 1395.3, "note": "~23.6 phut cho 1 KA"},
+  "graph": {"nodes": 408, "edges": 1396, "semantic_edges": 518, "infra_edges": {"contains": 484, "is_a": 344, "made_from": 25, "is_part_of": 25}},
+  "checks": {
+    "a_relationship_enum": {"pass": true, "detail": "518/518 canh LLM-extracted nam trong 15 enum (100%). Phan bo: part_of 125, other 105 (20.3%), subtype_of 90, constrains 41, depends_on 38, produces 34, consumes 33, causes 9, requires 9, usestool 8, verifies 8, measured_by 7, mitigates 6, validates 4, injects 1. KHONG co related_to/is_a rac tu LLM (is_a 344 la infra edge Entity->EntityType cua cognee, khong phai LLM). Luu y: cognee luu lowercase (PART_OF -> part_of)."},
+    "b_node_type_description": {"pass": true, "detail": "343/344 Entity nodes (99.7%) co description non-empty, cau co y nghia. Node types qua is_a: concept 170, artifact 43, activity 36, qualityattribute 25, method 22, metric 14, tool 10, technique 9, principle 6, knowledgearea 5, task 2, fault 1, failuremode 1 — tat ca trong 14 enum (13/14 kieu duoc dung, khong co HumanError trong KA Architecture la hop ly)."},
+    "c_confidence": {"pass": true, "detail": "518/518 canh semantic co edge_text voi 'confidence=X.X | ...' parse duoc (100%), mean=0.82, min=0.50, max=1.00."},
+    "d_no_mass_chunk_fail": {"pass": true, "detail": "Chi 1 retry gateway LLM (HTML error page, cognee tu retry thanh cong); khong co chunk fail validation nao; run DONE."
+    }
+  },
+  "sample_edges": [
+    "software architecture -[other]-> architecture description | confidence=0.9 | Kien truc phan mem... duoc bieu dat thong qua architecture description",
+    "software architecture -[part_of]-> software system | confidence=0.65",
+    "software architecture -[other]-> software system | confidence=0.97"
+  ],
+  "memory_peak": "MemAvailable toi thap ~2.0GB (tren nguong canh bao 1.2GB)",
+  "next": "BUILD FULL S2 da duoc phong: build_memory.py --preset c5_ontology --skip-search, detached, log /root/c5-build.log, dataset swebok_v4_c5"
+}

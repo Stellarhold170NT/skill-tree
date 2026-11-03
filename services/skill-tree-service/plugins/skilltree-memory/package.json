@@ -1,0 +1,30 @@
+{
+  "name": "skilltree-memory",
+  "version": "0.1.0",
+  "description": "SkillTree classroom memory plugin — per-student Cognee GraphRAG datasets. Registers 3 model tools: memory_ingest (Caliper/progress events -> the student's cognee dataset), memory_ask (Q&A over one student's evolving knowledge), memory_evolve (periodic knowledge-evolution pipeline). Dataset isolation: student-<candidateId> (candidateId comes from class-service M6). Talks to the Cognee MCP server already wired in plugins/patch.yml (row mcp-cognee-memory). No LLM key lives in this plugin: entity extraction runs inside the Cognee MCP server, whose LLM gateway (NetMind) is configured via env from skilltree-secrets/netmind.json.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "skilltree",
+    "classroom-memory",
+    "cognee",
+    "graphrag",
+    "caliper"
+  ],
+  "license": "MIT",
+  "files": [
+    "lib",
+    "skills",
+    "test",
+    "README.md",
+    "package.json"
+  ],
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\""
+  }
+}

@@ -1,0 +1,13 @@
+llm-pi-ai:
+  routes:
+    netmind:
+      provider: netmind
+      api: openai-completions
+      baseURL: https://${LLM_GATEWAY}/gateway/v1
+      apiKeyEnv: NETMIND_API_KEY
+      models:
+        - id: zai-org/GLM-5.3-Flash
+          name: GLM-5.3-Flash (NetMind)
+agent-default-model:
+  provider: netmind
+  model: zai-org/GLM-5.3-Flash

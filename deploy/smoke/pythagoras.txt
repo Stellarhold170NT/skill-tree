@@ -1,0 +1,4 @@
+Hinh hoc phang: Dinh ly Pythagoras a^2 + b^2 = c^2 voi tam giac vuong.
+Chieu cao ha luy h = ab/c. Dien tich S = 1/2 ab.
+Mot nua chu vi chu vi nua duong tron ban kinh r la pi r.
+Dinh ly cosin: c^2 = a^2 + b^2 - 2ab cos(C).

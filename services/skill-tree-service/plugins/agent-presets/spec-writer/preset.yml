@@ -1,0 +1,3 @@
+name: Chế độ Spec
+description: Giống hệt Standard mode nhưng bỏ tool bash và web search (tool-web). Persona, pwsh, skills, planning, goals, subagents, workflow giữ nguyên từ standard.
+order: 5
