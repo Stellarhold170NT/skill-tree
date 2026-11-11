@@ -1,0 +1,15 @@
+meta {
+  name: class-service
+}
+
+docs {
+  # class-service API Collection
+
+  Module **M6** of the learning platform: A pragmatic **1EdTech OneRoster v1.2** roster & school directory service.
+  
+  ## Key Capabilities
+  - **School & Course Structure**: Manages Organizations (schools, departments), Courses, and Class Sections.
+  - **Identity & Data Minimization**: The **only module in the platform permitted to store personal identities** (name, optional email, role).
+  - **Mints `candidateId`**: Every user's `sourcedId` (UUIDv4) is the pseudonymous identifier consumed across all behavioral modules (`quiz-service`, `analytics-service`, `learner-model-service`, `cognee-memory-gateway`).
+  - **Rosters & Enrollments**: Associates teachers and students with classes, providing classroom rosters and course membership.
+}

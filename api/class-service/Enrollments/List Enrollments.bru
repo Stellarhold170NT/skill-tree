@@ -1,0 +1,23 @@
+meta {
+  name: List Enrollments
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/enrollments?limit=50&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  offset: 0
+  ~classId: {{classId}}
+  ~userId: {{userId}}
+  ~role: student
+}
+
+docs {
+  Lists enrollments with optional filters by `classId`, `userId`, or `role`.
+}

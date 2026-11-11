@@ -80,7 +80,7 @@ services:
 
   class-service:
     build: ../services/class-service
-    image: skill-tree/class-service:0.1.0
+    image: stellarhold170nt/class-service:0.1.0
     environment:
       DATABASE_URL: postgresql+psycopg://class:${CLASS_DB_PASSWORD:-class_dev}@class-db:5432/class
     ports:

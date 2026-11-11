@@ -23,14 +23,23 @@ Module **M2** - Ngân hàng câu hỏi trắc nghiệm & chấm điểm chuẩn 
 * `Tests`: Lắp ráp đề thi (`AssessmentTest`) theo từng phân đoạn (sections).
 * `Attempts & Outcomes`: Chấm điểm tự động từng lượt làm bài hoặc theo lô (bulk) và tổng hợp tỷ lệ làm đúng theo từng khái niệm (`byConcept`).
 
-### C. `api/document-service/` (Cổng 8107)
+### C. `api/class-service/` (Cổng 8103)
+Module **M6** - Quản lý trường học, lớp học & hồ sơ danh sách chuẩn **1EdTech OneRoster v1.2**.
+* `Health`: Kiểm tra trạng thái hoạt động của service.
+* `Orgs`: Quản lý trường học, khoa, phòng ban đào tạo (`orgType`: department, school, district).
+* `Courses`: Quản lý học phần, môn học theo niên khóa (`schoolYear`).
+* `Classes`: Quản lý các lớp học phần (`term`), danh sách sinh viên (`students`) và giảng viên (`teachers`).
+* `Users`: Quản lý người dùng và cấp mã định danh ẩn danh toàn hệ thống `sourcedId` (`candidateId`).
+* `Enrollments`: Đăng ký tham gia lớp học phần cho sinh viên và giáo viên (`primary`).
+
+### D. `api/document-service/` (Cổng 8107)
 Module **M3** - Kho lưu trữ tài liệu học tập & tri thức chuẩn **W3C/LRMI**.
 * `Health`: Kiểm tra trạng thái hoạt động của service.
 * `Documents`: Quản lý tài liệu học tập, thời lượng học (`typicalLearningTime` ISO-8601), cấp độ giáo dục.
 * `Files`: Tải lên và quản lý tệp nhị phân gốc (PDF, TeX, TXT) với mã băm SHA-256.
 * `Chunks & Alignments`: Quản lý các đoạn văn bản (chunks) và gán nhãn căn chỉnh sư phạm (`teaches`, `assesses`, `requires`, `summarizes`) với các concept của `opencase-service`.
 
-### D. `api/rag-service/` (Cổng 8109)
+### E. `api/rag-service/` (Cổng 8109)
 Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tập thông minh.
 * `Health`: Kiểm tra trạng thái liveness của service.
 * `Documents`: Tải lên tài liệu học tập (`.md`, `.txt`, `.html`, `.tex`, `.zip`), xem cây mục lục ToC, quản lý vòng đời tài liệu.
@@ -47,6 +56,7 @@ Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tậ
 3. Duyệt và chọn thư mục collection bạn muốn test:
    * `api/opencase-service` (Test đồ thị môn học).
    * `api/quiz-service` (Test ngân hàng câu hỏi QTI & chấm điểm).
+   * `api/class-service` (Test tổ chức trường học, lớp học & OneRoster).
    * `api/document-service` (Test kho tài liệu và chunks).
    * `api/rag-service` (Test hỏi đáp sổ tay học tập thông minh).
 4. Ở góc trên bên phải của Bruno, chọn Environment tương ứng: **`Local`**.

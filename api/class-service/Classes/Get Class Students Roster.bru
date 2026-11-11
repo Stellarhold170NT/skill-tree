@@ -1,0 +1,16 @@
+meta {
+  name: Get Class Students Roster
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/classes/{{classId}}/students
+  body: none
+  auth: none
+}
+
+docs {
+  Returns the list of enrolled students for this class section.
+  Provides their `sourcedId` (the platform-wide `candidateId`).
+}

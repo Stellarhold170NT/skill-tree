@@ -1,0 +1,30 @@
+meta {
+  name: Create Enrollment
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/enrollments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "userSourcedId": "{{userId}}",
+    "classSourcedId": "{{classId}}",
+    "role": "student",
+    "primary": true
+  }
+}
+
+vars:post-response {
+  enrollmentId: res.body.sourcedId
+}
+
+docs {
+  Enrolls a user into a class section with a role (`student` or `teacher`).
+  `primary` indicates primary teacher/primary student enrollment.
+  Saves the returned `sourcedId` into variable `enrollmentId`.
+}

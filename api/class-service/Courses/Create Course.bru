@@ -1,0 +1,28 @@
+meta {
+  name: Create Course
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/courses
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Đại số tuyến tính ứng dụng",
+    "schoolYear": "2025-2026",
+    "orgSourcedId": "{{orgId}}"
+  }
+}
+
+vars:post-response {
+  courseId: res.body.sourcedId
+}
+
+docs {
+  Creates an academic course, optionally attached to an organization.
+  Saves the returned `sourcedId` into variable `courseId`.
+}

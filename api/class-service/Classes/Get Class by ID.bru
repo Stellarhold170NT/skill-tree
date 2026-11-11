@@ -1,0 +1,15 @@
+meta {
+  name: Get Class by ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/classes/{{classId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves class section details by `sourcedId`.
+}

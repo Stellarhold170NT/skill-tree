@@ -1,0 +1,21 @@
+meta {
+  name: List Courses
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/courses?limit=50&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  offset: 0
+  ~orgId: {{orgId}}
+}
+
+docs {
+  Lists courses with optional `orgId` filter.
+}

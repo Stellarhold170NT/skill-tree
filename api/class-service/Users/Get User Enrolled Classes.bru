@@ -1,0 +1,15 @@
+meta {
+  name: Get User Enrolled Classes
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/users/{{userId}}/classes
+  body: none
+  auth: none
+}
+
+docs {
+  Returns all class sections this user is currently enrolled in.
+}

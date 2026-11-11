@@ -1,0 +1,22 @@
+meta {
+  name: List Classes
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/classes?limit=50&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  offset: 0
+  ~courseId: {{courseId}}
+  ~orgId: {{orgId}}
+}
+
+docs {
+  Lists class sections with optional filters by `courseId` or `orgId`.
+}

@@ -1,0 +1,16 @@
+meta {
+  name: Get User by ID (Candidate ID)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/users/{{userId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves user record by `sourcedId`.
+  Notice that the returned `sourcedId` is the exact `candidateId` used across `quiz-service`, `analytics-service`, and `learner-model-service`.
+}

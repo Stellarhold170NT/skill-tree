@@ -1,0 +1,15 @@
+meta {
+  name: Delete Class
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/classes/{{classId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Deletes a class section and cascades enrollments.
+}

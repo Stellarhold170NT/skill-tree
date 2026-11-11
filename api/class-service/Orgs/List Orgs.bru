@@ -1,0 +1,20 @@
+meta {
+  name: List Orgs
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/orgs?limit=50&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  offset: 0
+}
+
+docs {
+  Lists all organizations.
+}

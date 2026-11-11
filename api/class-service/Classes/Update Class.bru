@@ -1,0 +1,21 @@
+meta {
+  name: Update Class
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/classes/{{classId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "term": "2026-fall"
+  }
+}
+
+docs {
+  Partially updates class section details (title, term, course, org).
+}

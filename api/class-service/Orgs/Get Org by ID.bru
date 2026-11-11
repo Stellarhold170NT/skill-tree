@@ -1,0 +1,15 @@
+meta {
+  name: Get Org by ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/orgs/{{orgId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves organization details by `sourcedId`.
+}

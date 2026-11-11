@@ -1,0 +1,29 @@
+meta {
+  name: Create Org
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/orgs
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Khoa Khoa Học Máy Tính",
+    "orgType": "department",
+    "identifier": "CS-DEPT-01"
+  }
+}
+
+vars:post-response {
+  orgId: res.body.sourcedId
+}
+
+docs {
+  Creates an organization (school, department, district).
+  `orgType` can be: `department`, `school`, `district`, `local`, `state`, `national`.
+  Saves the returned `sourcedId` into variable `orgId`.
+}

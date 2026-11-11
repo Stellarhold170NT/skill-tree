@@ -1,0 +1,15 @@
+meta {
+  name: Get Class Teachers Roster
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/classes/{{classId}}/teachers
+  body: none
+  auth: none
+}
+
+docs {
+  Returns the list of assigned teachers for this class section.
+}

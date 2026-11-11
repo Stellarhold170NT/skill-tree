@@ -1,0 +1,29 @@
+meta {
+  name: Create Class Section
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/classes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Đại số tuyến tính - Lớp CC01",
+    "courseSourcedId": "{{courseId}}",
+    "orgSourcedId": "{{orgId}}",
+    "term": "2026-spring"
+  }
+}
+
+vars:post-response {
+  classId: res.body.sourcedId
+}
+
+docs {
+  Creates a specific class section for a course during a term.
+  Saves the returned `sourcedId` into variable `classId`.
+}
