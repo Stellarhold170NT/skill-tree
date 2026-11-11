@@ -1,0 +1,25 @@
+meta {
+  name: Submit Single Attempt
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/attempts
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "itemId": "{{itemId}}",
+    "candidateId": "{{candidateId}}",
+    "response": ["A"],
+    "testId": "{{testId}}"
+  }
+}
+
+docs {
+  Scores an item response immediately using QTI `match_correct` rules (order-insensitive exact match).
+  Returns `isCorrect` (bool) and `score` (1.0 or 0.0).
+}

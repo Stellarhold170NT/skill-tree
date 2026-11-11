@@ -1,0 +1,15 @@
+meta {
+  name: Delete Item
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/items/{{itemId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Deletes an assessment item and cascades associated attempts.
+}

@@ -1,0 +1,20 @@
+meta {
+  name: List Tests
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/tests?limit=50&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  offset: 0
+}
+
+docs {
+  Lists all assembled assessment tests.
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Get Test with Resolved Items
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/tests/{{testId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves test details with each section's items fully resolved and expanded.
+}

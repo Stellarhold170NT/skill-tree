@@ -1,0 +1,29 @@
+meta {
+  name: Submit Bulk Attempts
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/attempts/bulk
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "candidateId": "{{candidateId}}",
+    "testId": "{{testId}}",
+    "responses": [
+      {
+        "itemId": "{{itemId}}",
+        "response": ["A"]
+      }
+    ]
+  }
+}
+
+docs {
+  Scores a batch of responses atomically for a candidate.
+  Returns summary totals, correct counts, and accuracy ratio.
+}

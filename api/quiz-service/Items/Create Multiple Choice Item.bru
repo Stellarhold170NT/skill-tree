@@ -1,0 +1,35 @@
+meta {
+  name: Create Multiple Choice Item
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/items
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Tính chất của ma trận trực giao",
+    "prompt": "Chọn các phát biểu đúng về ma trận trực giao Q:",
+    "choices": [
+      { "identifier": "A", "text": "Q^T * Q = I" },
+      { "identifier": "B", "text": "det(Q) có thể bằng 1 hoặc -1" },
+      { "identifier": "C", "text": "Q luôn có định thức bằng 0" },
+      { "identifier": "D", "text": "Các cột của Q tạo thành một hệ trực chuẩn" }
+    ],
+    "correctResponse": ["A", "B", "D"],
+    "interactionType": "multiple_choice",
+    "shuffle": true,
+    "conceptUri": "urn:skilltree:concept:linear-algebra:orthogonal-matrix",
+    "difficulty": 0.6,
+    "discrimination": 0.9,
+    "language": "vie"
+  }
+}
+
+docs {
+  Creates a multiple-choice item (requires selecting all correct responses).
+}

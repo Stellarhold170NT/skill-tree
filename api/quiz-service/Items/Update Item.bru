@@ -1,0 +1,23 @@
+meta {
+  name: Update Item
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/items/{{itemId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "difficulty": 0.45,
+    "discrimination": 0.85
+  }
+}
+
+docs {
+  Updates item metadata or choices/prompts.
+  Re-generates QTI XML if content changes.
+}

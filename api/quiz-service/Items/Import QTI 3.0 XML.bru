@@ -1,0 +1,21 @@
+meta {
+  name: Import QTI 3.0 XML
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/items/import-qti
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "qtiXml": "<qti-assessment-item identifier=\"ITEM-IMPORT-001\" title=\"Định thức ma trận bậc 2\" xmlns=\"https://purl.imsglobal.org/spec/qti/v3p0/ns\"><qti-response-declaration identifier=\"RESPONSE\" cardinality=\"single\" base-type=\"identifier\"><qti-correct-response><qti-value>A</qti-value></qti-correct-response></qti-response-declaration><qti-outcome-declaration identifier=\"SCORE\" cardinality=\"single\" base-type=\"float\"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration><qti-item-body><qti-p>Cho ma trận A = [[a, b], [c, d]]. det(A) bằng:</qti-p><qti-choice-interaction response-identifier=\"RESPONSE\" shuffle=\"true\" max-choices=\"1\"><qti-simple-choice identifier=\"A\">ad - bc</qti-simple-choice><qti-simple-choice identifier=\"B\">ab - cd</qti-simple-choice><qti-simple-choice identifier=\"C\">ac - bd</qti-simple-choice><qti-simple-choice identifier=\"D\">ad + bc</qti-simple-choice></qti-choice-interaction></qti-item-body><qti-response-processing template=\"https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct\"/></qti-assessment-item>"
+  }
+}
+
+docs {
+  Directly imports raw 1EdTech QTI v3.0 XML and parses it into item structures.
+}

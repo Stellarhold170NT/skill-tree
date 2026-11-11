@@ -1,0 +1,26 @@
+meta {
+  name: List Items
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/items?limit=50&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  offset: 0
+  ~conceptUri: urn:skilltree:concept:linear-algebra:invertible-matrix
+  ~interactionType: single_choice
+  ~q: khả nghịch
+}
+
+docs {
+  Lists items with optional filters:
+  - `conceptUri`: Filter items linked to a specific concept in CASE (M1).
+  - `interactionType`: `single_choice` or `multiple_choice`.
+  - `q`: Search keyword in title or prompt.
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Get Raw QTI XML
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/items/{{itemId}}/qti
+  body: none
+  auth: none
+}
+
+docs {
+  Returns the raw 1EdTech QTI v3.0 XML document with Content-Type `application/xml`.
+}

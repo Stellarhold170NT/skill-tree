@@ -1,0 +1,35 @@
+meta {
+  name: Assemble Test
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/tests
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "identifier": "TEST-MIDTERM-ALGEBRA",
+    "title": "Kiểm tra giữa kỳ - Đại số tuyến tính",
+    "sections": [
+      {
+        "title": "Phần 1: Ma trận và Định thức",
+        "itemIds": [
+          "{{itemId}}"
+        ]
+      }
+    ]
+  }
+}
+
+vars:post-response {
+  testId: res.body.id
+}
+
+docs {
+  Assembles an assessment test by grouping items into sections.
+  Saves the created `id` to the `testId` variable.
+}

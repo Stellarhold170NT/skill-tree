@@ -1,0 +1,17 @@
+meta {
+  name: quiz-service
+}
+
+docs {
+  # quiz-service API Collection
+
+  Module **M2** of the learning platform: A **1EdTech QTI v3.0 Question Bank & Scoring Engine**.
+  
+  ## Key Capabilities
+  - **Item Bank**: Multiple-choice assessment items (single and multiple choice).
+  - **Concept Linking**: Links items to curriculum nodes via `conceptUri` (CFItem identifier from M1 `opencase-service`).
+  - **QTI v3.0 XML**: Imports and exports standard QTI 3.0 XML packages with `rptemplates/match_correct`.
+  - **Test Assembly**: Groups items into modular test sections.
+  - **Scoring & Outcomes**: Evaluates single or bulk attempts, computes mastery ratios per `conceptUri` for M5 `learner-model-service`.
+  - **Privacy**: No PII stored; candidates are identified only by pseudonymous `candidateId` (OneRoster `sourcedId`).
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Get Item by ID
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/items/{{itemId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves item details by its internal UUID.
+}

@@ -1,0 +1,16 @@
+meta {
+  name: Get Candidate Outcomes & Concept Ratios
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/candidates/{{candidateId}}/outcomes
+  body: none
+  auth: none
+}
+
+docs {
+  Aggregates attempts by candidate and groups mastery ratios by `conceptUri`.
+  This is the clean input used by M5 (`learner-model-service`) to update Glicko-2 ratings and detect rusty knowledge.
+}

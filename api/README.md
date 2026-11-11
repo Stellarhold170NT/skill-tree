@@ -16,14 +16,21 @@ Module **M1** - Quản lý đồ thị khái niệm môn học theo chuẩn **1E
 * `Associations`: Quản lý các cạnh đồ thị (`CFAssociation` - điều kiện tiên quyết, phân cấp).
 * `Graph & Learning Order`: Xuất đồ thị, gói CASE JSON-LD, thứ tự topo và kiểm tra mở khóa concept.
 
-### B. `api/document-service/` (Cổng 8107)
+### B. `api/quiz-service/` (Cổng 8102)
+Module **M2** - Ngân hàng câu hỏi trắc nghiệm & chấm điểm chuẩn **1EdTech QTI v3.0**.
+* `Health`: Kiểm tra trạng thái hoạt động của service.
+* `Items`: Quản lý câu hỏi trắc nghiệm (đơn lựa chọn, đa lựa chọn), nhập xuất chuẩn QTI v3.0 XML (`rptemplates/match_correct`), liên kết khái niệm (`conceptUri`).
+* `Tests`: Lắp ráp đề thi (`AssessmentTest`) theo từng phân đoạn (sections).
+* `Attempts & Outcomes`: Chấm điểm tự động từng lượt làm bài hoặc theo lô (bulk) và tổng hợp tỷ lệ làm đúng theo từng khái niệm (`byConcept`).
+
+### C. `api/document-service/` (Cổng 8107)
 Module **M3** - Kho lưu trữ tài liệu học tập & tri thức chuẩn **W3C/LRMI**.
 * `Health`: Kiểm tra trạng thái hoạt động của service.
 * `Documents`: Quản lý tài liệu học tập, thời lượng học (`typicalLearningTime` ISO-8601), cấp độ giáo dục.
 * `Files`: Tải lên và quản lý tệp nhị phân gốc (PDF, TeX, TXT) với mã băm SHA-256.
 * `Chunks & Alignments`: Quản lý các đoạn văn bản (chunks) và gán nhãn căn chỉnh sư phạm (`teaches`, `assesses`, `requires`, `summarizes`) với các concept của `opencase-service`.
 
-### C. `api/rag-service/` (Cổng 8109)
+### D. `api/rag-service/` (Cổng 8109)
 Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tập thông minh.
 * `Health`: Kiểm tra trạng thái liveness của service.
 * `Documents`: Tải lên tài liệu học tập (`.md`, `.txt`, `.html`, `.tex`, `.zip`), xem cây mục lục ToC, quản lý vòng đời tài liệu.
@@ -39,6 +46,7 @@ Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tậ
 2. Chọn **Open Collection**.
 3. Duyệt và chọn thư mục collection bạn muốn test:
    * `api/opencase-service` (Test đồ thị môn học).
+   * `api/quiz-service` (Test ngân hàng câu hỏi QTI & chấm điểm).
    * `api/document-service` (Test kho tài liệu và chunks).
    * `api/rag-service` (Test hỏi đáp sổ tay học tập thông minh).
 4. Ở góc trên bên phải của Bruno, chọn Environment tương ứng: **`Local`**.

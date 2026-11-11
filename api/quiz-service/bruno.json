@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "quiz-service",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

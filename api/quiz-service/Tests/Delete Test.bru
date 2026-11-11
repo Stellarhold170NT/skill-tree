@@ -1,0 +1,15 @@
+meta {
+  name: Delete Test
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/tests/{{testId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Deletes an assessment test (does not delete the items).
+}

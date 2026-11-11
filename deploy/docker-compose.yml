@@ -51,7 +51,7 @@ services:
 
   quiz-service:
     build: ../services/quiz-service
-    image: skill-tree/quiz-service:0.1.0
+    image: stellarhold170nt/quiz-service:0.1.0
     environment:
       DATABASE_URL: postgresql+psycopg://quiz:${QUIZ_DB_PASSWORD:-quiz_dev}@quiz-db:5432/quiz
     ports:

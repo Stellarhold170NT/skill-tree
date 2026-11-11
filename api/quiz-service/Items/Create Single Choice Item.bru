@@ -1,0 +1,41 @@
+meta {
+  name: Create Single Choice Item
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/items
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Khái niệm ma trận khả nghịch",
+    "prompt": "Một ma trận vuông A cấp n được gọi là khả nghịch khi và chỉ khi:",
+    "choices": [
+      { "identifier": "A", "text": "det(A) != 0" },
+      { "identifier": "B", "text": "det(A) == 0" },
+      { "identifier": "C", "text": "A có các phần tử trên đường chéo chính bằng 0" },
+      { "identifier": "D", "text": "A là ma trận đường chéo" }
+    ],
+    "correctResponse": ["A"],
+    "interactionType": "single_choice",
+    "shuffle": true,
+    "conceptUri": "urn:skilltree:concept:linear-algebra:invertible-matrix",
+    "difficulty": 0.4,
+    "discrimination": 0.8,
+    "language": "vie"
+  }
+}
+
+vars:post-response {
+  itemId: res.body.id
+}
+
+docs {
+  Creates a single-choice assessment item.
+  The service automatically generates standard QTI v3.0 XML and assigns a unique identifier.
+  Saves the returned `id` to the `itemId` variable.
+}

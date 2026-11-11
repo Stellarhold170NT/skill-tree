@@ -1,0 +1,15 @@
+meta {
+  name: Get Candidate Attempt History
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/candidates/{{candidateId}}/history
+  body: none
+  auth: none
+}
+
+docs {
+  Returns all attempt logs for the candidate in ascending chronological order.
+}
