@@ -169,7 +169,7 @@ services:
 
   assignment-service:
     build: ../services/assignment-service
-    image: skill-tree/assignment-service:0.1.0
+    image: stellarhold170nt/assignment-service:0.1.0
     environment:
       DATABASE_URL: postgresql+psycopg://assignment:${ASSIGNMENT_DB_PASSWORD:-assignment_dev}@assignment-db:5432/assignment
       LEARNER_BASE_URL: http://learner-model-service:8105

@@ -1,0 +1,21 @@
+meta {
+  name: Update Assignment Status
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/assignments/{{assignmentId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "status": "closed"
+  }
+}
+
+docs {
+  Updates assignment status (`draft`, `published`, `closed`), title, or due date.
+}

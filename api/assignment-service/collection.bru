@@ -1,0 +1,16 @@
+meta {
+  name: assignment-service
+}
+
+docs {
+  # assignment-service API Collection
+
+  Module **M7** of the learning platform: **Targeted Practice & Interventions**.
+  
+  ## Key Capabilities
+  - **Diagnostic Consumer**: Reads student mastery states (`red` / `rusty`) from M5 (`learner-model-service`) class heatmap for a target `conceptUri`.
+  - **Question Bank Consumer**: Fetches assessment items for the `conceptUri` from M2 (`quiz-service`).
+  - **Targeted Practice Generator**: Assembles assignments restricted to affected students and matching items.
+  - **M2 Quiz Test Minting**: In a single call `POST /assignments/{id}/quiz`, generates an official M2 `AssessmentTest` (`ASG-<id>`) covering the assignment's questions.
+  - **Privacy**: Students are referenced only by pseudonymous `sourcedId`s (OneRoster M6).
+}

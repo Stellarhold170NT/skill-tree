@@ -1,0 +1,19 @@
+meta {
+  name: Generate Quiz for Assignment
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/assignments/{{assignmentId}}/quiz
+  body: none
+  auth: none
+}
+
+docs {
+  Generates an M2 (`quiz-service`) assessment test for this assignment:
+  - Calls M2 `POST /api/v1/tests` with identifier `ASG-<id>`.
+  - Links the assignment's `itemIds` into the test section.
+  - Updates `assignment.quizTestId`.
+  - Can only be generated once per assignment (returns 409 if already created).
+}

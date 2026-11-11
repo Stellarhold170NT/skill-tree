@@ -1,0 +1,33 @@
+meta {
+  name: Create Targeted Assignment
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/assignments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Ôn tập củng cố: Ma trận khả nghịch",
+    "classId": "{{classId}}",
+    "conceptUri": "{{conceptUri}}",
+    "targetGroup": "red_rusty",
+    "dueAt": "2026-11-20T23:59:59Z"
+  }
+}
+
+vars:post-response {
+  assignmentId: res.body.id
+}
+
+docs {
+  Creates a targeted assignment for struggling learners:
+  - Fetches the class heatmap from M5 (`learner-model-service`) for the target `conceptUri`.
+  - Filters students matching `targetGroup` (`red`, `rusty`, or `red_rusty`).
+  - Fetches matching questions from M2 (`quiz-service`) item bank for `conceptUri`.
+  - Saves the immutable snapshot (`studentIds`, `itemIds`) and saves the assignment `id`.
+}
