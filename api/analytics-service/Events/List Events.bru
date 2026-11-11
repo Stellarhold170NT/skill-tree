@@ -1,0 +1,16 @@
+meta {
+  name: List Events
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/events?limit=20&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 20
+  offset: 0
+}

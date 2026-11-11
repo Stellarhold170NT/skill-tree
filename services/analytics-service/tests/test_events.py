@@ -1,6 +1,6 @@
 """Append, idempotency, batch atomicity, filters, last-interaction."""
 
-from tests.conftest import CONCEPT, STUDENT, _event
+from .conftest import CONCEPT, STUDENT, _event
 
 
 def test_health(client):

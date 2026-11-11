@@ -1,0 +1,16 @@
+meta {
+  name: Filter Events by Actor
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/events?actorId=candidate-bruno-1&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  actorId: candidate-bruno-1
+  limit: 20
+}

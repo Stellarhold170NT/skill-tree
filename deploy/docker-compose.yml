@@ -109,7 +109,7 @@ services:
 
   analytics-service:
     build: ../services/analytics-service
-    image: skill-tree/analytics-service:0.1.0
+    image: stellarhold170nt/analytics-service:0.1.0
     environment:
       DATABASE_URL: postgresql+psycopg://analytics:${ANALYTICS_DB_PASSWORD:-analytics_dev}@analytics-db:5432/analytics
     ports:

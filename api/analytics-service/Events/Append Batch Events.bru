@@ -1,0 +1,52 @@
+meta {
+  name: Append Batch Events
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/events/batch
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "events": [
+      {
+        "type": "ResourceViewed",
+        "actor": {
+          "id": "candidate-bruno-1",
+          "type": "Person"
+        },
+        "object": {
+          "id": "doc://lesson/derivatives-intro",
+          "type": "Document"
+        },
+        "payload": {
+          "viewDurationSeconds": 120
+        },
+        "producer": "document-service"
+      },
+      {
+        "type": "ToolUsed",
+        "actor": {
+          "id": "candidate-bruno-1",
+          "type": "Person"
+        },
+        "object": {
+          "id": "tool://latexml/equation-renderer",
+          "type": "Tool"
+        },
+        "payload": {
+          "action": "render-formula"
+        },
+        "producer": "latexml-service"
+      }
+    ]
+  }
+}
