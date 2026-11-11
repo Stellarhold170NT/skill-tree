@@ -1,0 +1,84 @@
+services:
+  # =========================================================================
+  # 1. Cognee MCP Server (Module M8 - Classroom Memory Engine)
+  # Phục vụ cho skill-tree-service qua giao thức MCP (Streamable HTTP) tại /mcp
+  # Hợp đồng: http://localhost:8021/mcp
+  # =========================================================================
+  cognee-mcp:
+    image: cognee/cognee:main
+    container_name: skilltree-cognee-mcp
+    restart: unless-stopped
+    command: ["python", "-m", "cognee.infrastructure.interfaces.mcp.server"]
+    environment:
+      # Provider LLM & Embedding
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_ENDPOINT: ${LLM_ENDPOINT:-}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-openai}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-${LLM_API_KEY}}
+      EMBEDDING_ENDPOINT: ${EMBEDDING_ENDPOINT:-}
+
+      # Lưu trữ persistent
+      DATA_ROOT_DIRECTORY: /cognee-data/data
+      SYSTEM_ROOT_DIRECTORY: /cognee-data/system
+      ENABLE_BACKEND_ACCESS_CONTROL: ${ENABLE_BACKEND_ACCESS_CONTROL:-false}
+      COGNEE_SKIP_CONNECTION_TEST: ${COGNEE_SKIP_CONNECTION_TEST:-true}
+
+      # Port MCP nội bộ
+      PORT: 8001
+      HOST: 0.0.0.0
+    ports:
+      - "${COGNEE_MCP_PORT:-8021}:8001"
+    volumes:
+      - cognee-data:/cognee-data
+    networks:
+      - cognee-net
+      - platform-net
+
+  # =========================================================================
+  # 2. Cognee REST API Server & Docs (Tùy chọn)
+  # Swagger UI: http://localhost:8020/docs
+  # Cho phép xem, truy vấn, import/export memory qua REST API
+  # =========================================================================
+  cognee-server:
+    image: cognee/cognee:main
+    container_name: skilltree-cognee-server
+    restart: unless-stopped
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_ENDPOINT: ${LLM_ENDPOINT:-}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-openai}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-${LLM_API_KEY}}
+      EMBEDDING_ENDPOINT: ${EMBEDDING_ENDPOINT:-}
+
+      DATA_ROOT_DIRECTORY: /cognee-data/data
+      SYSTEM_ROOT_DIRECTORY: /cognee-data/system
+      ENABLE_BACKEND_ACCESS_CONTROL: ${ENABLE_BACKEND_ACCESS_CONTROL:-false}
+      COGNEE_SKIP_CONNECTION_TEST: ${COGNEE_SKIP_CONNECTION_TEST:-true}
+
+      PORT: 8000
+      HOST: 0.0.0.0
+    ports:
+      - "${COGNEE_API_PORT:-8020}:8000"
+    volumes:
+      - cognee-data:/cognee-data
+    networks:
+      - cognee-net
+      - platform-net
+
+volumes:
+  cognee-data:
+    name: skilltree_cognee-data
+
+networks:
+  cognee-net:
+    name: skilltree_cognee-net
+    driver: bridge
+  platform-net:
+    name: deploy_platform-net
+    external: true
