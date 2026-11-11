@@ -283,7 +283,7 @@ services:
 
   auth-service:
     build: ../services/auth-service
-    image: skill-tree/auth-service:0.1.0
+    image: stellarhold170nt/auth-service:0.1.0
     environment:
       DATABASE_URL: postgresql+psycopg://auth:${AUTH_DB_PASSWORD:-auth_dev}@auth-db:5432/auth
       AUTH_SECRET: ${AUTH_SECRET:-dev-secret-change-me}

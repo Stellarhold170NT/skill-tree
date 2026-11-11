@@ -3,7 +3,7 @@
 import json
 
 from app import security
-from tests.conftest import _auth
+from .conftest import _auth
 
 
 def test_verify_ok(client, admin):

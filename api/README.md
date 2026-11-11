@@ -59,6 +59,12 @@ Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tậ
 * `Ask`: Hỏi đáp thông minh với 2 chế độ (`retrieve` siêu tốc qua BM25 FTS5 hoặc `answer` qua LLM).
 * `Metrics`: Giám sát hiệu năng và độ trễ truy xuất (p50/p95/max).
 
+### I. pi/auth-service/ (Cổng 8108)
+Module **M11** - Xác thực, cấp phát token JWT & phân quyền truy cập (**RBAC**).
+* Health: Kiểm tra trạng thái hoạt động của service.
+* Auth: Đăng ký tài khoản (POST /api/v1/auth/register - tài khoản đầu tiên tự động thành dmin, các tài khoản sau mặc định student, cần mã token quản trị để kích hoạt 	eacher), đăng nhập lấy mã Bearer JWT (POST /api/v1/auth/login), kiểm tra giải mã tính hợp lệ của token (POST /api/v1/auth/verify).
+* Users: Lấy hồ sơ thông tin người dùng hiện tại từ token (GET /api/v1/users/me).
+
 ---
 
 ## 2. Hướng dẫn mở và kiểm thử trên Bruno

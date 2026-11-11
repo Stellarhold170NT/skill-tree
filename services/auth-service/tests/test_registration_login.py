@@ -1,6 +1,6 @@
 """Registration, login, first-user bootstrap, role gating."""
 
-from tests.conftest import _auth
+from .conftest import _auth
 
 
 def test_first_user_becomes_admin_then_others_student(client):
