@@ -1,6 +1,6 @@
 """Document CRUD + LRMI fields + file uploads."""
 
-from tests.conftest import DOC_URI, _document
+from .conftest import DOC_URI, _document
 
 
 def test_create_and_get_document(client):

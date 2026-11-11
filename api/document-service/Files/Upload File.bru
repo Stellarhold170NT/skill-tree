@@ -1,0 +1,39 @@
+meta {
+  name: Upload File
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/upload
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  file: @file(./sample.txt)
+}
+
+docs {
+  # Upload File
+  Tải lên một tệp nhị phân cho tài liệu (`{{documentId}}`).
+
+  ### Cấu hình:
+  * Phương thức: `multipart/form-data`
+  * Tham số: `file`
+  * Hệ thống tính mã băm SHA-256 để chống trùng lặp, lưu file vào thư mục lưu trữ (`DOCUMENT_UPLOAD_DIR`).
+  * Giới hạn dung lượng: 20 MiB (`DOCUMENT_MAX_UPLOAD_BYTES`).
+
+  ### Response (201 Created):
+  ```json
+  {
+    "id": "file-uuid",
+    "documentId": "doc-uuid",
+    "filename": "sample.txt",
+    "contentType": "text/plain",
+    "sizeBytes": 1024,
+    "sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+    "createdAt": "2026-11-11T10:00:00Z"
+  }
+  ```
+}

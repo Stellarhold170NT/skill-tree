@@ -1,0 +1,23 @@
+meta {
+  name: Get Document
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Document
+  Xem chi tiết thông tin một tài liệu theo `document_id`.
+
+  ### Path Parameters:
+  * `document_id`: ID của tài liệu (`{{documentId}}`).
+
+  ### Responses:
+  * `200 OK`: Chi tiết tài liệu và danh sách metadata.
+  * `404 Not Found`: Khi không tìm thấy tài liệu (`DOCUMENT_NOT_FOUND`).
+}

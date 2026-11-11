@@ -1,6 +1,6 @@
 """Chunks + concept alignments (teaches/assesses/requires/summarizes)."""
 
-from tests.conftest import CONCEPT, _document
+from .conftest import CONCEPT, _document
 
 
 def _add_chunks(client, doc_id, n=2):

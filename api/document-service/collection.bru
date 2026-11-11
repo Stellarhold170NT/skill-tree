@@ -1,0 +1,27 @@
+docs {
+  # Document Service API Collection
+
+  Module **M3** của SkillTree platform — **Learning-material store**.
+  Quản lý kho tài liệu học tập thực tế (giáo trình, slide, bài đọc), lưu trữ file nhị phân, chia tách văn bản thành các Chunks và gắn nhãn liên kết sư phạm (`Alignment`) với các khái niệm của `opencase-service`.
+
+  ## 1. Thông tin cấu hình (Environments)
+  - **Base URL (Local)**: `http://localhost:8107/api/v1`
+  - Khuyến nghị sử dụng environment `Local` đính kèm trong thư mục `environments/`.
+
+  ## 2. Tiêu chuẩn áp dụng
+  - **Metadata LRMI (Learning Resource Metadata Initiative - W3C/Schema.org)**:
+    - `learningResourceType`: Book, Slide, Article, Exercise, Text...
+    - `typicalLearningTime`: Định dạng khoảng thời gian ISO-8601 duration (ví dụ: `PT45M` = 45 phút, `PT2H` = 2 giờ).
+    - `educationalLevel`: Cấp độ đào tạo (Undergraduate, HighSchool...).
+  - **Căn chỉnh năng lực (Alignments - IEEE LOM/LRMI subset)**:
+    - `teaches`: Đoạn văn bản giảng dạy lý thuyết cho concept.
+    - `assesses`: Đoạn văn bản chứa câu hỏi/bài tập đánh giá concept.
+    - `requires`: Đoạn văn bản yêu cầu người đọc phải nắm vững concept trước.
+    - `summarizes`: Đoạn văn bản tóm tắt nội dung concept.
+
+  ## 3. Các thực thể chính
+  - **`Document`**: Tài liệu học tập tổng thể gắn với `documentUri` (khóa học bên `opencase-service`).
+  - **`DocumentFile`**: File nhị phân upload thực tế trên ổ đĩa (PDF, TeX, TXT) với mã băm SHA-256.
+  - **`Chunk`**: Đoạn văn bản có thứ tự (`orderIndex`, `charCount`).
+  - **`Alignment`**: Mối nối giữa `Chunk` và `conceptUri` của `opencase-service`.
+}

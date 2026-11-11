@@ -1,0 +1,42 @@
+meta {
+  name: Create Chunks
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/chunks
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "chunks": [
+      {
+        "text": "Trong Python, biến được dùng để lưu trữ dữ liệu. Ví dụ: x = 10 gán giá trị số nguyên 10 cho biến x."
+      },
+      {
+        "text": "Hàm đệ quy là hàm tự gọi lại chính nó. Cần lưu ý điều kiện dừng (base case) để tránh tràn bộ nhớ stack."
+      }
+    ]
+  }
+}
+
+vars:post-response {
+  chunkId1: res.body[0].id
+  chunkId2: res.body[1].id
+}
+
+docs {
+  # Create Chunks
+  Nạp danh sách các đoạn văn bản (chunks) vào tài liệu (`{{documentId}}`).
+
+  ### Quy tắc:
+  * Nếu không chỉ định `orderIndex`, hệ thống sẽ tự động tăng dần: `orderIndex = 0, 1, 2...`
+  * Tự động tính số ký tự `charCount`.
+  * Nếu chỉ định `orderIndex` trùng lặp, server trả về `409 DUPLICATE_ORDER_INDEX`.
+
+  ### Response (201 Created):
+  *(ID của chunk 1 và chunk 2 sẽ tự động được lưu vào `{{chunkId1}}` và `{{chunkId2}}`).*
+}

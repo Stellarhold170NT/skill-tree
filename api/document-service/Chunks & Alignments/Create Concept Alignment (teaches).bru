@@ -1,0 +1,32 @@
+meta {
+  name: Create Concept Alignment (teaches)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/chunks/{{chunkId1}}/alignments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "conceptUri": "{{conceptUri1}}",
+    "alignmentType": "teaches"
+  }
+}
+
+docs {
+  # Create Concept Alignment (teaches)
+  Gán nhãn căn chỉnh rằng đoạn văn bản `{{chunkId1}}` đóng vai trò **giảng dạy lý thuyết (`teaches`)** cho concept `{{conceptUri1}}` của `opencase-service`.
+
+  ### Request Body:
+  * `conceptUri` (string, bắt buộc): URI của concept từ `opencase-service`.
+  * `alignmentType` (string, bắt buộc): Phải là một trong: `teaches`, `assesses`, `requires`, `summarizes`.
+
+  ### Responses:
+  * `201 Created`: Tạo liên kết thành công.
+  * `409 DUPLICATE_ALIGNMENT`: Khi liên kết trùng lặp đã tồn tại.
+  * `422 INVALID_ALIGNMENT_TYPE`: Khi truyền loại quan hệ không hợp lệ.
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Create Document
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Giáo trình Lập trình Python Căn bản",
+    "description": "Tài liệu học tập chính thức môn CS101",
+    "documentUri": "http://localhost:8101/api/v1/case/CFDocuments/doc-cs101",
+    "learningResourceType": "Book",
+    "educationalLevel": "Undergraduate",
+    "typicalLearningTime": "PT12H30M"
+  }
+}
+
+vars:post-response {
+  documentId: res.body.id
+}
+
+docs {
+  # Create Document
+  Tạo bản ghi tài liệu mới kèm theo các trường chuẩn giáo dục LRMI.
+
+  ### Request Body:
+  * `title` (string, bắt buộc): Tiêu đề tài liệu.
+  * `description` (string, tuỳ chọn): Tóm tắt nội dung tài liệu.
+  * `documentUri` (string, tuỳ chọn): Khóa ngoại URI trỏ sang `CFDocument.identifier` bên `opencase-service`.
+  * `learningResourceType` (string, mặc định: "Text"): Loại học liệu (Book, Slide, Exercise, Article...).
+  * `educationalLevel` (string, tuỳ chọn): Trình độ người học (Undergraduate, Secondary...).
+  * `typicalLearningTime` (string, tuỳ chọn): Thời gian học ước tính theo định dạng chuẩn ISO-8601 Duration (ví dụ `PT12H30M` = 12 giờ 30 phút, `PT45M` = 45 phút). Hệ thống sẽ validate lỗi `422 VALIDATION_ERROR` nếu định dạng thời gian sai.
+
+  ### Response (201 Created):
+  *(ID của tài liệu vừa tạo sẽ tự động được gán vào biến `{{documentId}}`).*
+}

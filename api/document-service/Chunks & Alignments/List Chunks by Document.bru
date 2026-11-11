@@ -1,0 +1,19 @@
+meta {
+  name: List Chunks by Document
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}/chunks
+  body: none
+  auth: none
+}
+
+docs {
+  # List Chunks by Document
+  Lấy toàn bộ các đoạn văn bản thuộc tài liệu (`{{documentId}}`), được sắp xếp theo đúng thứ tự `orderIndex`.
+
+  ### Response (200 OK):
+  Mảng chứa danh sách các `Chunk` kèm theo danh sách `alignments` của từng chunk.
+}

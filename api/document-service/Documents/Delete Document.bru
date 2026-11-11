@@ -1,0 +1,22 @@
+meta {
+  name: Delete Document
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/documents/{{documentId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Document
+  Xóa một tài liệu khỏi hệ thống.
+
+  > **Chú ý**: Việc xóa tài liệu sẽ tự động xóa tầng (cascade) toàn bộ các `Chunk`, `Alignment` và các bản ghi `DocumentFile` liên quan đến tài liệu này.
+
+  ### Responses:
+  * `204 No Content`: Xóa thành công.
+  * `404 Not Found`: Khi không tìm thấy tài liệu.
+}

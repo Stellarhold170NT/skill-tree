@@ -1,0 +1,26 @@
+meta {
+  name: List Chunks by Alignment Filter
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}/chunks?alignmentType=teaches
+  body: none
+  auth: none
+}
+
+params:query {
+  alignmentType: teaches
+}
+
+docs {
+  # List Chunks by Alignment Filter
+  Lọc danh sách các chunk chỉ chứa một loại quan hệ sư phạm cụ thể (ví dụ chỉ lấy các chunk giảng dạy lý thuyết: `alignmentType=teaches`).
+
+  ### Query Parameters:
+  * `alignmentType` (string): Một trong các giá trị: `teaches`, `assesses`, `requires`, `summarizes`.
+
+  ### Response (200 OK):
+  Danh sách các chunk thỏa mãn điều kiện lọc.
+}

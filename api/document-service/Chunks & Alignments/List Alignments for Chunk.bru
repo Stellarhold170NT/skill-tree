@@ -1,0 +1,22 @@
+meta {
+  name: List Alignments for Chunk
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/chunks/{{chunkId1}}/alignments
+  body: none
+  auth: none
+}
+
+docs {
+  # List Alignments for Chunk
+  Xem danh sách tất cả các nhãn căn chỉnh năng lực của một đoạn văn bản (`{{chunkId1}}`).
+
+  ### Path Parameters:
+  * `chunk_id`: ID của chunk.
+
+  ### Response (200 OK):
+  Mảng danh sách các `Alignment` gắn liền với chunk này.
+}

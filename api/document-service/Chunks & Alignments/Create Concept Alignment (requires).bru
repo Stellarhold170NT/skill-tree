@@ -1,0 +1,26 @@
+meta {
+  name: Create Concept Alignment (requires)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/chunks/{{chunkId2}}/alignments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "conceptUri": "{{conceptUri2}}",
+    "alignmentType": "requires"
+  }
+}
+
+docs {
+  # Create Concept Alignment (requires)
+  Gán nhãn căn chỉnh rằng đoạn văn bản `{{chunkId2}}` **đòi hỏi người đọc phải có kiến thức (`requires`)** về concept `{{conceptUri2}}` trước khi đọc.
+
+  ### Response (201 Created):
+  Trả về bản ghi `Alignment` vừa tạo.
+}
