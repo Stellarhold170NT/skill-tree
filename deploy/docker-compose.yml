@@ -248,7 +248,7 @@ services:
   # Stateless single entry point (no DB): routes /{prefix}/* → services.
   api-gateway:
     build: ../services/api-gateway
-    image: skill-tree/api-gateway:0.1.0
+    image: stellarhold170nt/api-gateway:0.1.0
     environment:
       CASE_BASE_URL: http://opencase-service:8101
       QUIZ_BASE_URL: http://quiz-service:8102

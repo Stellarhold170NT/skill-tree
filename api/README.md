@@ -65,6 +65,21 @@ Module **M11** - Xác thực, cấp phát token JWT & phân quyền truy cập (
 * Auth: Đăng ký tài khoản (POST /api/v1/auth/register - tài khoản đầu tiên tự động thành dmin, các tài khoản sau mặc định student, cần mã token quản trị để kích hoạt 	eacher), đăng nhập lấy mã Bearer JWT (POST /api/v1/auth/login), kiểm tra giải mã tính hợp lệ của token (POST /api/v1/auth/verify).
 * Users: Lấy hồ sơ thông tin người dùng hiện tại từ token (GET /api/v1/users/me).
 
+### K. pi/api-gateway/ (Cổng 8000)
+Module **M10** - Cổng tiếp nhận duy nhất (**Single Entry Point**), điều phối định tuyến ngược (**Reverse Proxy**) & giới hạn tần suất (**Rate Limiting**).
+* Health & Routes: Kiểm tra trạng thái gateway (GET /health), tra cứu bảng định tuyến ánh xạ prefix tới 9 upstream microservices (GET /api/v1/routes).
+* Proxied Services: Kiểm thử định tuyến xuyên suốt qua Gateway tới toàn bộ 9 microservices trong nền tảng mà không cần gọi trực tiếp các cổng riêng lẻ:
+  * /case/* → opencase-service:8101
+  * /quiz/* → quiz-service:8102
+  * /class/* → class-service:8103
+  * /events/* → nalytics-service:8104
+  * /learner/* → learner-model-service:8105
+  * /assignments/* → ssignment-service:8106
+  * /documents/* → document-service:8107
+  * /auth/* → uth-service:8108
+  * /rag/* → 
+ag-service:8109
+
 ---
 
 ## 2. Hướng dẫn mở và kiểm thử trên Bruno
