@@ -2,7 +2,7 @@
 
 import json
 
-from tests.conftest import SAMPLE_MD
+from .conftest import SAMPLE_MD
 
 
 def test_metrics_records_ask_and_ingest(client, upload, wait_ready):

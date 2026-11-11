@@ -1,6 +1,6 @@
 """Ingest pipeline: upload → job lifecycle → section tree → reingest → delete."""
 
-from tests.conftest import SAMPLE_MD
+from .conftest import SAMPLE_MD
 
 
 def test_upload_markdown_reaches_ready(client, upload, wait_ready):

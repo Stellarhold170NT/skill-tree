@@ -1,0 +1,19 @@
+meta {
+  name: Get RAG Metrics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/metrics
+  body: none
+  auth: none
+}
+
+docs {
+  # Get RAG Metrics
+  Xem các chỉ số hiệu năng hoạt động của `rag-service` (đếm số lượng request, độ trễ `retrieveMs`, thời gian sinh `generateMs`, thống kê giai đoạn ingest).
+
+  ### Response (200 OK):
+  Trả về các bộ đếm `counters` và phân vị độ trễ (`p50`, `p95`, `max`) của 1.000 mẫu gần nhất.
+}

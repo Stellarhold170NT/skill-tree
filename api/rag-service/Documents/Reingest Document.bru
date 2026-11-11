@@ -1,0 +1,24 @@
+meta {
+  name: Reingest Document
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/reingest
+  body: none
+  auth: none
+}
+
+vars:post-response {
+  jobId: res.body.jobId
+}
+
+docs {
+  # Reingest Document
+  Chạy lại toàn bộ quy trình parse, chunking và đánh chỉ mục từ file gốc đã lưu trữ trong thư mục uploads.
+  Hữu ích khi hệ thống cập nhật thuật toán cắt hoặc muốn tái lập chỉ mục tìm kiếm.
+
+  ### Response (202 Accepted):
+  Trả về `jobId` mới để theo dõi tiến trình nạp lại.
+}

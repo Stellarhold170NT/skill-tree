@@ -1,0 +1,19 @@
+meta {
+  name: List Documents
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/documents
+  body: none
+  auth: none
+}
+
+docs {
+  # List Documents
+  Lấy danh sách các tài liệu học tập đã được nạp thành công vào hệ thống.
+
+  ### Response (200 OK):
+  Mảng chứa danh sách các tài liệu kèm số lượng chunks và thời gian nạp.
+}

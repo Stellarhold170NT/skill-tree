@@ -3,7 +3,7 @@
 import pytest
 
 from app import chunker
-from tests.conftest import LTX_HTML, SAMPLE_MD
+from .conftest import LTX_HTML, SAMPLE_MD
 
 
 def test_markdown_tree_paths_and_parts():

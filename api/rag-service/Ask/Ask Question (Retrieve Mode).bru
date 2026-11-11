@@ -1,0 +1,33 @@
+meta {
+  name: Ask Question (Retrieve Mode)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/ask
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "question": "Hàm đệ quy cần những điều kiện gì?",
+    "topK": 3,
+    "mode": "retrieve"
+  }
+}
+
+docs {
+  # Ask Question (Retrieve Mode)
+  Tìm kiếm các đoạn trích dẫn liên quan nhất đến câu hỏi bằng thuật toán BM25 FTS5 kết hợp trọng số cấu trúc STAIR (`heading=8.0`, `sectionPath=4.0`, `body=1.0`).
+
+  ### Request Body:
+  * `question` (string, bắt buộc): Câu hỏi của người dùng.
+  * `topK` (int, mặc định: 5): Số lượng trích dẫn tối đa cần lấy.
+  * `mode` (string): `retrieve` (mặc định) để lấy danh sách trích dẫn siêu tốc.
+  * `documentIds` (array[string], tuỳ chọn): Giới hạn tìm kiếm trong một số tài liệu cụ thể.
+
+  ### Response (200 OK):
+  Trả về danh sách `citations` với `sectionPath` chuẩn xác (ví dụ `Khung kiến thức > Hàm và Giải thuật > Hàm Đệ quy`) và điểm số tương đồng `score`.
+}

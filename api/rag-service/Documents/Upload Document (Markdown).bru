@@ -1,0 +1,32 @@
+meta {
+  name: Upload Document (Markdown)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents/upload
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  file: @file(./sample-notes.md)
+  title: Ghi chú Lập trình Python
+  uploaderId: {{uploaderId}}
+}
+
+vars:post-response {
+  jobId: res.body.jobId
+  documentId: res.body.docId
+}
+
+docs {
+  # Upload Document
+  Tải lên tài liệu học tập mới vào hệ thống RAG (`.md`, `.txt`, `.html`, `.tex`, `.zip`... dung lượng ≤ 20MB).
+
+  ### Cơ chế xử lý bất đồng bộ (202 Accepted):
+  * Hệ thống trả về ngay lập tức với HTTP `202 Accepted` kèm `jobId`, `docId` và `statusUrl`.
+  * Quá trình bóc tách ToC, cắt chunk theo chuẩn STAIR, mirror sang `document-service` và đánh chỉ mục FTS5 sẽ chạy ngầm.
+  * *(Biến `jobId` và `documentId` sẽ được tự động lưu vào Environment `Local` để bạn kiểm tra ở các bước sau).*
+}

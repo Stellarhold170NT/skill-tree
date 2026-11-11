@@ -1,6 +1,6 @@
 """Error envelope + lifecycle errors (platform contract)."""
 
-from tests.conftest import SAMPLE_MD
+from .conftest import SAMPLE_MD
 
 
 def test_health(client):

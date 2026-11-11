@@ -1,0 +1,25 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+docs {
+  # Health Check
+  Kiểm tra trạng thái hoạt động của `rag-service`.
+
+  ### Response (200 OK):
+  ```json
+  {
+    "status": "ok",
+    "service": "rag-service",
+    "version": "0.1.0"
+  }
+  ```
+}

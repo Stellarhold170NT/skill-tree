@@ -1,6 +1,6 @@
 """/ask: hybrid BM25 + path boost, citation payload, LLM answer degradation."""
 
-from tests.conftest import SAMPLE_MD
+from .conftest import SAMPLE_MD
 
 
 def _seed(client, upload, wait_ready):

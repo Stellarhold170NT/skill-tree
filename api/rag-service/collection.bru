@@ -1,0 +1,23 @@
+docs {
+  # RAG Service API Collection (Student Notebook)
+
+  Module phục vụ tính năng **Sổ tay học tập thông minh (Student Notebook / Hỏi đáp tài liệu)** chạy tại cổng **8109**.
+
+  ## 1. Cấu hình (Environment)
+  - **Base URL (Local)**: `http://localhost:8109/api/v1`
+  - Sử dụng environment `Local` đính kèm trong thư mục `environments/`.
+
+  ## 2. Triết lý & Thiết kế cốt lõi
+  - **Structure-Aware Chunking (STAIR - arXiv:2609.03874)**:
+    - Bóc tách cây mục lục (ToC Tree) từ Markdown/HTML/LaTeX.
+    - Cắt theo ranh giới Section Leaf tự nhiên, không cắt vụn theo số lượng token.
+    - Làm giàu ngữ cảnh bằng đường dẫn phân cấp: `Chương > Mục lớn > Tiểu mục`.
+  - **Truy xuất BM25 cấu trúc (SQLite FTS5)**:
+    - Trọng số: `heading=8.0`, `sectionPath=4.0`, `body=1.0`.
+    - Tốc độ siêu tốc (p95 ≤ 3s, thường chỉ mất vài mili-giây).
+  - **Hỏi đáp thông minh (`/ask`)**:
+    - `mode: "retrieve"`: Trả về danh sách trích dẫn (`citations`) kèm tọa độ mục lục.
+    - `mode: "answer"`: Kết hợp LLM để sinh câu trả lời tự nhiên (tự động hạ cấp mượt mà về `retrieve` nếu LLM lỗi hoặc chưa cấu hình).
+  - **Pipeline Ingest bất đồng bộ (202 Accepted)**:
+    - Upload $\rightarrow$ Parse $\rightarrow$ Chunk $\rightarrow$ Mirror sang `document-service` $\rightarrow$ Index FTS5.
+}

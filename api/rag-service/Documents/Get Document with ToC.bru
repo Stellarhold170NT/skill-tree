@@ -1,0 +1,22 @@
+meta {
+  name: Get Document with ToC
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Document with ToC
+  Lấy thông tin chi tiết của tài liệu kèm theo **toàn bộ cây phân cấp Mục lục (ToC Section Tree)** theo chuẩn STAIR.
+
+  ### Path Parameters:
+  * `document_id`: ID của tài liệu (`{{documentId}}`).
+
+  ### Cấu trúc Response (200 OK):
+  Trả về metadata tài liệu và mảng `sections` phân cấp với `level`, `title`, `path`, `charCount`.
+}

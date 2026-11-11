@@ -23,6 +23,14 @@ Module **M3** - Kho lưu trữ tài liệu học tập & tri thức chuẩn **W3
 * `Files`: Tải lên và quản lý tệp nhị phân gốc (PDF, TeX, TXT) với mã băm SHA-256.
 * `Chunks & Alignments`: Quản lý các đoạn văn bản (chunks) và gán nhãn căn chỉnh sư phạm (`teaches`, `assesses`, `requires`, `summarizes`) với các concept của `opencase-service`.
 
+### C. `api/rag-service/` (Cổng 8109)
+Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tập thông minh.
+* `Health`: Kiểm tra trạng thái liveness của service.
+* `Documents`: Tải lên tài liệu học tập (`.md`, `.txt`, `.html`, `.tex`, `.zip`), xem cây mục lục ToC, quản lý vòng đời tài liệu.
+* `Jobs`: Theo dõi tiến độ nạp tài liệu bất đồng bộ (`stageMs`: parse, chunk, mirror, index).
+* `Ask`: Hỏi đáp thông minh với 2 chế độ (`retrieve` siêu tốc qua BM25 FTS5 hoặc `answer` qua LLM).
+* `Metrics`: Giám sát hiệu năng và độ trễ truy xuất (p50/p95/max).
+
 ---
 
 ## 2. Hướng dẫn mở và kiểm thử trên Bruno
@@ -32,4 +40,5 @@ Module **M3** - Kho lưu trữ tài liệu học tập & tri thức chuẩn **W3
 3. Duyệt và chọn thư mục collection bạn muốn test:
    * `api/opencase-service` (Test đồ thị môn học).
    * `api/document-service` (Test kho tài liệu và chunks).
+   * `api/rag-service` (Test hỏi đáp sổ tay học tập thông minh).
 4. Ở góc trên bên phải của Bruno, chọn Environment tương ứng: **`Local`**.

@@ -1,0 +1,21 @@
+meta {
+  name: Delete Document
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/documents/{{documentId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Document
+  Xóa tài liệu, các sections và toàn bộ các dòng chỉ mục tìm kiếm FTS5 liên quan.
+  *(Lưu ý: Bản sao mirror trên `document-service` được bảo toàn và không bị xóa theo thiết kế).*
+
+  ### Responses:
+  * `204 No Content`: Xóa thành công.
+  * `404 Not Found`: Khi không tìm thấy tài liệu.
+}

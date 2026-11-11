@@ -1,0 +1,31 @@
+meta {
+  name: Ask Question (Answer Mode)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/ask
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "question": "Giải thích ngắn gọn khái niệm hàm đệ quy và base case?",
+    "topK": 3,
+    "mode": "answer"
+  }
+}
+
+docs {
+  # Ask Question (Answer Mode)
+  Chế độ hỏi đáp kết hợp mô hình ngôn ngữ lớn (LLM Synthesis).
+  Hệ thống sẽ lấy các trích dẫn phù hợp nhất và nhờ LLM tổng hợp thành câu trả lời hoàn chỉnh.
+
+  ### Cơ chế hạ cấp mượt mà (Graceful Degradation):
+  Nếu LLM chưa cấu hình biến môi trường (`LLM_ENDPOINT`, `LLM_API_KEY`) hoặc mạng bị lỗi:
+  * Hệ thống **vẫn trả về HTTP 200 OK**.
+  * Chế độ tự động chuyển về `mode: "retrieve"`.
+  * Kèm theo trường `llmError: "llm-not-configured"` và đầy đủ danh sách các `citations` để người dùng không bị gián đoạn trải nghiệm.
+}

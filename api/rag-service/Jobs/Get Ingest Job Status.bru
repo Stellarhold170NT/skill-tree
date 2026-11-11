@@ -1,0 +1,36 @@
+meta {
+  name: Get Ingest Job Status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/jobs/{{jobId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Ingest Job Status
+  Kiểm tra tiến độ thực thi của tiến trình nạp tài liệu (`{{jobId}}`).
+
+  ### Các trạng thái (`status`):
+  * `queued` $\rightarrow$ `received` $\rightarrow$ `parsed` $\rightarrow$ `chunked` $\rightarrow$ `mirrored` $\rightarrow$ `ready` (hoặc `failed`).
+
+  ### Cấu trúc Response khi hoàn tất (200 OK):
+  ```json
+  {
+    "jobId": "job-uuid",
+    "docId": "doc-uuid",
+    "status": "ready",
+    "stageMs": {
+      "parseMs": 15,
+      "chunkMs": 42,
+      "mirrorMs": 18,
+      "indexMs": 10
+    },
+    "createdAt": "...",
+    "updatedAt": "..."
+  }
+  ```
+}
