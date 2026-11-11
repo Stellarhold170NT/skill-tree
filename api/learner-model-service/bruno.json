@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "learner-model-service",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

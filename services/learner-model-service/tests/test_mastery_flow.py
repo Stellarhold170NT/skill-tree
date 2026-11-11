@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.database import SessionLocal
 from app.service import compute_state, get_record
-from tests.conftest import A, B, STUDENT
+from .conftest import A, B, STUDENT
 
 
 def _update(client, concept, correct, occurred_at=None):

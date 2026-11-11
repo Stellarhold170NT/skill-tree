@@ -1,0 +1,24 @@
+meta {
+  name: Get Class Teaching Plan
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/classes/{{classId}}/teaching-plan?documentId={{documentId}}&topN=5
+  body: none
+  auth: none
+}
+
+params:query {
+  documentId: {{documentId}}
+  topN: 5
+}
+
+docs {
+  Returns a contrastive teaching plan for the instructor:
+  Explains why concept X should be taught before concept Y based on:
+  - Prerequisite graph dependencies in M1.
+  - Number of students currently struggling (`red` or `rusty`).
+  - Potential unlock multiplier for downstream topics.
+}

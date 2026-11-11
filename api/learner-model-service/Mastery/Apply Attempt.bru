@@ -1,0 +1,27 @@
+meta {
+  name: Apply Attempt
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/students/{{studentId}}/update
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "conceptUri": "{{conceptUri}}",
+    "isCorrect": true
+  }
+}
+
+docs {
+  Applies one quiz attempt outcome for a student on a specific concept.
+  Updates the Glicko-2 rating ($r$, $RD$, $\sigma$), reviews count, and computes the current mastery state:
+  - `red`: mastery < 0.4
+  - `amber`: 0.4 <= mastery < 0.85
+  - `green`: mastery >= 0.85
+  - `rusty`: retention dropped below 0.7
+}

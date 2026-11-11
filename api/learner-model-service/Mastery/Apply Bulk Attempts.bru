@@ -1,0 +1,26 @@
+meta {
+  name: Apply Bulk Attempts
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/students/{{studentId}}/update/bulk
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "responses": [
+      {
+        "conceptUri": "{{conceptUri}}",
+        "isCorrect": true
+      }
+    ]
+  }
+}
+
+docs {
+  Applies a sequence of attempts in order and returns the full updated mastery list.
+}

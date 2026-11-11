@@ -32,19 +32,26 @@ Module **M6** - Quản lý trường học, lớp học & hồ sơ danh sách ch
 * `Users`: Quản lý người dùng và cấp mã định danh ẩn danh toàn hệ thống `sourcedId` (`candidateId`).
 * `Enrollments`: Đăng ký tham gia lớp học phần cho sinh viên và giáo viên (`primary`).
 
-### D. `api/assignment-service/` (Cổng 8106)
+### D. `api/learner-model-service/` (Cổng 8105)
+Module **M5** - Năng lực người học, chống quên lãng & Gợi ý lộ trình (**Trái tim hệ thống**).
+* `Health`: Kiểm tra trạng thái hoạt động của service.
+* `Mastery`: Cập nhật năng lực sinh viên bằng thuật toán **Glicko-2** ($r$, $RD$, $\sigma$), ánh xạ Sigmoid sang xác suất thành thạo $[0, 1]$, phát hiện điểm rơi kiến thức rỉ sét (**Ebbinghaus Decay**).
+* `Recommendation`: Gợi ý khái niệm tối ưu kế tiếp (**Frontier**) dựa trên các tiên quyết đã mở khóa và tiềm năng mở rộng (*Unlock Value*) từ đồ thị M1.
+* `Class Views`: Bản đồ nhiệt ma trận lớp học (**Heatmap**) và kế hoạch giảng dạy sư phạm tương phản (**Contrastive Teaching Plan**) cho giảng viên.
+
+### E. `api/assignment-service/` (Cổng 8106)
 Module **M7** - Giao bài tập can thiệp trúng đích (Targeted Practice & Interventions).
 * `Health`: Kiểm tra trạng thái hoạt động của service.
 * `Assignments`: Tạo bài tập can thiệp tự động cho nhóm học sinh gặp khó khăn (`red`, `rusty`, `red_rusty`) từ Heatmap của M5 (`learner-model-service`), liên kết với câu hỏi từ M2 (`quiz-service`), và kích hoạt sinh đề kiểm tra M2 `AssessmentTest` (`ASG-<id>`).
 
-### E. `api/document-service/` (Cổng 8107)
+### F. `api/document-service/` (Cổng 8107)
 Module **M3** - Kho lưu trữ tài liệu học tập & tri thức chuẩn **W3C/LRMI**.
 * `Health`: Kiểm tra trạng thái hoạt động của service.
 * `Documents`: Quản lý tài liệu học tập, thời lượng học (`typicalLearningTime` ISO-8601), cấp độ giáo dục.
 * `Files`: Tải lên và quản lý tệp nhị phân gốc (PDF, TeX, TXT) với mã băm SHA-256.
 * `Chunks & Alignments`: Quản lý các đoạn văn bản (chunks) và gán nhãn căn chỉnh sư phạm (`teaches`, `assesses`, `requires`, `summarizes`) với các concept của `opencase-service`.
 
-### F. `api/rag-service/` (Cổng 8109)
+### G. `api/rag-service/` (Cổng 8109)
 Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tập thông minh.
 * `Health`: Kiểm tra trạng thái liveness của service.
 * `Documents`: Tải lên tài liệu học tập (`.md`, `.txt`, `.html`, `.tex`, `.zip`), xem cây mục lục ToC, quản lý vòng đời tài liệu.
@@ -62,6 +69,7 @@ Module **Student Notebook RAG** - Hỏi đáp tài liệu & Trợ lý học tậ
    * `api/opencase-service` (Test đồ thị môn học).
    * `api/quiz-service` (Test ngân hàng câu hỏi QTI & chấm điểm).
    * `api/class-service` (Test tổ chức trường học, lớp học & OneRoster).
+   * `api/learner-model-service` (Test tính năng lực Glicko-2, Heatmap & Frontier).
    * `api/assignment-service` (Test giao bài tập can thiệp trúng đích).
    * `api/document-service` (Test kho tài liệu và chunks).
    * `api/rag-service` (Test hỏi đáp sổ tay học tập thông minh).

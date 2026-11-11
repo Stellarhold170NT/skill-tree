@@ -1,0 +1,23 @@
+meta {
+  name: Get Next Concept (Frontier)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/students/{{studentId}}/next?documentId={{documentId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  documentId: {{documentId}}
+}
+
+docs {
+  Recommends the single best concept the student is ready to learn next:
+  - Fetches course graph from M1 (`opencase-service`).
+  - Checks prerequisite satisfaction (all transitive prereqs must be `green`).
+  - Ranks by unlock value (number of downstream concepts unlocked).
+  - Returns the recommended concept, plain English pedagogical explanation, and top alternatives.
+}

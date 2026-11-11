@@ -1,0 +1,16 @@
+meta {
+  name: learner-model-service
+}
+
+docs {
+  # learner-model-service API Collection
+
+  Module **M5** of the learning platform: The **Heart of the Platform** (Glicko-2 & Ebbinghaus Decay).
+  
+  ## Key Capabilities
+  - **Glicko-2 Rating Model**: Computes student skill levels for each concept using the chess/gaming industry standard Glicko-2 system (Rating $r$, Uncertainty $RD$, Volatility $\sigma$).
+  - **Mastery Probability**: Sigmoid mapping of rating into $[0, 1]$.
+  - **Ebbinghaus Forgetting (Rusty Detection)**: $R(t) = \exp(-\Delta t / S)$ calculates memory retention without corrupting the historical rating.
+  - **Zone of Proximal Development (Frontier)**: Identifies the next best concepts to learn based on satisfied prerequisites and unlock value in the M1 DAG.
+  - **Teacher Heatmap & Contrastive Plan**: Class matrix of mastery states and pedagogical teaching order.
+}

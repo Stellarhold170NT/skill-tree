@@ -1,0 +1,24 @@
+meta {
+  name: Get Class Heatmap
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/classes/{{classId}}/heatmap?documentId={{documentId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  documentId: {{documentId}}
+}
+
+docs {
+  Returns the complete class mastery heatmap matrix:
+  - Rows: Enrolled students (sourced from M6 `class-service`).
+  - Columns: Course concepts (sourced from M1 `opencase-service`).
+  - Cells: State (`green`, `amber`, `red`, `rusty`, `none`).
+  
+  This heatmap is consumed by M7 (`assignment-service`) to generate targeted practice interventions.
+}

@@ -1,6 +1,6 @@
 """Frontier recommendation, class heatmap, contrastive teaching plan."""
 
-from tests.conftest import A, B, C, D, GRAPH, STUDENT
+from .conftest import A, B, C, D, GRAPH, STUDENT
 
 
 def _update(client, concept, correct):

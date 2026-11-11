@@ -138,7 +138,7 @@ services:
 
   learner-model-service:
     build: ../services/learner-model-service
-    image: skill-tree/learner-model-service:0.1.0
+    image: stellarhold170nt/learner-model-service:0.1.0
     environment:
       DATABASE_URL: postgresql+psycopg://learner:${LEARNER_DB_PASSWORD:-learner_dev}@learner-model-db:5432/learner
       OPENCASE_BASE_URL: http://opencase-service:8101
