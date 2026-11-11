@@ -1,0 +1,36 @@
+meta {
+  name: Update Document
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/documents/{{documentId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Nhập môn Lập trình Web Hiện đại (Cập nhật)",
+    "status": "Published",
+    "version": "1.1"
+  }
+}
+
+docs {
+  # Update Document
+  Cập nhật một phần (partial update) thông tin của khung chương trình (`CFDocument`).
+
+  ### Path Parameters:
+  * `document_id` (string): ID của document (`{{documentId}}`).
+
+  ### Request Body (tuỳ chọn các trường cần sửa):
+  * `title`: Tiêu đề mới.
+  * `status`: Trạng thái mới (`Draft`, `Published`, ...).
+  * `version`: Phiên bản mới.
+  * `description`: Mô tả cập nhật.
+
+  ### Response (200 OK):
+  Trả về thông tin `CFDocument` đã được cập nhật, đồng thời trường `lastChangeDateTime` được làm mới.
+}

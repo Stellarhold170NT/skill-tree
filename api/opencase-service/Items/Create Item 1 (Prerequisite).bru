@@ -1,0 +1,46 @@
+meta {
+  name: Create Item 1 (Prerequisite)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/items
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "fullStatement": "Biến và Kiểu dữ liệu trong JavaScript",
+    "humanCodingScheme": "JS.1.1",
+    "abbrevStatement": "Variables & Data Types",
+    "description": "Hiểu và sử dụng const, let, var cùng các kiểu nguyên thủy",
+    "language": "vie",
+    "status": "Published"
+  }
+}
+
+vars:post-response {
+  originItemId: res.body.id
+}
+
+docs {
+  # Create Item (Concept Node)
+  Tạo mới một điểm kiến thức / concept trong khung chương trình (`CFDocument`).
+
+  ### Path Parameters:
+  * `document_id`: ID của document sở hữu concept này (`{{documentId}}`).
+
+  ### Request Body:
+  * `fullStatement` (string, bắt buộc): Nội dung đầy đủ của chuẩn kiến thức / năng lực.
+  * `humanCodingScheme` (string, tuỳ chọn): Mã định danh quy ước giảng dạy (VD: `JS.1.1`).
+  * `abbrevStatement` (string, tuỳ chọn): Tên tóm tắt / ngắn gọn của concept.
+  * `description` (string, tuỳ chọn): Mô tả chi tiết mục tiêu cần đạt.
+  * `language` (string, tuỳ chọn): Ngôn ngữ của nội dung.
+  * `status` (string, tuỳ chọn): Trạng thái (`Draft`, `Published`).
+
+  ### Response (201 Created):
+  Trả về thực thể `CFItem` với `identifier` URI (dạng `http://.../CFItems/{id}`).
+  *(ID của item này sẽ tự động được gán vào biến `{{originItemId}}` để phục vụ tạo liên kết).*
+}

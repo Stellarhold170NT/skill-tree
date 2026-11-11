@@ -1,0 +1,29 @@
+meta {
+  name: Update Item
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/items/{{originItemId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "fullStatement": "Biến, Hằng và Kiểu dữ liệu trong ES6+",
+    "abbrevStatement": "Variables & ES6 Types"
+  }
+}
+
+docs {
+  # Update Item
+  Cập nhật một phần nội dung concept `CFItem`.
+
+  ### Path Parameters:
+  * `item_id`: ID của concept (`{{originItemId}}`).
+
+  ### Response (200 OK):
+  Trả về thông tin item sau khi cập nhật và cập nhật trường `lastChangeDateTime`.
+}

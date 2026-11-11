@@ -1,0 +1,20 @@
+meta {
+  name: Get Association
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/associations/{{associationId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Association
+  Lấy thông tin chi tiết của một cạnh liên kết thông qua `association_id`.
+
+  ### Responses:
+  * `200 OK`: Chi tiết `CFAssociation`.
+  * `404 Not Found`: Khi không tìm thấy liên kết.
+}

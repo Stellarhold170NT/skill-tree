@@ -1,0 +1,28 @@
+meta {
+  name: List Documents
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/documents?limit=50&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  offset: 0
+}
+
+docs {
+  # List Documents
+  Lấy danh sách các khung chương trình đào tạo hiện có trong hệ thống, sắp xếp theo thời gian tạo.
+
+  ### Query Parameters:
+  * `limit` (integer, mặc định: 50, tối đa: 200): Số lượng bản ghi cần lấy.
+  * `offset` (integer, mặc định: 0): Vị trí bắt đầu lấy.
+
+  ### Response (200 OK):
+  Danh sách mảng các đối tượng `CFDocument`.
+}

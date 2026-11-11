@@ -1,0 +1,32 @@
+meta {
+  name: Get CASE Package (JSON-LD)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}/package
+  body: none
+  auth: none
+}
+
+docs {
+  # Get CASE Package (JSON-LD)
+  Xuất toàn bộ cây dữ liệu khóa học (gồm Document, Items, Associations) theo định dạng đóng gói chuẩn quốc tế **CASE JSON-LD v1.1**.
+
+  ### Path Parameters:
+  * `document_id`: ID của document (`{{documentId}}`).
+
+  ### Cấu trúc Response (200 OK):
+  ```json
+  {
+    "@context": "https://purl.imsglobal.org/spec/case/v1p0/context/imscase-v1p0_context.jsonld",
+    "identifier": "http://.../CFDocuments/...",
+    "lastChangeDateTime": "...",
+    "CFDocument": { ... },
+    "CFItems": [ ... ],
+    "CFAssociations": [ ... ]
+  }
+  ```
+  Dữ liệu này tương thích để trao đổi hai chiều với bất kỳ máy chủ CASE nào khác.
+}

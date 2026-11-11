@@ -1,0 +1,41 @@
+meta {
+  name: Create Prerequisite Edge
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/associations
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "associationType": "isPrerequisiteOf",
+    "originItemId": "{{originItemId}}",
+    "destinationItemId": "{{destinationItemId}}",
+    "description": "Cần hiểu Biến trước khi học Hàm và Phạm vi"
+  }
+}
+
+vars:post-response {
+  associationId: res.body.id
+}
+
+docs {
+  # Create Prerequisite Association
+  Tạo cạnh định hướng thể hiện điều kiện tiên quyết: `originItemId` là prerequisite của `destinationItemId`.
+
+  ### Request Body:
+  * `associationType` (string, bắt buộc): Phải là một trong các giá trị từ điển CASE hợp lệ (ở đây là `isPrerequisiteOf`).
+  * `originItemId` (string, bắt buộc): Concept gốc (điều kiện tiên quyết).
+  * `destinationItemId` (string, bắt buộc): Concept đích (concept phụ thuộc).
+  * `description` (string, tuỳ chọn): Ghi chú lý do thiết lập quan hệ.
+
+  ### Responses:
+  * `201 Created`: Tạo liên kết thành công.
+  * `404 Not Found`: Khi một trong hai item không tồn tại hoặc không thuộc document.
+  * `422 Unprocessable Entity`: Khi tự trỏ vào chính nó (`SELF_REFERENCE`) hoặc loại quan hệ không hợp lệ (`INVALID_ASSOCIATION_TYPE`).
+  * `409 Conflict`: Khi cạnh thêm vào tạo ra chu trình lặp trong đồ thị (`CYCLE_DETECTED`).
+}

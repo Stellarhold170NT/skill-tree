@@ -1,0 +1,25 @@
+meta {
+  name: Delete Document
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/documents/{{documentId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Document
+  Xóa một khung chương trình (`CFDocument`).
+  
+  > **Chú ý**: Việc xóa document sẽ tự động cascade xóa toàn bộ các `CFItem` và `CFAssociation` thuộc về document này.
+
+  ### Path Parameters:
+  * `document_id` (string): ID của document (`{{documentId}}`).
+
+  ### Responses:
+  * `204 No Content`: Xóa thành công.
+  * `404 Not Found`: Không tìm thấy document.
+}

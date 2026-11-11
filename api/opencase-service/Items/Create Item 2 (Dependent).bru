@@ -1,0 +1,37 @@
+meta {
+  name: Create Item 2 (Dependent)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/items
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "fullStatement": "Hàm và Phạm vi (Functions & Scope)",
+    "humanCodingScheme": "JS.1.2",
+    "abbrevStatement": "Functions & Scope",
+    "description": "Khai báo hàm, arrow function, block scope và closure",
+    "language": "vie",
+    "status": "Published"
+  }
+}
+
+vars:post-response {
+  destinationItemId: res.body.id
+}
+
+docs {
+  # Create Dependent Item
+  Tạo concept thứ hai phụ thuộc vào concept thứ nhất để kiểm tra quan hệ tiên quyết (`isPrerequisiteOf`).
+
+  ### Path Parameters:
+  * `document_id`: ID của document sở hữu (`{{documentId}}`).
+
+  ### Response (201 Created):
+  *(ID của item này sẽ tự động gán vào biến `{{destinationItemId}}`).*
+}

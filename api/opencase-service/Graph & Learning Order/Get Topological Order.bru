@@ -1,0 +1,30 @@
+meta {
+  name: Get Topological Order
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}/topological-order
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Topological Order
+  Tính toán thứ tự học tập an toàn dựa trên thuật toán sắp xếp Topo (Kahn's Algorithm).
+  Đảm bảo mọi concept tiên quyết (`isPrerequisiteOf`) đều xuất hiện trước các concept phụ thuộc vào nó.
+
+  ### Path Parameters:
+  * `document_id`: ID của document (`{{documentId}}`).
+
+  ### Response (200 OK):
+  ```json
+  {
+    "order": [
+      "http://localhost:8101/api/v1/case/CFItems/origin_id",
+      "http://localhost:8101/api/v1/case/CFItems/dest_id"
+    ]
+  }
+  ```
+}

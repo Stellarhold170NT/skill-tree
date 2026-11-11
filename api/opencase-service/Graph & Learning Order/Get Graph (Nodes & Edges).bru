@@ -1,0 +1,42 @@
+meta {
+  name: Get Graph (Nodes & Edges)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}/graph
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Graph (Nodes & Edges)
+  Trả về đồ thị định dạng thân thiện `{nodes, edges}` phục vụ cho các thư viện trực quan hóa (như Vis.js, Cytoscape, D3.js) hoặc Roadmap Viewer (M12).
+
+  ### Path Parameters:
+  * `document_id`: ID của document (`{{documentId}}`).
+
+  ### Cấu trúc Response (200 OK):
+  ```json
+  {
+    "nodes": [
+      {
+        "id": "...",
+        "identifier": "http://.../CFItems/...",
+        "fullStatement": "...",
+        "humanCodingScheme": "..."
+      }
+    ],
+    "edges": [
+      {
+        "source": "id_1",
+        "target": "id_2",
+        "type": "isPrerequisiteOf",
+        "sourceIdentifier": "http://.../CFItems/id_1",
+        "targetIdentifier": "http://.../CFItems/id_2"
+      }
+    ]
+  }
+  ```
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Get Item
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/items/{{originItemId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Item
+  Lấy chi tiết một concept (`CFItem`) thông qua `item_id`.
+
+  ### Path Parameters:
+  * `item_id`: ID của concept (`{{originItemId}}`).
+
+  ### Responses:
+  * `200 OK`: Trả về dữ liệu chi tiết của item.
+  * `404 Not Found`: Khi không tìm thấy concept (`ITEM_NOT_FOUND`).
+}

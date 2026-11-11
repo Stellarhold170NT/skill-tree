@@ -1,0 +1,36 @@
+meta {
+  name: Create Cycle Edge (Expect 409)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/associations
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "associationType": "isPrerequisiteOf",
+    "originItemId": "{{destinationItemId}}",
+    "destinationItemId": "{{originItemId}}",
+    "description": "Cố tình tạo cạnh ngược để kiểm tra cycle detection"
+  }
+}
+
+docs {
+  # Test Cycle Detection
+  Thử tạo cạnh ngược chiều (`destinationItemId` $\rightarrow$ `originItemId`). Vì đã có chiều thuận trước đó, hệ thống sẽ phát hiện chu trình lặp và từ chối.
+
+  ### Expected Response (409 Conflict):
+  ```json
+  {
+    "error": {
+      "code": "CYCLE_DETECTED",
+      "message": "Adding this prerequisite edge would create a cycle",
+      "details": {}
+    }
+  }
+  ```
+}

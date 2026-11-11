@@ -1,0 +1,22 @@
+meta {
+  name: Delete Item
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/items/{{originItemId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Item
+  Xóa một concept `CFItem`.
+
+  > **Chú ý**: Việc xóa item sẽ tự động dọn dẹp các `CFAssociation` đang trỏ đến hoặc xuất phát từ item này để tránh mồ côi cạnh (orphan edges).
+
+  ### Responses:
+  * `204 No Content`: Xóa thành công.
+  * `404 Not Found`: Khi không tìm thấy concept.
+}

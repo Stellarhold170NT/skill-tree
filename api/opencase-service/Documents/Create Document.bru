@@ -1,0 +1,45 @@
+meta {
+  name: Create Document
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/documents
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Nhập môn Lập trình Web",
+    "creator": "Khoa CNTT",
+    "description": "Khung chuẩn kiến thức môn Lập trình Web căn bản",
+    "publisher": "Đại học",
+    "version": "1.0",
+    "status": "Draft",
+    "language": "vie"
+  }
+}
+
+vars:post-response {
+  documentId: res.body.id
+}
+
+docs {
+  # Create Document
+  Tạo mới một khung chương trình học thuật (`CFDocument`).
+
+  ### Request Body:
+  * `title` (string, bắt buộc): Tên khung chương trình / môn học.
+  * `creator` (string, bắt buộc): Người tạo / đơn vị phụ trách (Khoa, Bộ môn).
+  * `description` (string, tuỳ chọn): Mô tả tóm tắt.
+  * `publisher` (string, tuỳ chọn): Tổ chức xuất bản.
+  * `version` (string, tuỳ chọn): Phiên bản tài liệu (VD: `1.0`).
+  * `status` (string, tuỳ chọn): Trạng thái (VD: `Draft`, `Published`).
+  * `language` (string, tuỳ chọn): Mã ngôn ngữ (VD: `vie`, `eng`).
+
+  ### Response (201 Created):
+  Trả về thực thể `CFDocument` vừa tạo với `identifier` URI chuẩn CASE v1.1.
+  *(Biến môi trường `documentId` sẽ tự động được gán ID của document vừa tạo).*
+}

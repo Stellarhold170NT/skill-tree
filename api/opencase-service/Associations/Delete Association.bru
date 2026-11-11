@@ -1,0 +1,20 @@
+meta {
+  name: Delete Association
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/associations/{{associationId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Delete Association
+  Xóa một cạnh liên kết giữa hai concept trong đồ thị.
+
+  ### Responses:
+  * `204 No Content`: Xóa thành công.
+  * `404 Not Found`: Khi không tìm thấy liên kết.
+}

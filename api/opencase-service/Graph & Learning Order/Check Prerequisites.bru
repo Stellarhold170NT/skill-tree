@@ -1,0 +1,58 @@
+meta {
+  name: Check Prerequisites
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/documents/{{documentId}}/check-prerequisites
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "targetItemId": "{{destinationItemId}}",
+    "masteredItemIds": [
+      "{{originItemId}}"
+    ]
+  }
+}
+
+docs {
+  # Check Prerequisites (Khóa/Mở khóa bài học)
+  Xác định xem học viên đã đủ điều kiện để mở khóa một concept mục tiêu (`targetItemId`) hay chưa, căn cứ vào danh sách các concept mà học viên đã thành thạo (`masteredItemIds`).
+
+  ### Path Parameters:
+  * `document_id`: ID của document (`{{documentId}}`).
+
+  ### Request Body:
+  * `targetItemId` (string, bắt buộc): ID của concept cần kiểm tra xem đã mở khóa chưa.
+  * `masteredItemIds` (array[string], tuỳ chọn): Danh sách ID các concept mà học viên đã nắm vững.
+
+  ### Response (200 OK):
+  * **Trường hợp đã mở khóa** (`unlocked: true`):
+    ```json
+    {
+      "targetItem": "http://.../CFItems/...",
+      "unlocked": true,
+      "missingPrerequisites": [],
+      "masteredCount": 1
+    }
+    ```
+  * **Trường hợp chưa mở khóa** (`unlocked: false`):
+    ```json
+    {
+      "targetItem": "http://.../CFItems/...",
+      "unlocked": false,
+      "missingPrerequisites": [
+        {
+          "id": "...",
+          "identifier": "http://.../CFItems/...",
+          "fullStatement": "..."
+        }
+      ],
+      "masteredCount": 0
+    }
+    ```
+}

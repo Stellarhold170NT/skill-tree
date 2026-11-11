@@ -1,0 +1,22 @@
+meta {
+  name: List Associations by Document
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}/associations
+  body: none
+  auth: none
+}
+
+docs {
+  # List Associations by Document
+  Lấy danh sách tất cả các liên kết / quan hệ cạnh của một khung chương trình (`CFDocument`).
+
+  ### Path Parameters:
+  * `document_id`: ID của document (`{{documentId}}`).
+
+  ### Response (200 OK):
+  Mảng chứa danh sách các `CFAssociation`.
+}

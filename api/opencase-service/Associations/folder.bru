@@ -1,0 +1,14 @@
+meta {
+  name: Associations
+}
+
+docs {
+  # Associations API (CFAssociation)
+  Quản lý các cạnh liên kết trong đồ thị khái niệm môn học.
+  
+  ### Các loại quan hệ chuẩn CASE v1.1 được hỗ trợ:
+  * `isPrerequisiteOf`: Điều kiện tiên quyết (Concept A phải học trước Concept B).
+  * `isPartOf`: Quan hệ cấu trúc cha/con (Module $\rightarrow$ Lesson).
+  * `exactMatchOf` / `related`: Quan hệ tương đương hoặc liên quan giữa các framework.
+  * `isChildOf`, `isPeerOf`, `replacedBy`, `isTranslationOf`, `exemplar`, `hasSkillLevel`.
+}

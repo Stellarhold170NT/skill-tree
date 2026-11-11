@@ -1,0 +1,23 @@
+meta {
+  name: Get Document
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Document
+  Lấy chi tiết một khung chương trình (`CFDocument`) theo `document_id`.
+
+  ### Path Parameters:
+  * `document_id` (string): ID của document (được nạp tự động từ biến `{{documentId}}`).
+
+  ### Responses:
+  * `200 OK`: Trả về thông tin chi tiết của `CFDocument`.
+  * `404 Not Found`: Khi không tìm thấy tài liệu tương ứng (`DOCUMENT_NOT_FOUND`).
+}

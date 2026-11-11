@@ -1,0 +1,25 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+docs {
+  # Health Check
+  Kiểm tra liveness probe và phiên bản chạy của dịch vụ.
+
+  ### Response (200 OK):
+  ```json
+  {
+    "status": "ok",
+    "service": "opencase-service",
+    "version": "0.1.0"
+  }
+  ```
+}

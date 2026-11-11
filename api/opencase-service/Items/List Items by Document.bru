@@ -1,0 +1,22 @@
+meta {
+  name: List Items by Document
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/documents/{{documentId}}/items
+  body: none
+  auth: none
+}
+
+docs {
+  # List Items by Document
+  Lấy toàn bộ các concept (`CFItem`) thuộc một `CFDocument`.
+
+  ### Path Parameters:
+  * `document_id`: ID của document cần xem danh sách items (`{{documentId}}`).
+
+  ### Response (200 OK):
+  Mảng chứa danh sách tất cả các `CFItem` thuộc document.
+}

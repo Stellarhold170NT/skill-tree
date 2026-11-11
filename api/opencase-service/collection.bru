@@ -1,0 +1,24 @@
+docs {
+  # OpenCASE Service API Collection
+
+  Module **M1** trong hệ thống SkillTree (Graph RAG Platform).
+  Đóng vai trò là **Source of Truth** quản lý đồ thị khái niệm môn học và cấu trúc syllabus dựa trên tiêu chuẩn quốc tế **1EdTech CASE v1.1** (*Competencies and Academic Standards Exchange*).
+
+  ## 1. Thông tin cấu hình (Environments)
+  - **Base URL (Local)**: `http://localhost:8101/api/v1`
+  - Khuyến nghị sử dụng environment `Local` được đính kèm trong thư mục `environments/`.
+
+  ## 2. Mô hình thực thể CASE v1.1
+  - **`CFDocument`**: Đại diện cho 1 khóa học hoặc khung chương trình học thuật.
+  - **`CFItem`**: Điểm kiến thức nguyên tử (atomic concept node) với định danh URI toàn cầu.
+  - **`CFAssociation`**: Cạnh đồ thị liên kết giữa 2 concept:
+    - `isPrerequisiteOf`: Mối quan hệ điều kiện tiên quyết (DAG).
+    - `isPartOf`: Quan hệ phân cấp cấu trúc (chương, mục).
+    - `exactMatchOf` / `related`: Quan hệ tương đồng hoặc liên quan.
+
+  ## 3. Các tính năng đặc biệt
+  - **Cycle Rejection**: Tự động từ chối nếu quan hệ `isPrerequisiteOf` tạo chu trình lặp (HTTP 409).
+  - **Topological Order**: Tính toán thứ tự học tối ưu từ concept nền tảng tới nâng cao.
+  - **Check Prerequisites**: Kiểm tra mở khóa bài học dựa trên concept học viên đã nắm vững.
+  - **CASE JSON-LD Package**: Xuất toàn bộ đồ thị theo schema chuẩn 1EdTech.
+}
