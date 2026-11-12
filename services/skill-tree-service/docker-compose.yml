@@ -9,8 +9,8 @@ services:
     container_name: skill-tree-harness
     restart: unless-stopped
     ports:
-      - "8104:3080"   # Web UI + API (SDK dsh_web_sdk trỏ DSH_BASE_URL vào đây)
-      - "8105:3082"   # Webhook ingress (đã tắt mặc định trong patch.yml — bật khi cần)
+      - "8114:3080"   # Web UI + API (tránh trùng 8104 của analytics-service)
+      - "8115:3082"   # Webhook ingress (tránh trùng 8105 của learner-model-service)
     cap_add:
       - SYS_ADMIN
       - NET_ADMIN
@@ -34,7 +34,7 @@ services:
       - NODE_ENV=production
       # Host được phép truy cập Web UI (phân tách bằng dấu cách).
       # Ví dụ thêm máy dev LAN: EXTRA_TRUSTED_HOSTS=localhost:8104 192.168.1.50:8104
-      - EXTRA_TRUSTED_HOSTS=${EXTRA_TRUSTED_HOSTS:-localhost:8104 127.0.0.1:8104}
+      - EXTRA_TRUSTED_HOSTS=${EXTRA_TRUSTED_HOSTS:-localhost:8114 127.0.0.1:8114 localhost:8104 127.0.0.1:8104}
       # Gateway (M10) cho plugin skilltree-auth-ui gọi auth-service (M11) — xem plugins/skilltree-auth-ui/README.md
       - SKILLTREE_GATEWAY_URL=${SKILLTREE_GATEWAY_URL:-http://localhost:8000}
     healthcheck:

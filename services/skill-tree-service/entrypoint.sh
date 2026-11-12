@@ -122,7 +122,10 @@ PKG_FILE="/app/workspace/.dsh/profiles/web/package.json"
 rm -f /tmp/dsh-stdin; mkfifo /tmp/dsh-stdin
 sleep infinity > /tmp/dsh-stdin &
 
-TRUSTED_HOSTS_DEFAULT='"localhost:3080" "127.0.0.1:3080" "localhost:3081" "127.0.0.1:3081" "${DEV_HOST}:3080" "${DEV_HOST}:3082" "${EDGE_HOST}:9982" "127.0.0.1" "localhost"'
+TRUSTED_HOSTS_DYNAMIC="localhost:3080 127.0.0.1:3080 localhost:3081 127.0.0.1:3081 127.0.0.1 localhost"
+[ -n "${DEV_HOST:-}" ] && TRUSTED_HOSTS_DYNAMIC="$TRUSTED_HOSTS_DYNAMIC ${DEV_HOST}:3080 ${DEV_HOST}:3082"
+[ -n "${EDGE_HOST:-}" ] && TRUSTED_HOSTS_DYNAMIC="$TRUSTED_HOSTS_DYNAMIC ${EDGE_HOST}:9982"
+[ -n "${EXTRA_TRUSTED_HOSTS:-}" ] && TRUSTED_HOSTS_DYNAMIC="$TRUSTED_HOSTS_DYNAMIC ${EXTRA_TRUSTED_HOSTS}"
 
 while true; do
   echo "=========================================================="
@@ -132,10 +135,10 @@ while true; do
     # Direct: khong bwrap (DinD chi ap dung isolate o lop container/ngoai).
     setpriv --reuid=1000 --regid=1000 --init-groups \
       env HOME=/app/workspace bash -c \
-      "exec 0</tmp/dsh-stdin; exec dsh --profile web --patch /app/plugins/patch.yml --port 3081 --no-open --trusted-host $TRUSTED_HOSTS_DEFAULT \${EXTRA_TRUSTED_HOSTS:-}" || true
+      "exec 0</tmp/dsh-stdin; exec dsh --profile web --patch /app/plugins/patch.yml --port 3081 --no-open --trusted-host $TRUSTED_HOSTS_DYNAMIC" || true
   else
     # bwrap: hardened sandbox nhu cu.
-    su -s /bin/bash node -c 'exec 0</tmp/dsh-stdin;
+    su -s /bin/bash node -c "exec 0</tmp/dsh-stdin;
     exec bwrap \
       --ro-bind /usr /usr \
       --ro-bind /lib /lib \
@@ -153,7 +156,7 @@ while true; do
       --ro-bind /etc/group /etc/group \
       --ro-bind /usr/local/lib/node_modules /app/node_modules \
       --ro-bind /usr/local/lib/node_modules /node_modules \
-      --setenv DSH_GITHUB_WEBHOOK_SECRET "${DSH_GITHUB_WEBHOOK_SECRET}" \
+      --setenv DSH_GITHUB_WEBHOOK_SECRET '${DSH_GITHUB_WEBHOOK_SECRET}' \
       --dir /tmp --tmpfs /tmp \
       --ro-bind-try /app/plugins /app/plugins \
       --ro-bind-try /usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai /app/plugins/node_modules/@deepseek-ai \
@@ -161,8 +164,8 @@ while true; do
       --bind /app/workspace /app/workspace \
       --chdir /app/workspace \
       --setenv HOME /app/workspace \
-      --setenv PATH "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
-      --setenv NODE_PATH "/app/workspace/.dsh/profiles/web/node_modules:/usr/local/lib/node_modules" \
+      --setenv PATH '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
+      --setenv NODE_PATH '/app/workspace/.dsh/profiles/web/node_modules:/usr/local/lib/node_modules' \
       --unshare-user-try \
       --unshare-pid \
       --unshare-uts \
@@ -170,7 +173,7 @@ while true; do
       --new-session \
       --cap-drop ALL \
       --die-with-parent \
-      dsh --profile web --patch /app/plugins/patch.yml --port 3081 --no-open --trusted-host "localhost:3080" "127.0.0.1:3080" "localhost:3081" "127.0.0.1:3081" "${DEV_HOST}:3080" "${DEV_HOST}:3082" "${EDGE_HOST}:9982" "127.0.0.1" "localhost" ${EXTRA_TRUSTED_HOSTS:-}' || true
+      dsh --profile web --patch /app/plugins/patch.yml --port 3081 --no-open --trusted-host $TRUSTED_HOSTS_DYNAMIC" || true
   fi
 
   echo "[entrypoint] DSH exited. Restarting sandbox in 1 second..."
