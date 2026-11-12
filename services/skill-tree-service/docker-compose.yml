@@ -36,7 +36,7 @@ services:
       # Ví dụ thêm máy dev LAN: EXTRA_TRUSTED_HOSTS=localhost:8104 192.168.1.50:8104
       - EXTRA_TRUSTED_HOSTS=${EXTRA_TRUSTED_HOSTS:-localhost:8114 127.0.0.1:8114 localhost:8104 127.0.0.1:8104}
       # Gateway (M10) cho plugin skilltree-auth-ui gọi auth-service (M11) — xem plugins/skilltree-auth-ui/README.md
-      - SKILLTREE_GATEWAY_URL=${SKILLTREE_GATEWAY_URL:-http://localhost:8000}
+      - SKILLTREE_GATEWAY_URL=${SKILLTREE_GATEWAY_URL:-http://api-gateway:8000}
     healthcheck:
       # 401 (chưa auth) vẫn tính là sống — chỉ cần HTTP server trả lời.
       # /api/v1/health theo contract chung của services/ sẽ thêm sau bằng plugin.
@@ -45,3 +45,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 90s
+
+networks:
+  default:
+    name: deploy_platform-net
+    external: true
