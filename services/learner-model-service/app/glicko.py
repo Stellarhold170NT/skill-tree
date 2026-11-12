@@ -31,7 +31,7 @@ def _g(phi: float) -> float:
 
 
 def _expected(mu: float, opponent_mu: float, g: float) -> float:
-    z = -g * (opponent_mu - mu)
+    z = -g * (mu - opponent_mu)
     if z > 50.0:   # E -> 0, avoid exp overflow
         return 0.0
     if z < -50.0:  # E -> 1

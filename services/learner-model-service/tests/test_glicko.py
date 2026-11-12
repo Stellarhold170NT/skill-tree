@@ -30,8 +30,10 @@ def test_deterministic_and_reproducible():
     first = glicko.rate(*args, matches)
     second = glicko.rate(*args, matches)
     assert first == second
-    # strong opponents + mostly losses pull the rating down
-    assert first[0] < 1500.0
+    # Canonical Glickman (2012) numerical example: Rating=1464.05, RD=151.52, Vol=0.06000
+    assert round(first[0], 2) == 1464.05
+    assert round(first[1], 2) == 151.52
+    assert round(first[2], 5) == 0.06000
 
 
 def test_inactivity_inflation_caps_at_initial_rd():

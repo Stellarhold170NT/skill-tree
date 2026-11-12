@@ -10,7 +10,8 @@ def _update(client, concept, correct):
 
 
 def test_next_picks_highest_unlock_value(client, fake_graph):
-    # A green (2 wins), B amber (1 win, prereq A satisfied), C blocked, D untouched
+    # A green (3 wins to cross 0.85 mastery), B amber (1 win, prereq A satisfied), C blocked, D untouched
+    _update(client, A, True)
     _update(client, A, True)
     _update(client, A, True)
     _update(client, B, True)
