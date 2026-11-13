@@ -217,21 +217,28 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		}).then((res) => res.json().catch(() => ({ ok: false, error: "HTTP " + res.status })));
 	}
 
-	/* Loader for vis.Network */
+	/* Loader for vis.Network — loads exact same CDN as Classroom Memory */
 	function ensureVis() {
 		if (window.vis && window.vis.Network) return Promise.resolve(window.vis);
 		return new Promise((resolve) => {
+			const existing = document.querySelector('script[data-vis-network]');
+			if (existing) {
+				if (window.vis && window.vis.Network) return resolve(window.vis);
+				existing.addEventListener('load', () => resolve(window.vis));
+				return;
+			}
 			const script = document.createElement("script");
-			script.src = "/skilltree-teacher/vis-network.min.js";
+			script.setAttribute("data-vis-network", "true");
+			script.src = "https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js";
 			script.async = true;
 			script.onload = () => resolve(window.vis);
 			script.onerror = () => {
-				const unpkg = document.createElement("script");
-				unpkg.src = "https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js";
-				unpkg.async = true;
-				unpkg.onload = () => resolve(window.vis);
-				unpkg.onerror = () => resolve(null);
-				document.head.appendChild(unpkg);
+				const fallback = document.createElement("script");
+				fallback.src = "https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js";
+				fallback.async = true;
+				fallback.onload = () => resolve(window.vis);
+				fallback.onerror = () => resolve(null);
+				document.head.appendChild(fallback);
 			};
 			document.head.appendChild(script);
 		});
