@@ -77,15 +77,20 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 	function PageHeader() {
 		return h("div", {
 			style: {
-				display: "flex", alignItems: "center", gap: "14px",
-				marginBottom: "24px", paddingBottom: "16px",
-				borderBottom: `0.5px solid ${T.border}`
+				display: "flex", alignItems: "center", gap: "12px",
+				padding: "0 0 16px", borderBottom: `0.5px solid ${T.border}`,
+				marginBottom: "20px"
 			}
 		},
-			h("span", { style: { display: "inline-flex", alignItems: "center", color: "#ffffff" } },
+			h("div", {
+				style: {
+					display: "flex", alignItems: "center", justifyContent: "center",
+					width: "28px", height: "28px", color: "#ffffff"
+				}
+			},
 				h("svg", {
-					width: "28", height: "28", viewBox: "0 0 24 24", fill: "none",
-					stroke: "#ffffff", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
+					xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", width: 24, height: 24,
+					fill: "none", stroke: "#ffffff", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round"
 				},
 					h("path", { d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" }),
 					h("path", { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" }),
@@ -94,8 +99,8 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 				)
 			),
 			h("div", null,
-				h("h2", { style: { margin: "0 0 4px", fontSize: "18px", fontWeight: 600, color: T.labelPrimary, lineHeight: "24px" } }, "Môn học & Giáo trình"),
-				h("p", { style: { margin: 0, fontSize: "13px", color: T.labelTertiary, lineHeight: "20px" } }, "Quản lý danh mục môn học, học liệu tài liệu và cấu trúc cây kỹ năng (Mastery Graph)")
+				h("h2", { style: { margin: 0, fontSize: "18px", fontWeight: 600, color: T.labelPrimary, lineHeight: "24px" } }, "Môn học"),
+				h("p", { style: { margin: "2px 0 0", fontSize: "13px", color: T.labelTertiary, lineHeight: "18px" } }, "Quản lý danh mục môn học, học liệu tài liệu và cấu trúc cây kỹ năng (Mastery Graph)")
 			)
 		);
 	}
@@ -251,8 +256,6 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 		/* ==================== VIEW 1: COURSE DETAIL ==================== */
 		if (selectedCourse) {
 			return h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } },
-				PageHeader(),
-
 				// Top Action Bar
 				h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
 					h("button", {
@@ -555,8 +558,6 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 
 		/* ==================== VIEW 2: COURSE LIST ==================== */
 		return h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } },
-			PageHeader(),
-
 			// Toolbar: Search + Create Course CTA Button
 			h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" } },
 				h("div", { style: { position: "relative", width: "300px", maxWidth: "100%" } },
@@ -741,11 +742,16 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 
 	function MainPanel() {
 		return h("div", {
+			className: "st-page",
 			style: {
-				maxWidth: "1080px", margin: "0 auto", padding: "28px 24px",
-				boxSizing: "border-box", color: T.labelPrimary, fontFamily: FONT
+				width: "100%", maxWidth: "1100px", margin: "0 auto",
+				padding: "24px 32px 48px", boxSizing: "border-box",
+				fontFamily: FONT, color: T.labelPrimary
 			}
-		}, h(CourseManagementPanel));
+		},
+			h(PageHeader, null),
+			h(CourseManagementPanel, null)
+		);
 	}
 
 	exports.name = NS;
