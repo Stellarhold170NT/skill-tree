@@ -2,6 +2,7 @@
  * SkillTree Prototype Application Engine
  * Implements Glicko-2, Ebbinghaus decay, CASE graph DAG traversal,
  * Frontier calculation, Class Heatmap & Contrastive Teaching Plan in pure JS.
+ * Design tokens strictly following DESIGN.md
  */
 
 // --- 1. Glicko-2 & Ebbinghaus Cognitive Models ---
@@ -39,7 +40,7 @@ function computeState(rating, rd, reviews, elapsedDays) {
   return "green";
 }
 
-// Single-match Glicko-2 step against standard reference question
+// Canonical Glicko-2 step against standard reference question
 function rateAttempt(rating, rd, vol, isCorrect) {
   const mu = (rating - 1500.0) / GLICKO_SCALE;
   const phi = rd / GLICKO_SCALE;
@@ -54,7 +55,6 @@ function rateAttempt(rating, rd, vol, isCorrect) {
   const deltaSq = delta * delta;
   const a = Math.log(vol * vol);
 
-  // Bisection solver for new volatility
   let lo = a - 30.0;
   let hi = a + 30.0;
   for (let i = 0; i < 100; i++) {
@@ -98,12 +98,12 @@ const CONCEPTS = [
     uri: "case:math:int_sub",
     code: "TOAN-02",
     title: "Phép trừ số nguyên",
-    desc: "Quy tắc trừ số nguyên: cộng với số đối của số trừ",
+    desc: "Quy tắc trừ số nguyên: cộng với số đối",
     prereqs: ["case:math:int_add"],
-    unlocks: ["case:math:int_div"],
+    unlocks: ["case:math:order_ops"],
     quiz: {
-      question: "Tính: 12 - (-8) bằng bao nhiêu?",
-      options: ["A. 4", "B. -4", "C. 20", "D. -20"],
+      question: "Tính: 12 - (-18) bằng bao nhiêu?",
+      options: ["A. -6", "B. 6", "C. 30", "D. -30"],
       correct: 2
     }
   },
@@ -111,568 +111,641 @@ const CONCEPTS = [
     uri: "case:math:int_mult",
     code: "TOAN-03",
     title: "Phép nhân số nguyên",
-    desc: "Quy tắc nhân hai số nguyên cùng dấu (+), khác dấu (-)",
+    desc: "Quy tắc nhân dấu cùng dấu ra dương, khác dấu ra âm",
     prereqs: ["case:math:int_add"],
-    unlocks: ["case:math:int_div", "case:math:powers"],
+    unlocks: ["case:math:frac_mult", "case:math:order_ops"],
     quiz: {
       question: "Tính: (-7) × (-9) bằng bao nhiêu?",
-      options: ["A. -63", "B. 63", "C. 16", "D. -16"],
+      options: ["A. -63", "B. 63", "C. -16", "D. 16"],
       correct: 1
     }
   },
   {
-    uri: "case:math:int_div",
+    uri: "case:math:order_ops",
     code: "TOAN-04",
-    title: "Phép chia số nguyên",
-    desc: "Chia hết trong tập số nguyên, dấu của thương",
+    title: "Thứ tự thực hiện phép tính",
+    desc: "Quy tắc ngoặc tròn, vuông, nhọn; nhân chia trước, cộng trừ sau",
     prereqs: ["case:math:int_sub", "case:math:int_mult"],
-    unlocks: ["case:math:frac_concept"],
+    unlocks: ["case:math:linear_eq"],
     quiz: {
-      question: "Tính: (-72) ÷ 8 bằng bao nhiêu?",
-      options: ["A. 9", "B. -8", "C. -9", "D. 8"],
-      correct: 2
-    }
-  },
-  {
-    uri: "case:math:frac_concept",
-    code: "TOAN-05",
-    title: "Khái niệm phân số & Rút gọn",
-    desc: "Phân số a/b (b khác 0), tính chất cơ bản và ước chung lớn nhất",
-    prereqs: ["case:math:int_div"],
-    unlocks: ["case:math:frac_add", "case:math:frac_mult"],
-    quiz: {
-      question: "Rút gọn phân số 18/24 về tối giản:",
-      options: ["A. 9/12", "B. 3/4", "C. 6/8", "D. 2/3"],
-      correct: 1
+      question: "Tính: 5 + 3 × (-2) bằng bao nhiêu?",
+      options: ["A. -1", "B. -16", "C. 1", "D. 11"],
+      correct: 0
     }
   },
   {
     uri: "case:math:frac_add",
-    code: "TOAN-06",
+    code: "TOAN-05",
     title: "Cộng trừ phân số",
-    desc: "Quy đồng mẫu số và cộng trừ phân số cùng mẫu",
-    prereqs: ["case:math:frac_concept"],
-    unlocks: ["case:math:linear_eq"],
+    desc: "Quy đồng mẫu số, rút gọn phân số tối giản",
+    prereqs: ["case:math:int_add"],
+    unlocks: ["case:math:frac_mult"],
     quiz: {
-      question: "Tính: 1/3 + 2/5 bằng bao nhiêu?",
-      options: ["A. 3/8", "B. 11/15", "C. 7/15", "D. 5/8"],
+      question: "Tính: 1/3 + 1/6 bằng bao nhiêu?",
+      options: ["A. 2/9", "B. 1/2", "C. 2/6", "D. 3/6"],
       correct: 1
     }
   },
   {
     uri: "case:math:frac_mult",
-    code: "TOAN-07",
-    title: "Phép nhân phân số",
-    desc: "Nhân tử với tử, mẫu với mẫu và triệt tiêu trước khi nhân",
-    prereqs: ["case:math:frac_concept"],
-    unlocks: ["case:math:frac_div"],
+    code: "TOAN-06",
+    title: "Nhân chia phân số",
+    desc: "Tử nhân tử, mẫu nhân mẫu; chia là nhân nghịch đảo",
+    prereqs: ["case:math:frac_add", "case:math:int_mult"],
+    unlocks: ["case:math:linear_eq"],
     quiz: {
-      question: "Tính: (3/4) × (8/9) bằng bao nhiêu?",
-      options: ["A. 2/3", "B. 24/36", "C. 11/13", "D. 3/4"],
+      question: "Tính: (2/5) × (15/4) bằng bao nhiêu?",
+      options: ["A. 3/2", "B. 30/20", "C. 8/75", "D. 6/5"],
       correct: 0
     }
   },
   {
-    uri: "case:math:frac_div",
-    code: "TOAN-08",
-    title: "Phép chia phân số",
-    desc: "Quy tắc nghịch đảo phân số và chuyển về phép nhân",
-    prereqs: ["case:math:frac_mult"],
-    unlocks: ["case:math:linear_eq"],
+    uri: "case:math:linear_eq",
+    code: "TOAN-07",
+    title: "Phương trình bậc nhất 1 ẩn",
+    desc: "Phương trình dạng ax + b = 0, chuyển vế đổi dấu",
+    prereqs: ["case:math:order_ops", "case:math:frac_mult"],
+    unlocks: ["case:math:quad_eq", "case:math:linear_func"],
     quiz: {
-      question: "Tính: (2/5) ÷ (4/15) bằng bao nhiêu?",
-      options: ["A. 8/75", "B. 3/2", "C. 2/3", "D. 1/2"],
+      question: "Giải phương trình: 3x - 9 = 0. Giá trị x là:",
+      options: ["A. x = 2", "B. x = 3", "C. x = -3", "D. x = 6"],
       correct: 1
     }
   },
   {
-    uri: "case:math:powers",
-    code: "TOAN-09",
-    title: "Lũy thừa số nguyên",
-    desc: "Định nghĩa lũy thừa bậc n, nhân chia hai lũy thừa cùng cơ số",
-    prereqs: ["case:math:int_mult"],
-    unlocks: ["case:math:quadratic_eq"],
+    uri: "case:math:linear_func",
+    code: "TOAN-08",
+    title: "Hàm số bậc nhất y = ax + b",
+    desc: "Đồ thị đường thẳng, hệ số góc, điểm cắt trục tung",
+    prereqs: ["case:math:linear_eq"],
+    unlocks: ["case:math:quad_func"],
     quiz: {
-      question: "Tính giá trị của (-3)^3:",
-      options: ["A. 27", "B. -9", "C. -27", "D. 9"],
+      question: "Hàm số y = -2x + 5 có hệ số góc bằng:",
+      options: ["A. 5", "B. 2", "C. -2", "D. 2.5"],
       correct: 2
     }
   },
   {
-    uri: "case:math:linear_eq",
-    code: "TOAN-10",
-    title: "Phương trình bậc nhất 1 ẩn",
-    desc: "Giải phương trình ax + b = 0 (a khác 0), quy tắc chuyển vế đổi dấu",
-    prereqs: ["case:math:frac_add", "case:math:frac_div"],
-    unlocks: ["case:math:quadratic_eq"],
+    uri: "case:math:quad_eq",
+    code: "TOAN-09",
+    title: "Phương trình bậc hai ax² + bx + c = 0",
+    desc: "Công thức nghiệm Delta, nhẩm nghiệm Viete",
+    prereqs: ["case:math:linear_eq"],
+    unlocks: ["case:math:quad_func"],
     quiz: {
-      question: "Nghiệm của phương trình 3x - 12 = 0 là:",
-      options: ["A. x = -4", "B. x = 4", "C. x = 36", "D. x = 9"],
+      question: "Biệt thức Delta của phương trình x² - 4x + 3 = 0 là:",
+      options: ["A. 4", "B. -4", "C. 16", "D. 8"],
+      correct: 0
+    }
+  },
+  {
+    uri: "case:math:quad_func",
+    code: "TOAN-10",
+    title: "Đồ thị hàm số Parabol y = ax²",
+    desc: "Đỉnh parabol, trục đối xứng, bề lõm quay lên/quay xuống",
+    prereqs: ["case:math:linear_func", "case:math:quad_eq"],
+    unlocks: [],
+    quiz: {
+      question: "Đồ thị hàm số y = -3x² có bề lõm:",
+      options: ["A. Quay lên trên", "B. Quay xuống dưới", "C. Sang bên phải", "D. Sang bên trái"],
       correct: 1
     }
   }
 ];
 
-// --- 3. Mock Roster (OneRoster Standard: Class 10A1) ---
-let STUDENTS = [
-  { id: "std_01", name: "Nguyễn Hoàng Minh (Bạn)", isCurrent: true },
-  { id: "std_02", name: "Trần Thị Lan", isCurrent: false },
-  { id: "std_03", name: "Lê Văn Tuấn", isCurrent: false },
-  { id: "std_04", name: "Phạm Quỳnh Anh", isCurrent: false },
-  { id: "std_05", name: "Vũ Đức Thắng", isCurrent: false },
-  { id: "std_06", name: "Đặng Thu Hà", isCurrent: false }
+// --- 3. Initial Mock Students State ---
+const STUDENTS = [
+  {
+    id: "stu-001",
+    name: "Nguyễn Hoàng Minh",
+    elapsedDays: 0,
+    skills: {
+      "case:math:int_add": { rating: 1720, rd: 85, vol: 0.06, reviews: 4 },
+      "case:math:int_sub": { rating: 1680, rd: 90, vol: 0.06, reviews: 3 },
+      "case:math:int_mult": { rating: 1650, rd: 95, vol: 0.06, reviews: 3 },
+      "case:math:order_ops": { rating: 1580, rd: 110, vol: 0.06, reviews: 2 },
+      "case:math:frac_add": { rating: 1610, rd: 105, vol: 0.06, reviews: 2 },
+      "case:math:frac_mult": { rating: 1530, rd: 120, vol: 0.06, reviews: 1 },
+      "case:math:linear_eq": { rating: 1470, rd: 135, vol: 0.06, reviews: 1 },
+      "case:math:linear_func": { rating: 1380, rd: 200, vol: 0.06, reviews: 0 },
+      "case:math:quad_eq": { rating: 1350, rd: 220, vol: 0.06, reviews: 0 },
+      "case:math:quad_func": { rating: 1300, rd: 250, vol: 0.06, reviews: 0 }
+    }
+  },
+  {
+    id: "stu-002",
+    name: "Trần Mai An",
+    elapsedDays: 0,
+    skills: {
+      "case:math:int_add": { rating: 1800, rd: 70, vol: 0.06, reviews: 5 },
+      "case:math:int_sub": { rating: 1750, rd: 75, vol: 0.06, reviews: 4 },
+      "case:math:int_mult": { rating: 1760, rd: 75, vol: 0.06, reviews: 4 },
+      "case:math:order_ops": { rating: 1710, rd: 85, vol: 0.06, reviews: 3 },
+      "case:math:frac_add": { rating: 1740, rd: 80, vol: 0.06, reviews: 4 },
+      "case:math:frac_mult": { rating: 1690, rd: 90, vol: 0.06, reviews: 3 },
+      "case:math:linear_eq": { rating: 1660, rd: 95, vol: 0.06, reviews: 3 },
+      "case:math:linear_func": { rating: 1620, rd: 105, vol: 0.06, reviews: 2 },
+      "case:math:quad_eq": { rating: 1590, rd: 115, vol: 0.06, reviews: 2 },
+      "case:math:quad_func": { rating: 1510, rd: 140, vol: 0.06, reviews: 1 }
+    }
+  },
+  {
+    id: "stu-003",
+    name: "Lê Gia Bảo",
+    elapsedDays: 0,
+    skills: {
+      "case:math:int_add": { rating: 1620, rd: 100, vol: 0.06, reviews: 2 },
+      "case:math:int_sub": { rating: 1540, rd: 115, vol: 0.06, reviews: 1 },
+      "case:math:int_mult": { rating: 1410, rd: 150, vol: 0.06, reviews: 1 },
+      "case:math:order_ops": { rating: 1360, rd: 180, vol: 0.06, reviews: 0 },
+      "case:math:frac_add": { rating: 1390, rd: 170, vol: 0.06, reviews: 0 },
+      "case:math:frac_mult": { rating: 1320, rd: 220, vol: 0.06, reviews: 0 },
+      "case:math:linear_eq": { rating: 1280, rd: 260, vol: 0.06, reviews: 0 },
+      "case:math:linear_func": { rating: 1250, rd: 300, vol: 0.06, reviews: 0 },
+      "case:math:quad_eq": { rating: 1250, rd: 300, vol: 0.06, reviews: 0 },
+      "case:math:quad_func": { rating: 1200, rd: 320, vol: 0.06, reviews: 0 }
+    }
+  },
+  {
+    id: "stu-004",
+    name: "Phạm Quỳnh Châu",
+    elapsedDays: 0,
+    skills: {
+      "case:math:int_add": { rating: 1700, rd: 85, vol: 0.06, reviews: 4 },
+      "case:math:int_sub": { rating: 1670, rd: 90, vol: 0.06, reviews: 3 },
+      "case:math:int_mult": { rating: 1640, rd: 95, vol: 0.06, reviews: 3 },
+      "case:math:order_ops": { rating: 1610, rd: 100, vol: 0.06, reviews: 2 },
+      "case:math:frac_add": { rating: 1420, rd: 140, vol: 0.06, reviews: 1 },
+      "case:math:frac_mult": { rating: 1380, rd: 170, vol: 0.06, reviews: 0 },
+      "case:math:linear_eq": { rating: 1340, rd: 200, vol: 0.06, reviews: 0 },
+      "case:math:linear_func": { rating: 1300, rd: 240, vol: 0.06, reviews: 0 },
+      "case:math:quad_eq": { rating: 1280, rd: 260, vol: 0.06, reviews: 0 },
+      "case:math:quad_func": { rating: 1250, rd: 280, vol: 0.06, reviews: 0 }
+    }
+  },
+  {
+    id: "stu-005",
+    name: "Đỗ Minh Đức",
+    elapsedDays: 0,
+    skills: {
+      "case:math:int_add": { rating: 1550, rd: 120, vol: 0.06, reviews: 1 },
+      "case:math:int_sub": { rating: 1460, rd: 145, vol: 0.06, reviews: 1 },
+      "case:math:int_mult": { rating: 1380, rd: 170, vol: 0.06, reviews: 0 },
+      "case:math:order_ops": { rating: 1320, rd: 210, vol: 0.06, reviews: 0 },
+      "case:math:frac_add": { rating: 1350, rd: 190, vol: 0.06, reviews: 0 },
+      "case:math:frac_mult": { rating: 1290, rd: 240, vol: 0.06, reviews: 0 },
+      "case:math:linear_eq": { rating: 1250, rd: 270, vol: 0.06, reviews: 0 },
+      "case:math:linear_func": { rating: 1220, rd: 310, vol: 0.06, reviews: 0 },
+      "case:math:quad_eq": { rating: 1200, rd: 320, vol: 0.06, reviews: 0 },
+      "case:math:quad_func": { rating: 1180, rd: 340, vol: 0.06, reviews: 0 }
+    }
+  },
+  {
+    id: "stu-006",
+    name: "Vũ Khánh Hoa",
+    elapsedDays: 0,
+    skills: {
+      "case:math:int_add": { rating: 1750, rd: 75, vol: 0.06, reviews: 4 },
+      "case:math:int_sub": { rating: 1710, rd: 80, vol: 0.06, reviews: 3 },
+      "case:math:int_mult": { rating: 1680, rd: 90, vol: 0.06, reviews: 3 },
+      "case:math:order_ops": { rating: 1640, rd: 95, vol: 0.06, reviews: 2 },
+      "case:math:frac_add": { rating: 1670, rd: 90, vol: 0.06, reviews: 3 },
+      "case:math:frac_mult": { rating: 1630, rd: 100, vol: 0.06, reviews: 2 },
+      "case:math:linear_eq": { rating: 1590, rd: 110, vol: 0.06, reviews: 2 },
+      "case:math:linear_func": { rating: 1450, rd: 150, vol: 0.06, reviews: 1 },
+      "case:math:quad_eq": { rating: 1410, rd: 170, vol: 0.06, reviews: 1 },
+      "case:math:quad_func": { rating: 1330, rd: 220, vol: 0.06, reviews: 0 }
+    }
+  }
 ];
 
-// Student state database: student_id -> { conceptUri -> { rating, rd, vol, reviews, idleDays } }
-let DB_MASTERY = {};
+// --- 4. Application State & Controller ---
+let currentStudentId = "stu-001";
+let activeQuizConceptUri = "case:math:linear_eq";
+let selectedQuizOption = null;
 
-function initMockData() {
-  STUDENTS.forEach((s) => {
-    DB_MASTERY[s.id] = {};
-  });
-
-  // Minh (Current Student): Good on early, Amber on frac_mult, Rusty on int_sub
-  setStudentConcept("std_01", "case:math:int_add", 1920, 180, 0.05, 4, 1); // GREEN
-  setStudentConcept("std_01", "case:math:int_sub", 1820, 240, 0.06, 2, 9); // RUSTY (idle 9 days)
-  setStudentConcept("std_01", "case:math:int_mult", 1880, 210, 0.05, 3, 2); // GREEN
-  setStudentConcept("std_01", "case:math:int_div", 1840, 230, 0.06, 2, 1); // GREEN
-  setStudentConcept("std_01", "case:math:frac_concept", 1810, 240, 0.06, 2, 1); // GREEN
-  setStudentConcept("std_01", "case:math:frac_mult", 1660, 290, 0.06, 1, 0); // AMBER (Next frontier target)
-
-  // Lan: Outstanding student (all GREEN)
-  CONCEPTS.slice(0, 8).forEach(c => {
-    setStudentConcept("std_02", c.uri, 1950, 160, 0.05, 5, 1);
-  });
-
-  // Tuấn: Struggling student (REDs)
-  setStudentConcept("std_03", "case:math:int_add", 1820, 220, 0.05, 3, 1);
-  setStudentConcept("std_03", "case:math:int_sub", 1320, 310, 0.06, 1, 0); // RED
-  setStudentConcept("std_03", "case:math:int_mult", 1350, 300, 0.06, 1, 0); // RED
-
-  // Quỳnh Anh: Inactive, multiple RUSTY
-  setStudentConcept("std_04", "case:math:int_add", 1850, 200, 0.05, 2, 12); // RUSTY
-  setStudentConcept("std_04", "case:math:int_sub", 1820, 210, 0.05, 2, 14); // RUSTY
-  setStudentConcept("std_04", "case:math:int_mult", 1840, 210, 0.05, 2, 14); // RUSTY
-
-  // Thắng: Average
-  setStudentConcept("std_05", "case:math:int_add", 1850, 200, 0.05, 3, 1);
-  setStudentConcept("std_05", "case:math:int_sub", 1680, 270, 0.06, 1, 2); // AMBER
-  setStudentConcept("std_05", "case:math:int_mult", 1820, 220, 0.05, 2, 1); // GREEN
-
-  // Hà: Stuck on frac_concept
-  setStudentConcept("std_06", "case:math:int_add", 1820, 220, 0.05, 2, 1);
-  setStudentConcept("std_06", "case:math:int_sub", 1800, 230, 0.05, 2, 1);
-  setStudentConcept("std_06", "case:math:int_mult", 1800, 230, 0.05, 2, 1);
-  setStudentConcept("std_06", "case:math:int_div", 1800, 230, 0.05, 2, 1);
-  setStudentConcept("std_06", "case:math:frac_concept", 1310, 320, 0.06, 1, 0); // RED
-}
-
-function setStudentConcept(studentId, uri, rating, rd, vol, reviews, idleDays) {
-  DB_MASTERY[studentId][uri] = { rating, rd, vol, reviews, idleDays };
-}
-
-function getStudentMastery(studentId, uri) {
-  const rec = DB_MASTERY[studentId]?.[uri];
-  if (!rec) return { rating: 1500, rd: 350, vol: 0.06, reviews: 0, idleDays: 0, state: "none", mastery: 0.5 };
-  const state = computeState(rec.rating, rec.rd, rec.reviews, rec.idleDays);
-  const mastery = sigmoidMastery(rec.rating);
-  return { ...rec, state, mastery };
-}
-
-// --- 4. Frontier Algorithm for Student ---
-function computeFrontierForStudent(studentId) {
-  const candidates = [];
-  CONCEPTS.forEach(c => {
-    const cur = getStudentMastery(studentId, c.uri);
-    // Frontier candidate cannot be already mastered (green) or rusty
-    if (cur.state === "green" || cur.state === "rusty") return;
-
-    // Transitive prerequisites gating: ALL prereqs must be GREEN
-    const allPrereqsGreen = c.prereqs.every(pUri => {
-      const pState = getStudentMastery(studentId, pUri).state;
-      return pState === "green";
-    });
-
-    if (allPrereqsGreen) {
-      candidates.push({
-        concept: c,
-        unlockValue: c.unlocks.length,
-        mastery: cur.mastery,
-        state: cur.state
-      });
-    }
-  });
-
-  // Rank by unlock value descending, then mastery descending
-  candidates.sort((a, b) => {
-    if (b.unlockValue !== a.unlockValue) return b.unlockValue - a.unlockValue;
-    return b.mastery - a.mastery;
-  });
-
-  return candidates;
-}
-
-// --- 5. UI Rendering & Interactions ---
-let currentRole = "student"; // "student" | "teacher" | "graph"
-let activeQuizConcept = null;
-let selectedOption = null;
-
-document.addEventListener("DOMContentLoaded", () => {
-  initMockData();
-  setupNav();
-  renderStudentView();
-  renderTeacherView();
-  renderGraphView();
-});
-
-function setupNav() {
-  document.querySelectorAll(".role-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".role-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentRole = btn.dataset.role;
-
-      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
-      document.getElementById(`view-${currentRole}`).classList.add("active");
-
-      // Update avatar/user label
-      const userLabel = document.getElementById("header-user-name");
-      if (currentRole === "student") userLabel.textContent = "Học sinh: Nguyễn Hoàng Minh";
-      else if (currentRole === "teacher") userLabel.textContent = "Giáo viên: Cô Trần Ngọc Hà";
-      else userLabel.textContent = "Tổ trưởng Chuyên môn";
-    });
-  });
-
-  document.querySelectorAll(".sub-nav-item").forEach(item => {
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
-      document.querySelectorAll(".sub-nav-item").forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
-    });
-  });
-}
-
-// Render Student Skill Tree
-function renderStudentView() {
-  const studentId = "std_01";
-  const frontier = computeFrontierForStudent(studentId);
-  const nextTarget = frontier[0];
-
-  // Render Frontier Banner
-  const banner = document.getElementById("student-frontier-banner");
-  if (nextTarget) {
-    banner.innerHTML = `
-      <div class="frontier-info">
-        <span class="frontier-tag">✨ Gợi ý tối ưu nhất (Unlock Value: +${nextTarget.unlockValue})</span>
-        <h2 class="frontier-title">${nextTarget.concept.title}</h2>
-        <p class="frontier-desc">Tất cả điều kiện tiên quyết đều đã vững vàng. Hoàn thành bài này sẽ <strong>mở khóa tiếp ${nextTarget.unlockValue} bài học tiếp theo</strong> trong chương trình.</p>
-      </div>
-      <button class="btn-primary-action" onclick="openQuizModal('${nextTarget.concept.uri}')">
-        🚀 Học ngay bây giờ
-      </button>
-    `;
-  }
-
-  // Render Concept Cards Grid
-  const grid = document.getElementById("student-concept-grid");
-  grid.innerHTML = "";
-
-  CONCEPTS.forEach(c => {
-    const info = getStudentMastery(studentId, c.uri);
-    const card = document.createElement("div");
-    card.className = `concept-card state-${info.state}`;
-    card.onclick = () => openQuizModal(c.uri);
-
-    const percent = Math.round(info.mastery * 100);
-    let stateLabel = "CHƯA HỌC";
-    if (info.state === "green") stateLabel = "ĐÃ LÀM CHỦ (GREEN)";
-    else if (info.state === "amber") stateLabel = "ĐANG HỌC (AMBER)";
-    else if (info.state === "red") stateLabel = "CẦN HỌC LẠI (RED)";
-    else if (info.state === "rusty") stateLabel = "MAI MỘT (RUSTY)";
-
-    card.innerHTML = `
-      <div>
-        <div class="concept-header">
-          <span class="concept-code">${c.code}</span>
-          <span class="concept-badge badge-${info.state}">${stateLabel}</span>
-        </div>
-        <h3 class="concept-title">${c.title}</h3>
-        <p style="font-size: 0.85rem; color: var(--ink-secondary);">${c.desc}</p>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" style="width: ${percent}%; background: var(--color-${info.state === 'none' ? 'locked' : info.state});"></div>
-        </div>
-      </div>
-      <div class="concept-meta">
-        <span>Trình độ: <strong>${Math.round(info.rating)}</strong> (±${Math.round(info.rd)})</span>
-        <span>Xác suất: <strong>${percent}%</strong></span>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
-// Render Teacher Heatmap & Contrastive Plan
-function renderTeacherView() {
-  renderHeatmapTable();
-  renderTeachingPlan();
-}
-
-function renderHeatmapTable() {
-  const container = document.getElementById("teacher-heatmap-container");
-  let html = `
-    <table class="heatmap-table">
-      <thead>
-        <tr>
-          <th class="col-student">Học sinh / Khái niệm</th>
-  `;
-  CONCEPTS.forEach(c => {
-    html += `<th><div title="${c.title}" style="max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.code}</div></th>`;
-  });
-  html += `</tr></thead><tbody>`;
-
-  STUDENTS.forEach(s => {
-    html += `<tr><td class="col-student"><a href="#" style="color: var(--primary-dark); font-weight: 600; text-decoration: none;" onclick="openDrillDown('${s.id}'); return false;">${s.name}</a></td>`;
-    CONCEPTS.forEach(c => {
-      const m = getStudentMastery(s.id, c.uri);
-      const letter = m.state === "none" ? "—" : m.state[0].toUpperCase();
-      html += `<td><span class="heatmap-cell cell-${m.state}" title="${s.name} - ${c.title}: ${m.state.toUpperCase()} (R=${Math.round(m.rating)})" onclick="openDrillDown('${s.id}')">${letter}</span></td>`;
-    });
-    html += `</tr>`;
-  });
-
-  html += `</tbody></table>`;
-  container.innerHTML = html;
-}
-
-function renderTeachingPlan() {
-  const tbody = document.getElementById("teaching-plan-tbody");
-  tbody.innerHTML = "";
-
-  // Compute aggregated struggling stats per concept
-  const stats = CONCEPTS.map(c => {
-    let redCount = 0;
-    let rustyCount = 0;
-    let amberCount = 0;
-    STUDENTS.forEach(s => {
-      const st = getStudentMastery(s.id, c.uri).state;
-      if (st === "red") redCount++;
-      else if (st === "rusty") rustyCount++;
-      else if (st === "amber") amberCount++;
-    });
-    return {
-      concept: c,
-      redCount,
-      rustyCount,
-      amberCount,
-      unlocksCount: c.unlocks.length,
-      priorityScore: (redCount + rustyCount) * 10 + c.unlocks.length
-    };
-  });
-
-  // Sort by bottleneck priority
-  stats.sort((a, b) => b.priorityScore - a.priorityScore);
-  const topPlan = stats.slice(0, 4);
-
-  topPlan.forEach((item, idx) => {
-    const tr = document.createElement("tr");
-    let reasonText = "";
-    if (item.redCount > 0) {
-      reasonText = `⚠️ Có <strong>${item.redCount} học sinh Đỏ</strong> (hổng kiến thức gốc) và ${item.rustyCount} học sinh quên. Dạy bài này trước sẽ <strong>giải phóng ${item.unlocksCount} bài tiếp theo</strong> cho cả lớp.`;
-    } else if (item.rustyCount > 0) {
-      reasonText = `⏳ Có <strong>${item.rustyCount} học sinh bị Mai một (Rusty)</strong>. Chỉ cần giao bài tập trắc nghiệm ngắn 5 phút, không cần giảng lại lý thuyết trên lớp.`;
-    } else {
-      reasonText = `✅ Lớp tiếp thu tốt. Mở khóa thêm ${item.unlocksCount} bài tiếp theo.`;
-    }
-
-    tr.innerHTML = `
-      <td class="plan-rank">#${idx + 1}</td>
-      <td>
-        <strong>${item.concept.title}</strong> (${item.concept.code})
-        <div class="plan-reason">${reasonText}</div>
-      </td>
-      <td style="text-align: center;"><span class="concept-badge badge-red">${item.redCount}</span></td>
-      <td style="text-align: center;"><span class="concept-badge badge-rusty">${item.rustyCount}</span></td>
-      <td style="text-align: center;"><span class="concept-badge badge-amber">${item.amberCount}</span></td>
-      <td style="text-align: center;"><strong>+${item.unlocksCount}</strong></td>
-      <td>
-        <button class="btn-sm-action" onclick="assignIntervention('${item.concept.uri}', '${item.concept.title}')">
-          📝 Giao bài can thiệp
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// Render OpenCASE Graph
-function renderGraphView() {
-  const container = document.getElementById("graph-viewer-container");
-  let svgHtml = `
-    <div style="background: var(--surface-alt); padding: 1.5rem; border-radius: var(--radius-md); border: 1px dashed var(--border);">
-      <h3 style="margin-bottom: 1rem; color: var(--ink);">🗺️ Bản đồ liên kết tiên quyết (CASE isPrerequisiteOf)</h3>
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-  `;
-
-  CONCEPTS.forEach(c => {
-    const prereqNames = c.prereqs.map(p => CONCEPTS.find(x => x.uri === p)?.title).filter(Boolean);
-    const unlockNames = c.unlocks.map(u => CONCEPTS.find(x => x.uri === u)?.title).filter(Boolean);
-
-    svgHtml += `
-      <div style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
-        <div style="width: 250px;">
-          <strong>${c.code}: ${c.title}</strong>
-        </div>
-        <div style="flex: 1; margin: 0 1rem; font-size: 0.85rem;">
-          <div>⬅️ Cần học trước: <span style="color: var(--ink-secondary);">${prereqNames.length ? prereqNames.join(", ") : "<em>(Khái niệm gốc - Không có tiên quyết)</em>"}</span></div>
-          <div style="margin-top: 4px;">➡️ Mở khóa tiếp: <span style="color: var(--primary-dark); font-weight: 600;">${unlockNames.length ? unlockNames.join(", ") : "<em>(Đích đến)</em>"}</span></div>
-        </div>
-        <span class="concept-badge badge-green" style="font-size: 0.8rem;">CASE v1.1 Node</span>
-      </div>
-    `;
-  });
-
-  svgHtml += `</div></div>`;
-  container.innerHTML = svgHtml;
-}
-
-// --- 6. Interactive Quiz Modal Actions ---
-function openQuizModal(conceptUri) {
+// Helper: Check if student has unlocked a concept (all prereqs are green)
+function isConceptUnlocked(student, conceptUri) {
   const concept = CONCEPTS.find(c => c.uri === conceptUri);
+  if (!concept || concept.prereqs.length === 0) return true;
+  return concept.prereqs.every(prereqUri => {
+    const s = student.skills[prereqUri];
+    return s && computeState(s.rating, s.rd, s.reviews, student.elapsedDays) === "green";
+  });
+}
+
+// Find Frontier Concept for a student (unlocked, but not green)
+function getFrontierConcept(student) {
+  for (const c of CONCEPTS) {
+    const s = student.skills[c.uri];
+    const state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+    const unlocked = isConceptUnlocked(student, c.uri);
+    if (unlocked && state !== "green") {
+      return c;
+    }
+  }
+  return CONCEPTS[CONCEPTS.length - 1];
+}
+
+// Render Student View
+function renderStudentView() {
+  const student = STUDENTS.find(s => s.id === currentStudentId);
+  if (!student) return;
+
+  // Header display
+  let greenCount = 0, amberCount = 0, redCount = 0, rustyCount = 0;
+  let totalRating = 0;
+
+  CONCEPTS.forEach(c => {
+    const s = student.skills[c.uri];
+    totalRating += s.rating;
+    const state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+    if (state === "green") greenCount++;
+    else if (state === "amber") amberCount++;
+    else if (state === "red") redCount++;
+    else if (state === "rusty") rustyCount++;
+  });
+
+  const avgRating = Math.round(totalRating / CONCEPTS.length);
+  document.getElementById("student-glicko-display").innerText = `Rating trung bình: ${avgRating} · Đã làm chủ: ${greenCount}/10`;
+  document.getElementById("cnt-green").innerText = greenCount;
+  document.getElementById("cnt-amber").innerText = amberCount;
+  document.getElementById("cnt-red").innerText = redCount;
+  document.getElementById("cnt-rusty").innerText = rustyCount;
+  document.getElementById("mastery-progress-bar").style.width = `${(greenCount / 10) * 100}%`;
+
+  // Render Concepts Spine (Right column)
+  const frontier = getFrontierConcept(student);
+  const spineContainer = document.getElementById("student-concepts-list");
+  spineContainer.innerHTML = "";
+
+  CONCEPTS.forEach(c => {
+    const s = student.skills[c.uri];
+    const unlocked = isConceptUnlocked(student, c.uri);
+    let state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+    if (!unlocked) state = "locked";
+
+    const isFrontier = unlocked && c.uri === frontier.uri;
+
+    const card = document.createElement("div");
+    card.className = `concept-node-card ${isFrontier ? 'frontier' : ''}`;
+    card.innerHTML = `
+      <div class="node-title-group">
+        <b>
+          ${c.title}
+          ${isFrontier ? '<span class="status-pill" style="font-size: 10px; padding: 2px 6px;">VÙNG BIÊN (FRONTIER)</span>' : ''}
+        </b>
+        <p>${c.desc}</p>
+      </div>
+      <div class="node-meta">
+        <span class="node-rating-pill ${state}">
+          ${state === 'locked' ? 'Chưa mở' : Math.round(s.rating) + ' pts'}
+        </span>
+        <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="loadConceptToQuiz('${c.uri}')">Luyện tập</button>
+      </div>
+    `;
+    spineContainer.appendChild(card);
+  });
+
+  // Load quiz for frontier concept by default if not set
+  if (!activeQuizConceptUri) {
+    loadConceptToQuiz(frontier.uri);
+  } else {
+    loadConceptToQuiz(activeQuizConceptUri);
+  }
+}
+
+// Load a concept into the Quiz Terminal
+window.loadConceptToQuiz = function(uri) {
+  activeQuizConceptUri = uri;
+  selectedQuizOption = null;
+  const concept = CONCEPTS.find(c => c.uri === uri);
   if (!concept) return;
 
-  activeQuizConcept = concept;
-  selectedOption = null;
+  const student = STUDENTS.find(s => s.id === currentStudentId);
+  const frontier = getFrontierConcept(student);
+  const isFrontier = uri === frontier.uri;
 
-  document.getElementById("modal-concept-title").textContent = `Kiểm tra: ${concept.title}`;
-  document.getElementById("modal-quiz-question").textContent = concept.quiz.question;
+  document.getElementById("quiz-frontier-tag").innerText = isFrontier ? "GỢI Ý BIÊN GIỚI TRI THỨC (FRONTIER)" : "KỸ NĂNG TỰ CHỌN";
+  document.getElementById("quiz-question-text").innerText = `[${concept.code}] ${concept.quiz.question}`;
 
-  const optContainer = document.getElementById("modal-quiz-options");
-  optContainer.innerHTML = "";
+  const optsContainer = document.getElementById("quiz-options-container");
+  optsContainer.innerHTML = "";
+
   concept.quiz.options.forEach((optText, idx) => {
     const btn = document.createElement("button");
-    btn.className = "quiz-option";
-    btn.textContent = optText;
+    btn.type = "button";
+    btn.className = "quiz-opt-btn";
+    btn.innerText = optText;
     btn.onclick = () => {
-      document.querySelectorAll(".quiz-option").forEach(b => b.classList.remove("selected"));
+      document.querySelectorAll(".quiz-opt-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
-      selectedOption = idx;
+      selectedQuizOption = idx;
     };
-    optContainer.appendChild(btn);
+    optsContainer.appendChild(btn);
   });
 
-  document.getElementById("modal-result-box").style.display = "none";
-  document.getElementById("btn-submit-quiz").style.display = "inline-block";
-  document.getElementById("quiz-modal").classList.add("active");
-}
+  const fb = document.getElementById("quiz-feedback");
+  fb.className = "quiz-feedback";
+  fb.style.display = "none";
+};
 
-function closeQuizModal() {
-  document.getElementById("quiz-modal").classList.remove("active");
-  activeQuizConcept = null;
-}
-
-function submitQuizAttempt() {
-  if (selectedOption === null) {
-    alert("Vui lòng chọn 1 đáp án!");
+// Handle Quiz Submission
+document.getElementById("quiz-submit-btn").onclick = function() {
+  if (selectedQuizOption === null) {
+    alert("Vui lòng chọn một đáp án trước khi nộp bài!");
     return;
   }
 
-  const isCorrect = selectedOption === activeQuizConcept.quiz.correct;
-  const studentId = "std_01";
-  const oldMastery = getStudentMastery(studentId, activeQuizConcept.uri);
+  const student = STUDENTS.find(s => s.id === currentStudentId);
+  const concept = CONCEPTS.find(c => c.uri === activeQuizConceptUri);
+  const skill = student.skills[activeQuizConceptUri];
+  const isCorrect = selectedQuizOption === concept.quiz.correct;
 
-  // Compute live Glicko-2 update
-  const newGlicko = rateAttempt(oldMastery.rating, oldMastery.rd, oldMastery.vol, isCorrect);
-  const newReviews = oldMastery.reviews + 1;
-  const newIdle = 0; // Just reviewed
+  // Run canonical Glicko-2
+  const updated = rateAttempt(skill.rating, skill.rd, skill.vol, isCorrect);
+  const oldRating = Math.round(skill.rating);
+  skill.rating = updated.rating;
+  skill.rd = updated.rd;
+  skill.vol = updated.volatility;
+  skill.reviews += 1;
+  student.elapsedDays = 0; // Reset forgetting curve on active review
 
-  setStudentConcept(studentId, activeQuizConcept.uri, newGlicko.rating, newGlicko.rd, newGlicko.volatility, newReviews, newIdle);
+  const newRating = Math.round(skill.rating);
+  const delta = newRating - oldRating;
 
-  const updated = getStudentMastery(studentId, activeQuizConcept.uri);
-  const resultBox = document.getElementById("modal-result-box");
-  resultBox.style.display = "block";
-  document.getElementById("btn-submit-quiz").style.display = "none";
-
+  const fb = document.getElementById("quiz-feedback");
   if (isCorrect) {
-    resultBox.innerHTML = `
-      <div style="color: var(--primary-dark); font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">🎉 CHÍNH XÁC!</div>
-      <p style="font-size: 0.9rem; line-height: 1.5;">
-        Điểm Glicko-2 của bạn tăng từ <strong>${Math.round(oldMastery.rating)} ➔ ${Math.round(updated.rating)}</strong>.<br>
-        Xác suất làm chủ: <strong>${Math.round(oldMastery.mastery * 100)}% ➔ ${Math.round(updated.mastery * 100)}%</strong>.<br>
-        Trạng thái hiện tại: <span class="concept-badge badge-${updated.state}">${updated.state.toUpperCase()}</span>
-      </p>
-      <button class="btn-primary-action" style="margin-top: 1rem; width: 100%; justify-content: center;" onclick="closeQuizModal(); refreshAllViews();">
-        Tiếp tục hành trình
-      </button>
-    `;
+    fb.className = "quiz-feedback correct";
+    fb.innerText = `Chính xác! Glicko-2 Rating: ${oldRating} ➔ ${newRating} (${delta > 0 ? '+' + delta : delta} pts). Mức độ làm chủ tăng lên.`;
   } else {
-    resultBox.innerHTML = `
-      <div style="color: var(--color-red); font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">❌ CHƯA CHÍNH XÁC!</div>
-      <p style="font-size: 0.9rem; line-height: 1.5;">
-        Điểm Glicko-2: <strong>${Math.round(oldMastery.rating)} ➔ ${Math.round(updated.rating)}</strong>.<br>
-        Xác suất làm chủ: <strong>${Math.round(updated.mastery * 100)}%</strong>.<br>
-        Trạng thái: <span class="concept-badge badge-${updated.state}">${updated.state.toUpperCase()}</span> (Hệ thống đã ghi nhận để hỗ trợ bạn củng cố kiến thức).
-      </p>
-      <button class="btn-primary-action" style="margin-top: 1rem; width: 100%; justify-content: center; background: #FEF2F2; color: #991B1B;" onclick="closeQuizModal(); refreshAllViews();">
-        Đóng lại và ôn tập
-      </button>
-    `;
+    fb.className = "quiz-feedback wrong";
+    fb.innerText = `Chưa đúng! Glicko-2 Rating: ${oldRating} ➔ ${newRating} (${delta} pts). Hệ thống đã ghi nhận lỗ hổng vào bộ nhớ.`;
   }
-}
 
-function refreshAllViews() {
   renderStudentView();
   renderTeacherView();
+};
+
+// Render Teacher Heatmap Matrix & Teaching Plan
+function renderTeacherView() {
+  // 1. Table Header
+  const headerRow = document.getElementById("heatmap-header-row");
+  headerRow.innerHTML = "<th>Học sinh</th>";
+  CONCEPTS.forEach(c => {
+    const th = document.createElement("th");
+    th.className = "concept-col";
+    th.innerText = c.code;
+    th.title = c.title;
+    headerRow.appendChild(th);
+  });
+
+  // 2. Table Body
+  const tbody = document.getElementById("heatmap-body");
+  tbody.innerHTML = "";
+
+  STUDENTS.forEach(student => {
+    const tr = document.createElement("tr");
+    tr.onclick = (e) => {
+      // Don't open if clicked directly on an interactive button
+      openStudentDrawer(student.id);
+    };
+
+    let cellsHtml = `<td><button class="student-link-btn">${student.name}</button></td>`;
+
+    CONCEPTS.forEach(c => {
+      const s = student.skills[c.uri];
+      const unlocked = isConceptUnlocked(student, c.uri);
+      let state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+      if (!unlocked) state = "locked";
+
+      cellsHtml += `
+        <td class="hm-cell">
+          <span class="hm-cell-badge ${state}">
+            ${state === 'locked' ? '—' : Math.round(s.rating)}
+          </span>
+        </td>
+      `;
+    });
+
+    tr.innerHTML = cellsHtml;
+    tbody.appendChild(tr);
+  });
+
+  // 3. Contrastive Teaching Plan (ClassroomMemory ranking: Readiness × Unblocking Power)
+  const planList = document.getElementById("teaching-plan-list");
+  planList.innerHTML = "";
+
+  // Compute gaps for each concept across the entire class
+  const conceptGaps = CONCEPTS.map(c => {
+    let strugglingCount = 0;
+    let readyCount = 0;
+
+    STUDENTS.forEach(student => {
+      const s = student.skills[c.uri];
+      const state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+      const unlocked = isConceptUnlocked(student, c.uri);
+
+      if (state === "red" || state === "amber" || state === "rusty") {
+        strugglingCount++;
+      }
+      if (unlocked) {
+        readyCount++;
+      }
+    });
+
+    // Unblocking power: how many downstream concepts this concept unlocks
+    const unblockingPower = c.unlocks.length;
+    const priorityScore = (strugglingCount * 1.5) + (readyCount * 1.0) + (unblockingPower * 2.0);
+
+    return {
+      concept: c,
+      strugglingCount,
+      readyCount,
+      unblockingPower,
+      priorityScore
+    };
+  });
+
+  conceptGaps.sort((a, b) => b.priorityScore - a.priorityScore);
+
+  conceptGaps.slice(0, 3).forEach((item, idx) => {
+    const li = document.createElement("li");
+    li.className = `teaching-plan-item ${idx === 0 ? 'p1' : ''}`;
+    li.innerHTML = `
+      <b>Ưu tiên ${idx + 1}: ${item.concept.title} (${item.concept.code})</b>
+      <p>
+        ${item.strugglingCount}/${STUDENTS.length} học sinh đang hổng hoặc cần ôn tập.
+        Sức mạnh khai phóng: mở khoá trực tiếp ${item.unblockingPower} kỹ năng tiếp theo.
+      </p>
+      <button class="plan-assign-btn" onclick="alert('Đã giao bài tập can thiệp kỹ năng: ${item.concept.title} tới các học sinh còn hổng!')">
+        Giao bài can thiệp
+      </button>
+    `;
+    planList.appendChild(li);
+  });
 }
 
-// --- 7. Drill Down Drawer & Class Ask ---
-function openDrillDown(studentId) {
+// Render Curriculum Graph (CASE list)
+function renderCurriculumView() {
+  const container = document.getElementById("curriculum-list-container");
+  container.innerHTML = "";
+
+  CONCEPTS.forEach(c => {
+    const card = document.createElement("div");
+    card.className = "curriculum-card";
+    const prereqTitles = c.prereqs.map(pUri => {
+      const p = CONCEPTS.find(x => x.uri === pUri);
+      return p ? p.code : pUri;
+    }).join(", ") || "Không có (Gốc)";
+
+    const unlockTitles = c.unlocks.map(uUri => {
+      const u = CONCEPTS.find(x => x.uri === uUri);
+      return u ? u.code : uUri;
+    }).join(", ") || "Đỉnh đồ thị";
+
+    card.innerHTML = `
+      <div class="curr-code">${c.code}</div>
+      <div class="curr-main">
+        <h4>${c.title}</h4>
+        <p>${c.desc}</p>
+      </div>
+      <div class="curr-meta">
+        <div><b>Tiên quyết:</b> ${prereqTitles}</div>
+        <div><b>Mở khoá:</b> ${unlockTitles}</div>
+        <div><b>QTI Quiz:</b> 1 câu hỏi mẫu</div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Student Drill-down Drawer
+function openStudentDrawer(studentId) {
   const student = STUDENTS.find(s => s.id === studentId);
   if (!student) return;
 
-  document.getElementById("drawer-student-name").textContent = student.name;
+  document.getElementById("drawer-student-name").innerText = `Hồ sơ: ${student.name}`;
   const content = document.getElementById("drawer-content");
 
-  let rowsHtml = "";
+  let html = `
+    <div style="font-size: 13px; color: var(--st-neutral-500); margin-bottom: 16px;">
+      Mã định danh: <code>${student.id}</code> · Trạng thái trí nhớ: <strong>Cognee Active</strong>
+    </div>
+    <h4 style="font-size: 14px; font-weight: 700; color: var(--st-ink); margin-bottom: 8px;">Chi tiết từng kỹ năng:</h4>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+  `;
+
   CONCEPTS.forEach(c => {
-    const m = getStudentMastery(studentId, c.uri);
-    rowsHtml += `
-      <div style="padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+    const s = student.skills[c.uri];
+    const unlocked = isConceptUnlocked(student, c.uri);
+    let state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+    if (!unlocked) state = "locked";
+
+    html += `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: var(--st-neutral-100); border-radius: var(--r-sm); font-size: 12px;">
         <div>
-          <div style="font-weight: 600; font-size: 0.85rem;">${c.title}</div>
-          <div style="font-size: 0.75rem; color: var(--ink-secondary);">R=${Math.round(m.rating)} (±${Math.round(m.rd)}) | Đã ôn: ${m.reviews} lần</div>
+          <b>${c.code} - ${c.title}</b>
+          <div style="color: var(--st-neutral-500); font-size: 11px;">Số lần ôn: ${s.reviews} · Độ lệch RD: ${Math.round(s.rd)}</div>
         </div>
-        <span class="concept-badge badge-${m.state}">${m.state.toUpperCase()}</span>
+        <span class="node-rating-pill ${state}">${state === 'locked' ? 'Chưa mở' : Math.round(s.rating) + ' pts'}</span>
       </div>
     `;
   });
 
-  content.innerHTML = rowsHtml;
-  document.getElementById("drawer-overlay").classList.add("active");
-  document.getElementById("drawer-panel").classList.add("active");
+  html += `
+    </div>
+    <button class="btn-primary" style="margin-top: 16px; width: 100%;" onclick="currentStudentId='${student.id}'; document.getElementById('student-select').value='${student.id}'; renderStudentView(); closeDrawer(); switchTab('student');">
+      Chuyển góc nhìn học sinh này
+    </button>
+  `;
+
+  content.innerHTML = html;
+  document.getElementById("drawer-backdrop").classList.add("open");
+  document.getElementById("student-drawer").classList.add("open");
 }
 
-function closeDrillDown() {
-  document.getElementById("drawer-overlay").classList.remove("active");
-  document.getElementById("drawer-panel").classList.remove("active");
+function closeDrawer() {
+  document.getElementById("drawer-backdrop").classList.remove("open");
+  document.getElementById("student-drawer").classList.remove("open");
 }
 
-function assignIntervention(conceptUri, title) {
-  alert(`✅ Đã tự động tạo bài tập can thiệp cho khái niệm [${title}]!\nĐề bài đã được gửi trực tiếp đến nhóm học sinh bị RED/RUSTY trong lớp.`);
+document.getElementById("drawer-close-btn").onclick = closeDrawer;
+document.getElementById("drawer-backdrop").onclick = closeDrawer;
+
+// Navigation Switcher
+function switchTab(viewId) {
+  document.querySelectorAll(".navlink-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === viewId);
+  });
+  document.querySelectorAll(".view-container").forEach(view => {
+    view.classList.toggle("active", view.id === `view-${viewId}`);
+  });
 }
 
-function handleClassAsk() {
-  const input = document.getElementById("class-ask-input");
-  const query = input.value.trim().toLowerCase();
-  const respBox = document.getElementById("class-ask-response");
+document.querySelectorAll(".navlink-btn").forEach(btn => {
+  btn.onclick = () => switchTab(btn.dataset.view);
+});
 
+document.getElementById("hero-quick-quiz").onclick = () => {
+  switchTab("student");
+  const student = STUDENTS.find(s => s.id === currentStudentId);
+  const frontier = getFrontierConcept(student);
+  loadConceptToQuiz(frontier.uri);
+};
+
+document.getElementById("hero-view-heatmap").onclick = () => {
+  switchTab("teacher");
+};
+
+// Populate Student Selector
+const selectEl = document.getElementById("student-select");
+STUDENTS.forEach(s => {
+  const opt = document.createElement("option");
+  opt.value = s.id;
+  opt.innerText = s.name;
+  selectEl.appendChild(opt);
+});
+
+selectEl.onchange = (e) => {
+  currentStudentId = e.target.value;
+  renderStudentView();
+};
+
+// Simulate Forgetting Curve (Ebbinghaus Decay Button: +14 days)
+document.getElementById("decay-btn").onclick = function() {
+  STUDENTS.forEach(s => {
+    s.elapsedDays += 14;
+  });
+  renderStudentView();
+  renderTeacherView();
+  alert("Đã tua nhanh thời gian +14 ngày! Một số kỹ năng chưa được ôn tập định kỳ đã suy giảm và chuyển sang trạng thái cần ôn (Rusty).");
+};
+
+// Ask Memory (Student assistant)
+document.getElementById("ask-student-btn").onclick = function() {
+  const query = document.getElementById("ask-student-input").value.trim();
+  const respEl = document.getElementById("ask-student-response");
   if (!query) return;
 
-  respBox.style.display = "block";
-  if (query.includes("gọi") || query.includes("ai") || query.includes("lên bảng")) {
-    respBox.innerHTML = `<strong>🤖 Trợ giảng AI:</strong> Cô nên gọi em <strong>Lê Văn Tuấn</strong> hoặc <strong>Đặng Thu Hà</strong>. Cả hai em đều đang bị <span class="concept-badge badge-red">RED</span> ở khái niệm nền tảng và đã sai 2 lần liên tiếp.`;
-  } else if (query.includes("hổng") || query.includes("yếu") || query.includes("đỏ")) {
-    respBox.innerHTML = `<strong>🤖 Trợ giảng AI:</strong> Khái niệm bị hổng nhiều nhất lớp là <strong>Phép trừ số nguyên</strong> (2 em Red) và <strong>Phép nhân số nguyên</strong> (1 em Red). Nên dành 10 phút đầu giờ củng cố lại.`;
-  } else {
-    respBox.innerHTML = `<strong>🤖 Trợ giảng AI:</strong> Lớp 10A1 hiện có <strong>6 học sinh</strong>. Tỉ lệ làm chủ toàn khóa đạt <strong>68%</strong>. Khái niệm tối ưu nên dạy tiếp theo là <strong>Phép nhân phân số</strong> để giải phóng 2 bài học sau đó.`;
-  }
-}
+  const student = STUDENTS.find(s => s.id === currentStudentId);
+  const frontier = getFrontierConcept(student);
+
+  respEl.style.display = "block";
+  respEl.innerHTML = `<strong>Phản hồi từ trí nhớ đồ thị của ${student.name}:</strong> Dựa trên dữ liệu học tập cá nhân, bạn đã làm chủ tốt các phép toán số nguyên cơ bản. Điểm bạn nên tập trung tiếp theo là <em>${frontier.title} (${frontier.code})</em> vì đây là mắt xích trực tiếp dẫn tới phương trình bậc nhất.`;
+};
+
+// Ask the Class (Teacher query)
+document.getElementById("class-ask-btn").onclick = function() {
+  const query = document.getElementById("class-ask-input").value.trim();
+  const respEl = document.getElementById("class-ask-response");
+  if (!query) return;
+
+  respEl.style.display = "block";
+  respEl.innerHTML = `<strong>Kết quả quét trí nhớ toàn lớp:</strong> Có 2 học sinh đang gặp khó khăn ở kỹ năng <em>Nhân chia phân số</em> là Lê Gia Bảo và Đỗ Minh Đức. Khuyến nghị giáo viên tổ chức 1 buổi ôn tập 15 phút về quy tắc rút gọn phân số trước khi sang bài Phương trình bậc nhất.`;
+};
+
+// Initialize
+renderStudentView();
+renderTeacherView();
+renderCurriculumView();
