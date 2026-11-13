@@ -1,0 +1,22 @@
+{
+  "name": "skilltree-auth-ui-v2",
+  "version": "0.2.0",
+  "description": "vAiPlatform / SkillTree auth UI v2 (matching vAiPlatform login design & vai-brand logo)",
+  "type": "module",
+  "main": "lib/index.js",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": ["dsh-plugin", "skilltree", "vai-platform", "auth", "login", "jwt"],
+  "license": "MIT"
+}

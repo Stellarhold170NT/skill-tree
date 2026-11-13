@@ -43,9 +43,13 @@
       config:
         workspaceDir: ~/.dsh/skilltree
 
-    # === Auth UI: đăng nhập/đăng ký (M11 auth-service qua gateway M10, JWT localStorage) ===
+    # === Auth UI: Tam thoi disable v1 -> chuyen qua skilltree-auth-ui-v2 theo thiet ke vAiPlatform ===
     - id: skilltree-auth-ui
+      disabled: true
       name: '/app/plugins/skilltree-auth-ui/lib/index.js'
+
+    - id: skilltree-auth-ui-v2
+      name: 'skilltree-auth-ui-v2'
 
     # === UI học sinh: lớp + lộ trình + upload tài liệu (rag) + kiểm tra nhanh ===
     # Slot shell.overlay order 57; JWT từ skilltree-auth-ui (localStorage).
