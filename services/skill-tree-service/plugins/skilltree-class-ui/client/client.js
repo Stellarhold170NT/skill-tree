@@ -1,6 +1,6 @@
 /**
  * skilltree-class-ui — CLIENT half (no build step; platform module format).
- * Modern, clean LMS Class Management for teachers aligned with vAiPlatform design.
+ * Modern, clean LMS Class Management for teachers aligned with vAiPlatform / deepseek-harness source design.
  * Integrates seamlessly with class-service (M6) and api-gateway (M10).
  */
 window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
@@ -13,27 +13,28 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 	const AUTH_STORAGE_KEY = "skilltree.auth.v1";
 	const GATEWAY_STORAGE_KEY = "skilltree.auth.gateway";
 
-	/* ---- Modern Dark/vAiPlatform Design Tokens ---- */
+	/* ---- Standard deepseek-harness & vAiPlatform design tokens ---- */
 	const T = {
-		bg: "#151517",
-		card: "#1e1f23",
-		cardHover: "#26282e",
-		field: "#25262b",
-		border: "rgba(255, 255, 255, 0.1)",
-		borderFocus: "rgba(253, 80, 90, 0.5)",
-		label: "#f9fafb",
-		labelMuted: "#9ca3af",
-		labelSubtle: "#6b7280",
-		brand: "#fd505a",
+		bg: "var(--dsw-alias-bg-base, #151517)",
+		card: "var(--dsw-alias-bg-layer-2, #1b1b1d)",
+		cardHover: "var(--dsw-alias-bg-layer-3, #232326)",
+		field: "var(--dsw-specific-login-input, #1f1f22)",
+		border: "var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.1))",
+		borderLight: "rgba(255, 255, 255, 0.06)",
+		borderFocus: "var(--dsw-alias-brand-primary, #fd505a)",
+		labelPrimary: "var(--dsw-alias-label-primary, #f9fafb)",
+		labelSecondary: "var(--dsw-alias-label-secondary, #cfd3d6)",
+		labelTertiary: "var(--dsw-alias-label-tertiary, #81858c)",
+		brand: "var(--dsw-alias-brand-primary, #fd505a)",
 		brandHover: "#e0444e",
-		brandSoft: "rgba(253, 80, 90, 0.15)",
-		accent: "#22c55e",
-		accentSoft: "rgba(34, 197, 94, 0.15)",
-		danger: "#ef4444",
-		dangerSoft: "rgba(239, 68, 68, 0.15)",
+		brandSoft: "rgba(253, 80, 90, 0.12)",
+		accent: "var(--dsw-alias-state-success-primary, #22c55e)",
+		accentSoft: "rgba(34, 197, 94, 0.12)",
+		danger: "var(--dsw-alias-state-error-primary, #f25a5a)",
+		dangerSoft: "rgba(242, 90, 90, 0.12)",
 	};
 
-	const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif';
+	const FONT = 'var(--dsw-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)';
 
 	function getActiveToken() {
 		try {
@@ -123,7 +124,6 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 				await refreshCounts(classArray);
 			} catch (e) {
 				const errStr = String(e.message || e);
-				// Friendly error when services are unreachable
 				if (errStr.includes("fetch failed") || errStr.includes("upstream unreachable")) {
 					setError("Chưa kết nối được với hệ thống lớp học (class-service). Vui lòng kiểm tra dịch vụ.");
 				} else {
@@ -309,24 +309,24 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 
 		/* ==================== RENDER DETAIL VIEW ==================== */
 		if (detail) {
-			return h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } },
+			return h("div", { style: { display: "flex", flexDirection: "column", gap: "16px" } },
 				// Header bar
 				h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
 					h("button", {
 						onClick: () => setDetail(null),
 						style: {
 							display: "inline-flex", alignItems: "center", gap: "6px",
-							background: "transparent", border: "none", color: T.labelMuted,
-							cursor: "pointer", fontSize: "14px", padding: 0
+							background: "transparent", border: "none", color: T.labelSecondary,
+							cursor: "pointer", fontSize: "13px", fontWeight: 500, padding: 0
 						}
 					}, "← Quay lại danh sách lớp"),
-					h("div", { style: { display: "flex", gap: "10px" } },
+					h("div", { style: { display: "flex", gap: "8px" } },
 						h("button", {
 							onClick: () => removeClass(detail.cls),
 							style: {
-								padding: "6px 12px", background: T.dangerSoft, color: T.danger,
-								border: "1px solid rgba(239,68,68,0.2)", borderRadius: "6px",
-								fontSize: "13px", cursor: "pointer"
+								padding: "5px 12px", background: T.dangerSoft, color: T.danger,
+								border: "1px solid rgba(242,90,90,0.2)", borderRadius: "6px",
+								fontSize: "12px", fontWeight: 500, cursor: "pointer"
 							}
 						}, "Xóa lớp này")
 					)
@@ -335,21 +335,21 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 				// Class Banner Card
 				h("div", {
 					style: {
-						background: T.card, border: `1px solid ${T.border}`, borderRadius: "12px",
-						padding: "24px", position: "relative", overflow: "hidden"
+						background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
+						padding: "20px 24px", position: "relative"
 					}
 				},
 					h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" } },
 						h("div", null,
-							h("h1", { style: { margin: "0 0 6px", fontSize: "22px", fontWeight: 650, color: T.label } }, detail.cls.title),
-							h("p", { style: { margin: 0, fontSize: "14px", color: T.labelMuted } },
+							h("h1", { style: { margin: "0 0 4px", fontSize: "18px", fontWeight: 600, color: T.labelPrimary, lineHeight: "24px" } }, detail.cls.title),
+							h("p", { style: { margin: 0, fontSize: "13px", color: T.labelTertiary, lineHeight: "20px" } },
 								courseTitle(courses, detail.cls.courseSourcedId) + (detail.cls.term ? ` • Học kỳ: ${detail.cls.term}` : "")
 							)
 						),
 						h("div", {
 							style: {
-								padding: "6px 14px", background: T.brandSoft, color: T.brand,
-								borderRadius: "20px", fontSize: "13px", fontWeight: 600
+								padding: "4px 12px", background: T.brandSoft, color: T.brand,
+								borderRadius: "16px", fontSize: "12px", fontWeight: 500
 							}
 						}, `${detail.students.length} học sinh`)
 					)
@@ -358,23 +358,23 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 				// Feedback message
 				msg ? h("div", {
 					style: {
-						padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
+						padding: "8px 12px", borderRadius: "8px", fontSize: "13px",
 						background: msg.ok ? T.accentSoft : T.dangerSoft,
 						color: msg.ok ? T.accent : T.danger,
-						border: `1px solid ${msg.ok ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`
+						border: `1px solid ${msg.ok ? "rgba(34,197,94,0.3)" : "rgba(242,90,90,0.3)"}`
 					}
 				}, msg.text) : null,
 
 				// Student List Section
-				h("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: "12px", padding: "20px" } },
+				h("div", { style: { background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px", padding: "20px 24px" } },
 					h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" } },
-						h("h3", { style: { margin: 0, fontSize: "16px", fontWeight: 600, color: T.label } }, "Danh sách học sinh"),
+						h("h3", { style: { margin: 0, fontSize: "15px", fontWeight: 600, color: T.labelPrimary } }, "Danh sách học sinh"),
 						h("div", { style: { display: "flex", gap: "8px" } },
 							h("button", {
 								onClick: () => { if (!pool) loadPool(); setShowEnrollNew(!showEnrollNew); },
 								style: {
-									padding: "7px 14px", background: T.brand, color: "#fff",
-									border: "none", borderRadius: "6px", fontSize: "13px",
+									padding: "6px 14px", background: T.brand, color: "#fff",
+									border: "none", borderRadius: "8px", fontSize: "13px",
 									fontWeight: 500, cursor: "pointer"
 								}
 							}, showEnrollNew ? "Đóng thêm học sinh" : "+ Thêm học sinh")
@@ -384,67 +384,67 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 					// Add / Enroll drawer form
 					showEnrollNew ? h("div", {
 						style: {
-							background: T.field, border: `1px solid ${T.border}`, borderRadius: "8px",
+							background: T.field, border: `0.5px solid ${T.border}`, borderRadius: "8px",
 							padding: "16px", marginBottom: "20px"
 						}
 					},
-						h("h4", { style: { margin: "0 0 12px", fontSize: "14px", color: T.label } }, "Thêm học sinh mới vào lớp"),
+						h("h4", { style: { margin: "0 0 12px", fontSize: "13px", fontWeight: 600, color: T.labelPrimary } }, "Thêm học sinh mới vào lớp"),
 						h("form", { onSubmit: createAndEnroll, style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" } },
 							h("input", {
 								value: newStudentName, onChange: e => setNewStudentName(e.target.value),
 								placeholder: "Họ và tên học sinh *",
 								style: {
-									flex: "1 1 200px", padding: "8px 12px", background: T.bg, border: `1px solid ${T.border}`,
-									borderRadius: "6px", color: T.label, fontSize: "13px", outline: "none"
+									flex: "1 1 200px", padding: "8px 12px", background: T.bg, border: `0.5px solid ${T.border}`,
+									borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", outline: "none"
 								}
 							}),
 							h("input", {
 								value: newStudentEmail, onChange: e => setNewStudentEmail(e.target.value),
 								placeholder: "Email học sinh (tùy chọn)",
 								style: {
-									flex: "1 1 200px", padding: "8px 12px", background: T.bg, border: `1px solid ${T.border}`,
-									borderRadius: "6px", color: T.label, fontSize: "13px", outline: "none"
+									flex: "1 1 200px", padding: "8px 12px", background: T.bg, border: `0.5px solid ${T.border}`,
+									borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", outline: "none"
 								}
 							}),
 							h("button", {
 								type: "submit", disabled: busy,
 								style: {
 									padding: "8px 16px", background: T.brand, color: "#fff",
-									border: "none", borderRadius: "6px", fontSize: "13px",
+									border: "none", borderRadius: "8px", fontSize: "13px",
 									fontWeight: 500, cursor: "pointer"
 								}
 							}, busy ? "Đang thêm..." : "Thêm vào lớp")
 						),
 
 						// Pool lookup existing
-						pool ? h("div", { style: { marginTop: "16px", borderTop: `1px solid ${T.border}`, paddingTop: "12px" } },
-							h("div", { style: { fontSize: "13px", color: T.labelMuted, marginBottom: "8px" } }, "Hoặc chọn từ danh sách học sinh sẵn có:"),
+						pool ? h("div", { style: { marginTop: "16px", borderTop: `0.5px solid ${T.border}`, paddingTop: "12px" } },
+							h("div", { style: { fontSize: "13px", color: T.labelTertiary, marginBottom: "8px" } }, "Hoặc chọn từ danh sách học sinh sẵn có:"),
 							h("input", {
 								value: studentSearch, onChange: e => setStudentSearch(e.target.value),
 								placeholder: "Tìm học sinh theo tên/email...",
 								style: {
-									width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${T.border}`,
-									borderRadius: "6px", color: T.label, fontSize: "13px", boxSizing: "border-box", marginBottom: "8px"
+									width: "100%", padding: "7px 10px", background: T.bg, border: `0.5px solid ${T.border}`,
+									borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", marginBottom: "8px"
 								}
 							}),
-							filteredPool.length === 0 ? h("p", { style: { fontSize: "12px", color: T.labelSubtle, margin: "4px 0" } }, "Không còn học sinh nào chưa ghi danh.") :
+							filteredPool.length === 0 ? h("p", { style: { fontSize: "12px", color: T.labelTertiary, margin: "4px 0" } }, "Không còn học sinh nào chưa ghi danh.") :
 								h("div", { style: { display: "flex", flexDirection: "column", gap: "6px" } },
 									filteredPool.map(u => h("div", {
 										key: u.sourcedId,
 										style: {
 											display: "flex", justifyContent: "space-between", alignItems: "center",
-											padding: "8px 12px", background: T.bg, borderRadius: "6px"
+											padding: "8px 12px", background: T.bg, borderRadius: "8px"
 										}
 									},
 										h("div", null,
-											h("span", { style: { color: T.label, fontSize: "13px", fontWeight: 500 } }, u.displayName),
-											u.email ? h("span", { style: { color: T.labelSubtle, fontSize: "12px", marginLeft: "8px" } }, u.email) : null
+											h("span", { style: { color: T.labelPrimary, fontSize: "13px", fontWeight: 500 } }, u.displayName),
+											u.email ? h("span", { style: { color: T.labelTertiary, fontSize: "12px", marginLeft: "8px" } }, u.email) : null
 										),
 										h("button", {
 											onClick: () => enroll(u), disabled: busy,
 											style: {
 												padding: "4px 10px", background: T.brandSoft, color: T.brand,
-												border: "none", borderRadius: "4px", fontSize: "12px", cursor: "pointer"
+												border: "none", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer"
 											}
 										}, "Ghi danh")
 									))
@@ -454,34 +454,34 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 
 					// Students Table
 					detail.students.length === 0 ? h("div", {
-						style: { textAlign: "center", padding: "40px 20px", color: T.labelSubtle }
+						style: { textAlign: "center", padding: "40px 20px", color: T.labelTertiary }
 					},
-						h("p", { style: { margin: "0 0 8px", fontSize: "15px" } }, "Lớp học chưa có học sinh nào."),
-						h("p", { style: { margin: 0, fontSize: "13px" } }, 'Nhấp vào nút "+ Thêm học sinh" ở trên để đưa học sinh vào lớp.')
+						h("p", { style: { margin: "0 0 6px", fontSize: "14px", fontWeight: 500, color: T.labelSecondary } }, "Lớp học chưa có học sinh nào."),
+						h("p", { style: { margin: 0, fontSize: "13px", color: T.labelTertiary } }, 'Nhấp vào nút "+ Thêm học sinh" ở trên để đưa học sinh vào lớp.')
 					) : h("div", { style: { overflowX: "auto" } },
 						h("table", { style: { width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" } },
 							h("thead", null,
-								h("tr", { style: { borderBottom: `1px solid ${T.border}`, color: T.labelMuted } },
-									h("th", { style: { padding: "10px 12px", fontWeight: 500 } }, "Học sinh"),
-									h("th", { style: { padding: "10px 12px", fontWeight: 500 } }, "Email"),
-									h("th", { style: { padding: "10px 12px", fontWeight: 500 } }, "Mã hệ thống (ID)"),
-									h("th", { style: { padding: "10px 12px", fontWeight: 500, textAlign: "right" } }, "Thao tác")
+								h("tr", { style: { borderBottom: `0.5px solid ${T.border}`, color: T.labelTertiary } },
+									h("th", { style: { padding: "10px 12px", fontWeight: 500, fontSize: "12px" } }, "Học sinh"),
+									h("th", { style: { padding: "10px 12px", fontWeight: 500, fontSize: "12px" } }, "Email"),
+									h("th", { style: { padding: "10px 12px", fontWeight: 500, fontSize: "12px" } }, "Mã hệ thống (ID)"),
+									h("th", { style: { padding: "10px 12px", fontWeight: 500, fontSize: "12px", textAlign: "right" } }, "Thao tác")
 								)
 							),
 							h("tbody", null,
 								detail.students.map((st) => h("tr", {
 									key: st.sourcedId,
-									style: { borderBottom: `1px solid rgba(255,255,255,0.05)` }
+									style: { borderBottom: `0.5px solid ${T.borderLight}` }
 								},
-									h("td", { style: { padding: "12px", color: T.label, fontWeight: 500 } }, st.displayName),
-									h("td", { style: { padding: "12px", color: T.labelMuted } }, st.email || "—"),
-									h("td", { style: { padding: "12px", color: T.labelSubtle, fontFamily: "monospace", fontSize: "12px" } }, st.sourcedId),
+									h("td", { style: { padding: "12px", color: T.labelPrimary, fontWeight: 500 } }, st.displayName),
+									h("td", { style: { padding: "12px", color: T.labelSecondary } }, st.email || "—"),
+									h("td", { style: { padding: "12px", color: T.labelTertiary, fontFamily: "ui-monospace, monospace", fontSize: "12px" } }, st.sourcedId),
 									h("td", { style: { padding: "12px", textAlign: "right" } },
 										h("button", {
 											onClick: () => removeStudent(st),
 											style: {
 												background: "transparent", border: "none", color: T.danger,
-												cursor: "pointer", fontSize: "12px", padding: "4px 8px"
+												cursor: "pointer", fontSize: "12px", fontWeight: 500, padding: "4px 8px"
 											}
 										}, "Xóa khỏi lớp")
 									)
@@ -494,16 +494,16 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 		}
 
 		/* ==================== RENDER LIST VIEW ==================== */
-		return h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } },
+		return h("div", { style: { display: "flex", flexDirection: "column", gap: "16px" } },
 			// Top Action Bar
 			h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" } },
-				h("div", { style: { position: "relative", width: "320px", maxWidth: "100%" } },
+				h("div", { style: { position: "relative", width: "300px", maxWidth: "100%" } },
 					h("input", {
 						value: search, onChange: e => setSearch(e.target.value),
 						placeholder: "Tìm kiếm lớp học...",
 						style: {
-							width: "100%", padding: "9px 14px", background: T.card, border: `1px solid ${T.border}`,
-							borderRadius: "8px", color: T.label, fontSize: "14px", outline: "none",
+							width: "100%", padding: "8px 12px", background: T.card, border: `0.5px solid ${T.border}`,
+							borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", outline: "none",
 							boxSizing: "border-box"
 						}
 					})
@@ -513,8 +513,8 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 						onClick: () => setShowCreate(!showCreate),
 						style: {
 							display: "inline-flex", alignItems: "center", gap: "6px",
-							padding: "9px 16px", background: T.brand, color: "#fff",
-							border: "none", borderRadius: "8px", fontSize: "14px",
+							padding: "8px 16px", background: T.brand, color: "#fff",
+							border: "none", borderRadius: "8px", fontSize: "13px",
 							fontWeight: 500, cursor: "pointer", transition: "background 0.15s"
 						}
 					}, showCreate ? "Đóng tạo lớp" : "+ Tạo lớp học mới")
@@ -524,19 +524,19 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 			// Alert Message
 			msg ? h("div", {
 				style: {
-					padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
+					padding: "8px 12px", borderRadius: "8px", fontSize: "13px",
 					background: msg.ok ? T.accentSoft : T.dangerSoft,
 					color: msg.ok ? T.accent : T.danger,
-					border: `1px solid ${msg.ok ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`
+					border: `1px solid ${msg.ok ? "rgba(34,197,94,0.3)" : "rgba(242,90,90,0.3)"}`
 				}
 			}, msg.text) : null,
 
 			// System Error Banner
 			error ? h("div", {
 				style: {
-					padding: "12px 16px", borderRadius: "8px", fontSize: "13px",
+					padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
 					background: T.dangerSoft, color: T.danger,
-					border: "1px solid rgba(239,68,68,0.3)"
+					border: "1px solid rgba(242,90,90,0.3)"
 				}
 			},
 				h("p", { style: { margin: "0 0 4px", fontWeight: 600 } }, "Không thể tải danh sách lớp học:"),
@@ -546,41 +546,41 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 			// Create Class Modal / Card
 			showCreate ? h("div", {
 				style: {
-					background: T.card, border: `1px solid ${T.border}`, borderRadius: "12px",
-					padding: "20px", display: "flex", flexDirection: "column", gap: "16px"
+					background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
+					padding: "20px", display: "flex", flexDirection: "column", gap: "14px"
 				}
 			},
-				h("h3", { style: { margin: 0, fontSize: "16px", fontWeight: 600, color: T.label } }, "Tạo lớp học mới"),
+				h("h3", { style: { margin: 0, fontSize: "15px", fontWeight: 600, color: T.labelPrimary } }, "Tạo lớp học mới"),
 				h("form", { onSubmit: createClass, style: { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" } },
 					h("div", { style: { flex: "1 1 220px" } },
-						h("label", { style: { display: "block", fontSize: "12px", color: T.labelMuted, marginBottom: "6px" } }, "Tên lớp học *"),
+						h("label", { style: { display: "block", fontSize: "12px", color: T.labelTertiary, marginBottom: "6px" } }, "Tên lớp học *"),
 						h("input", {
 							value: newTitle, onChange: e => setNewTitle(e.target.value),
 							placeholder: "Ví dụ: Đại số 10A1, Python Cơ bản",
 							style: {
-								width: "100%", padding: "8px 12px", background: T.field, border: `1px solid ${T.border}`,
-								borderRadius: "6px", color: T.label, fontSize: "13px", boxSizing: "border-box", outline: "none"
+								width: "100%", padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+								borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none"
 							}
 						})
 					),
 					h("div", { style: { flex: "1 1 150px" } },
-						h("label", { style: { display: "block", fontSize: "12px", color: T.labelMuted, marginBottom: "6px" } }, "Học kỳ"),
+						h("label", { style: { display: "block", fontSize: "12px", color: T.labelTertiary, marginBottom: "6px" } }, "Học kỳ"),
 						h("input", {
 							value: newTerm, onChange: e => setNewTerm(e.target.value),
 							placeholder: "Ví dụ: HK1 2026",
 							style: {
-								width: "100%", padding: "8px 12px", background: T.field, border: `1px solid ${T.border}`,
-								borderRadius: "6px", color: T.label, fontSize: "13px", boxSizing: "border-box", outline: "none"
+								width: "100%", padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+								borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none"
 							}
 						})
 					),
 					h("div", { style: { flex: "1 1 200px" } },
-						h("label", { style: { display: "block", fontSize: "12px", color: T.labelMuted, marginBottom: "6px" } }, "Khóa học liên kết"),
+						h("label", { style: { display: "block", fontSize: "12px", color: T.labelTertiary, marginBottom: "6px" } }, "Khóa học liên kết"),
 						h("select", {
 							value: newCourse, onChange: e => setNewCourse(e.target.value),
 							style: {
-								width: "100%", padding: "8px 12px", background: T.field, border: `1px solid ${T.border}`,
-								borderRadius: "6px", color: T.label, fontSize: "13px", boxSizing: "border-box", outline: "none"
+								width: "100%", padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+								borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none"
 							}
 						},
 							h("option", { value: "" }, "— Không gắn khóa học —"),
@@ -590,8 +590,8 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 					h("button", {
 						type: "submit", disabled: busy,
 						style: {
-							padding: "9px 20px", background: T.brand, color: "#fff",
-							border: "none", borderRadius: "6px", fontSize: "13px",
+							padding: "8px 18px", background: T.brand, color: "#fff",
+							border: "none", borderRadius: "8px", fontSize: "13px",
 							fontWeight: 500, cursor: "pointer", height: "35px"
 						}
 					}, busy ? "Đang tạo..." : "Tạo lớp")
@@ -599,21 +599,21 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 			) : null,
 
 			// Class Cards Grid
-			classes === null ? h("div", { style: { textAlign: "center", padding: "40px", color: T.labelMuted } }, "Đang tải danh sách lớp học...") :
+			classes === null ? h("div", { style: { textAlign: "center", padding: "40px", color: T.labelTertiary, fontSize: "13px" } }, "Đang tải danh sách lớp học...") :
 				filteredClasses.length === 0 ? h("div", {
 					style: {
-						textAlign: "center", padding: "60px 20px", background: T.card,
-						border: `1px solid ${T.border}`, borderRadius: "12px"
+						textAlign: "center", padding: "48px 20px", background: T.card,
+						border: `0.5px solid ${T.border}`, borderRadius: "12px"
 					}
 				},
-					h("div", { style: { fontSize: "36px", marginBottom: "12px" } }, "🏫"),
-					h("h3", { style: { margin: "0 0 6px", fontSize: "16px", color: T.label } }, "Chưa có lớp học nào"),
-					h("p", { style: { margin: "0 0 16px", fontSize: "13px", color: T.labelMuted } }, "Bắt đầu tạo lớp học đầu tiên để quản lý học sinh và tiến độ học tập."),
+					h("div", { style: { fontSize: "32px", marginBottom: "12px" } }, "🏫"),
+					h("h3", { style: { margin: "0 0 4px", fontSize: "15px", fontWeight: 600, color: T.labelPrimary } }, "Chưa có lớp học nào"),
+					h("p", { style: { margin: "0 0 16px", fontSize: "13px", color: T.labelTertiary } }, "Bắt đầu tạo lớp học đầu tiên để quản lý học sinh và tiến độ học tập."),
 					h("button", {
 						onClick: () => setShowCreate(true),
 						style: {
-							padding: "8px 18px", background: T.brand, color: "#fff",
-							border: "none", borderRadius: "6px", fontSize: "13px",
+							padding: "8px 16px", background: T.brand, color: "#fff",
+							border: "none", borderRadius: "8px", fontSize: "13px",
 							fontWeight: 500, cursor: "pointer"
 						}
 					}, "+ Tạo lớp học ngay")
@@ -621,42 +621,42 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 				h("div", {
 					style: {
 						display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-						gap: "16px"
+						gap: "14px"
 					}
 				},
 					filteredClasses.map(c => h("div", {
 						key: c.sourcedId,
 						onClick: () => openDetail(c),
 						style: {
-							background: T.card, border: `1px solid ${T.border}`, borderRadius: "12px",
-							padding: "20px", cursor: "pointer", transition: "all 0.15s ease",
+							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
+							padding: "16px 18px", cursor: "pointer", transition: "border-color 0.16s, background 0.16s",
 							display: "flex", flexDirection: "column", justifyContent: "space-between",
-							minHeight: "130px"
+							minHeight: "120px"
 						},
-						onMouseEnter: (e) => { e.currentTarget.style.borderColor = "rgba(253,80,90,0.4)"; e.currentTarget.style.background = T.cardHover; },
+						onMouseEnter: (e) => { e.currentTarget.style.borderColor = "var(--dsw-alias-label-dimmed, rgba(255,255,255,0.25))"; e.currentTarget.style.background = T.cardHover; },
 						onMouseLeave: (e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.card; }
 					},
 						h("div", null,
-							h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" } },
-								h("h4", { style: { margin: 0, fontSize: "16px", fontWeight: 650, color: T.label } }, c.title),
+							h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" } },
+								h("h4", { style: { margin: 0, fontSize: "15px", fontWeight: 600, color: T.labelPrimary, lineHeight: "20px" } }, c.title),
 								h("span", {
 									style: {
-										fontSize: "12px", padding: "2px 8px", borderRadius: "12px",
+										fontSize: "12px", padding: "2px 8px", borderRadius: "10px",
 										background: T.brandSoft, color: T.brand, fontWeight: 500
 									}
 								}, `${counts[c.sourcedId] || 0} HS`)
 							),
-							h("p", { style: { margin: "0 0 12px", fontSize: "13px", color: T.labelMuted } },
+							h("p", { style: { margin: "0 0 10px", fontSize: "13px", color: T.labelTertiary, lineHeight: "18px" } },
 								courseTitle(courses, c.courseSourcedId)
 							)
 						),
 						h("div", {
 							style: {
 								display: "flex", justifyContent: "space-between", alignItems: "center",
-								paddingTop: "12px", borderTop: `1px solid rgba(255,255,255,0.06)`, fontSize: "12px"
+								paddingTop: "10px", borderTop: `0.5px solid ${T.borderLight}`, fontSize: "12px"
 							}
 						},
-							h("span", { style: { color: T.labelSubtle } }, c.term ? `Học kỳ: ${c.term}` : "Chưa đặt kỳ"),
+							h("span", { style: { color: T.labelTertiary } }, c.term ? `Học kỳ: ${c.term}` : "Chưa đặt kỳ"),
 							h("span", { style: { color: T.brand, fontWeight: 500 } }, "Quản lý lớp →")
 						)
 					))
@@ -666,10 +666,10 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 
 	function SidebarIcon(props) {
 		const active = Boolean(props && props.active);
-		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? "var(--vai-brand, #fd505a)" : "inherit" } },
+		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? "var(--dsw-alias-brand-primary, #fd505a)" : "inherit" } },
 			h("svg", {
 				xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", width: 18, height: 18,
-				fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round"
+				fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round"
 			},
 				h("path", { d: "M22 10v6M2 10l10-5 10 5-10 5z" }),
 				h("path", { d: "M6 12v5c3 3 9 3 12 0v-5" })
@@ -680,28 +680,29 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 	function PageHeader() {
 		return h("div", {
 			style: {
-				display: "flex", alignItems: "center", gap: "14px",
-				padding: "0 0 20px", borderBottom: `1px solid ${T.border}`,
-				marginBottom: "24px"
+				display: "flex", alignItems: "center", gap: "12px",
+				padding: "0 0 16px", borderBottom: `0.5px solid ${T.border}`,
+				marginBottom: "20px"
 			}
 		},
+			// White clean icon, no background box
 			h("div", {
 				style: {
-					display: "grid", placeItems: "center", width: "42px", height: "42px",
-					borderRadius: "10px", background: T.brandSoft, color: T.brand
+					display: "flex", alignItems: "center", justifyContent: "center",
+					width: "28px", height: "28px", color: "#ffffff"
 				}
 			},
 				h("svg", {
-					xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", width: 22, height: 22,
-					fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round"
+					xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", width: 24, height: 24,
+					fill: "none", stroke: "#ffffff", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round"
 				},
 					h("path", { d: "M22 10v6M2 10l10-5 10 5-10 5z" }),
 					h("path", { d: "M6 12v5c3 3 9 3 12 0v-5" })
 				)
 			),
 			h("div", null,
-				h("h2", { style: { margin: 0, fontSize: "20px", fontWeight: 650, color: T.label, letterSpacing: "-0.01em" } }, "Lớp học"),
-				h("p", { style: { margin: "2px 0 0", fontSize: "13px", color: T.labelMuted } }, "Quản lý danh sách lớp, môn học và phân bổ học sinh theo tiêu chuẩn OneRoster")
+				h("h2", { style: { margin: 0, fontSize: "18px", fontWeight: 600, color: T.labelPrimary, lineHeight: "24px" } }, "Lớp học"),
+				h("p", { style: { margin: "2px 0 0", fontSize: "13px", color: T.labelTertiary, lineHeight: "18px" } }, "Quản lý danh sách lớp, môn học và phân bổ học sinh theo tiêu chuẩn OneRoster")
 			)
 		);
 	}
@@ -710,9 +711,9 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 		return h("div", {
 			className: "st-page",
 			style: {
-				width: "100%", maxWidth: "1200px", margin: "0 auto",
+				width: "100%", maxWidth: "1100px", margin: "0 auto",
 				padding: "24px 32px 48px", boxSizing: "border-box",
-				fontFamily: FONT, color: T.label
+				fontFamily: FONT, color: T.labelPrimary
 			}
 		},
 			h(PageHeader, null),
