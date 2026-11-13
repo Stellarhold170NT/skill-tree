@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillTree Prototype — Giao diện Trải nghiệm Giáo dục Thông minh</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">🌲</div>
+      <div>
+        <span class="brand-title">SkillTree</span>
+        <span class="brand-tagline">Graph RAG & Adaptive Learning Platform</span>
+      </div>
+    </div>
+
+    <!-- Role Switcher Pills -->
+    <div class="role-switcher">
+      <button class="role-btn active" data-role="student">
+        <span>🎒</span> Học sinh
+      </button>
+      <button class="role-btn" data-role="teacher">
+        <span>👩‍🏫</span> Giáo viên
+      </button>
+      <button class="role-btn" data-role="graph">
+        <span>🗺️</span> Cây tri thức CASE
+      </button>
+    </div>
+
+    <div class="header-meta">
+      <div class="user-badge">
+        <div class="user-avatar" id="header-avatar">M</div>
+        <span id="header-user-name">Học sinh: Nguyễn Hoàng Minh</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sub Navigation Bar -->
+  <nav class="sub-nav">
+    <a href="#" class="sub-nav-item active">📊 Bảng điều khiển chính</a>
+    <a href="#" class="sub-nav-item">📚 Kho học liệu & RAG</a>
+    <a href="#" class="sub-nav-item">⚡ Kiểm tra thích ứng (QTI)</a>
+    <a href="#" class="sub-nav-item">⚙️ Cài đặt hệ thống</a>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: STUDENT VIEW (LỘ TRÌNH HỌC SINH)   -->
+    <!-- ========================================== -->
+    <section id="view-student" class="view-panel active">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Lộ trình học tập cá nhân hóa</h1>
+          <p class="section-subtitle">Chương trình: <strong>Đại số & Phân số nâng cao (THCS - THPT)</strong> · Lớp 10A1</p>
+        </div>
+      </div>
+
+      <!-- Banner gợi ý bài học tối ưu nhất (Frontier) -->
+      <div id="student-frontier-banner" class="frontier-banner">
+        <!-- Rendered dynamically by JS -->
+      </div>
+
+      <!-- Bảng chú giải trạng thái 4 màu -->
+      <div class="status-legend">
+        <span style="font-weight: 600; font-size: 0.85rem; color: var(--ink);">Trạng thái làm chủ:</span>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--color-green);"></span>
+          <span><strong>GREEN (≥85%)</strong>: Đã làm chủ vững vàng</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--color-amber);"></span>
+          <span><strong>AMBER (40-85%)</strong>: Đang tiếp thu tốt</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--color-red);"></span>
+          <span><strong>RED (&lt;40%)</strong>: Hổng kiến thức gốc</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--color-rusty);"></span>
+          <span><strong>RUSTY (&lt;70% trí nhớ)</strong>: Mai một, cần ôn lại</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--color-locked);"></span>
+          <span><strong>LOCKED</strong>: Chưa đủ điều kiện mở khóa</span>
+        </div>
+      </div>
+
+      <!-- Lưới các Concept Cards (Skill Tree Nodes) -->
+      <div class="tree-canvas-card">
+        <h3 style="margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.25rem;">Mạng lưới kỹ năng bài học</h3>
+        <div id="student-concept-grid" class="graph-grid">
+          <!-- Rendered dynamically by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: TEACHER VIEW (DASHBOARD GIÁO VIÊN) -->
+    <!-- ========================================== -->
+    <section id="view-teacher" class="view-panel">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Radar lớp học & Kế hoạch can thiệp sư phạm</h1>
+          <p class="section-subtitle">Lớp: <strong>10A1 (Sĩ số: 6 học sinh)</strong> · Khung môn học: <strong>Đại số chuẩn CASE v1.1</strong></p>
+        </div>
+      </div>
+
+      <!-- Khung trợ giảng AI: Class Ask -->
+      <div class="chat-box">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 1.1rem; color: var(--ink); display: flex; align-items: center; gap: 8px;">
+            <span>🤖</span> Trợ giảng AI thông minh (Class Ask)
+          </h3>
+          <span style="font-size: 0.8rem; color: var(--ink-secondary);">Dữ liệu thời gian thực từ M5 Heatmap & Cognee</span>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="class-ask-input" class="chat-input" placeholder="Hỏi bất kỳ điều gì: 'Ai đang bị hổng kiến thức?', 'Nên gọi ai lên bảng?', 'Hôm nay dạy bài gì?'...">
+          <button class="btn-primary-action" style="font-size: 0.9rem; padding: 0.5rem 1.25rem;" onclick="handleClassAsk()">
+            Hỏi AI
+          </button>
+        </div>
+        <div id="class-ask-response" class="chat-response"></div>
+      </div>
+
+      <!-- Kế hoạch can thiệp tương phản (Contrastive Teaching Plan) -->
+      <div class="plan-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-family: var(--font-serif); font-size: 1.25rem;">🎯 Kế hoạch can thiệp ưu tiên (Teaching Plan)</h3>
+          <span style="font-size: 0.85rem; color: var(--ink-secondary);">Xếp hạng theo: <strong>(Số em Red + Rusty) × Độ giải phóng nút thắt</strong></span>
+        </div>
+        <table class="plan-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Ưu tiên</th>
+              <th>Khái niệm & Phân tích sư phạm</th>
+              <th style="text-align: center; width: 80px;">Số em Đỏ</th>
+              <th style="text-align: center; width: 80px;">Số em Quên</th>
+              <th style="text-align: center; width: 80px;">Đang học</th>
+              <th style="text-align: center; width: 100px;">Mở khóa tiếp</th>
+              <th style="width: 160px;">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="teaching-plan-tbody">
+            <!-- Rendered dynamically by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Ma trận Heatmap Lớp học -->
+      <div class="section-header" style="margin-top: 2rem;">
+        <div>
+          <h2 class="section-title" style="font-size: 1.35rem;">Bản chụp X-Quang Nhiệt độ Lớp học (Heatmap)</h2>
+          <p class="section-subtitle">Click vào tên học sinh hoặc ô màu để xem chi tiết chân dung năng lực</p>
+        </div>
+      </div>
+      <div id="teacher-heatmap-container" class="heatmap-container">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: GRAPH VIEW (CÂY TRI THỨC OPENCASE) -->
+    <!-- ========================================== -->
+    <section id="view-graph" class="view-panel">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Bản đồ Đồ thị Tri thức (CASE v1.1 Ontology)</h1>
+          <p class="section-subtitle">Mô hình hóa các quan hệ điều kiện tiên quyết <code>isPrerequisiteOf</code> và phân cấp <code>isPartOf</code></p>
+        </div>
+      </div>
+      <div id="graph-viewer-container" class="tree-canvas-card">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: LÀM BÀI KIỂM TRA TRẮC NGHIỆM (QUIZ) -->
+  <!-- ========================================== -->
+  <div id="quiz-modal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeQuizModal()">&times;</button>
+      <span class="concept-badge badge-green" style="margin-bottom: 0.5rem; display: inline-block;">1EdTech QTI v3.0 Item</span>
+      <h2 id="modal-concept-title" style="font-family: var(--font-serif); margin-bottom: 1rem;">Kiểm tra năng lực</h2>
+      
+      <div style="background: var(--surface-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+        <p id="modal-quiz-question" style="font-size: 1.1rem; font-weight: 600; color: var(--ink);">Câu hỏi trắc nghiệm...</p>
+      </div>
+
+      <div id="modal-quiz-options">
+        <!-- Options rendered dynamically -->
+      </div>
+
+      <div id="modal-result-box" style="margin-top: 1.5rem; padding: 1rem; border-radius: var(--radius-md); background: var(--surface-alt); border: 1px solid var(--border); display: none;"></div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button class="btn-primary-action" style="background: #E2E8F0; color: var(--ink); box-shadow: none;" onclick="closeQuizModal()">Hủy bỏ</button>
+        <button id="btn-submit-quiz" class="btn-primary-action" style="background: var(--primary); color: white;" onclick="submitQuizAttempt()">Nộp bài thi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- DRAWER: DRILL-DOWN HỌC SINH CHO GIÁO VIÊN  -->
+  <!-- ========================================== -->
+  <div id="drawer-overlay" class="drawer-overlay" onclick="closeDrillDown()"></div>
+  <aside id="drawer-panel" class="drawer-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+      <div>
+        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--ink-secondary); font-weight: 700;">Hồ sơ năng lực học sinh</span>
+        <h2 id="drawer-student-name" style="font-family: var(--font-serif); font-size: 1.4rem;">Tên học sinh</h2>
+      </div>
+      <button onclick="closeDrillDown()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    </div>
+    
+    <div style="background: var(--primary-light); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-focus); margin-bottom: 1.5rem;">
+      <div style="font-size: 0.85rem; color: var(--primary-dark); font-weight: 600;">Thông số Glicko-2 & Ebbinghaus:</div>
+      <p style="font-size: 0.8rem; color: var(--ink-secondary); margin-top: 4px;">Dữ liệu thu thập từ các lần làm bài trắc nghiệm và khoảng cách thời gian ôn tập.</p>
+    </div>
+
+    <div id="drawer-content">
+      <!-- Concepts rows rendered dynamically -->
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
