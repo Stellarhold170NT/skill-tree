@@ -1271,13 +1271,29 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 		return h("div", {
 			className: "st-page",
 			style: {
-				width: "100%", maxWidth: "1100px", margin: "0 auto",
-				padding: "24px 32px 48px", boxSizing: "border-box",
-				fontFamily: FONT, color: T.labelPrimary
+				width: "100%",
+				height: "100%",
+				maxHeight: "100%",
+				overflowY: "auto",
+				overflowX: "hidden",
+				boxSizing: "border-box",
+				fontFamily: FONT,
+				color: T.labelPrimary,
+				WebkitOverflowScrolling: "touch"
 			}
 		},
-			h(PageHeader, null),
-			h(CourseManagementPanel, null)
+			h("div", {
+				style: {
+					width: "100%",
+					maxWidth: "1100px",
+					margin: "0 auto",
+					padding: "24px 32px 64px",
+					boxSizing: "border-box"
+				}
+			},
+				h(PageHeader, null),
+				h(CourseManagementPanel, null)
+			)
 		);
 	}
 
