@@ -389,12 +389,15 @@ function apply(ctx) {
     return el('div', { className: 'gd-root' + ' st-page' }, el(PageHeader, null), el(PageIntro, null), el(Panel, { onClose: function () {} }));
   }
 
+  // Consolidated into Môn học tab (skilltree-course-ui)
+  /*
   ctx.slots.inject('sidebar.panellist', () =>
     ctx.slots.register(
       { name: 'sidebar.panellist', id: 'skilltree-graph-dashboard', order: 20, label: 'Dashboard' },
       SidebarIcon
     )
   );
+  */
   ctx.slots.inject('main', () =>
     ctx.slots.register({ name: 'main', key: 'skilltree-graph-dashboard' }, MainPanel)
   );

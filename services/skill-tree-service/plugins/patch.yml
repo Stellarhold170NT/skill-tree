@@ -21,6 +21,10 @@
     - id: secret
       name: 'secret'
 
+    # === UI GV: Quan ly mon hoc & giao trinh & Cay ky nang ===
+    - id: skilltree-course-ui
+      name: 'skilltree-course-ui'
+
     # === UI GV: Quan ly lop hoc ca nhan (M6 qua gateway; sourcedId an danh) ===
     - id: skilltree-class-ui
       name: 'skilltree-class-ui'
@@ -56,13 +60,13 @@
     - id: skilltree-student-ui
       name: 'skilltree-student-ui'
 
-    # === Dashboard graph CASE kieu roadmap (M1 graph + M9 materials + M5 mastery) ===
-    # Slot shell.overlay order 51; routes same-origin nhu cac UI khac.
+    # === Gom vao tab Mon hoc (skilltree-course-ui), disable tab roi rac ngoai sidebar ===
     - id: skilltree-graph-dashboard
+      disabled: true
       name: 'skilltree-graph-dashboard'
 
-    # === Roadmap viewer (recolor theo token DESIGN.md, bo accent legacy) ===
     - id: roadmap-viewer
+      disabled: true
       name: 'roadmap-viewer'
 
     # === MCP: Cognee — Graph RAG cho đồ án (truy xuất/kho tri thức đồ thị) ===

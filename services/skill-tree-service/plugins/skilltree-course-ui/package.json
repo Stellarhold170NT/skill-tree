@@ -1,0 +1,22 @@
+{
+  "name": "skilltree-course-ui",
+  "version": "1.0.0",
+  "description": "SkillTree teacher course and curriculum management UI: manage courses, syllabus documents, and view the concept Mastery Graph & Roadmap",
+  "type": "module",
+  "main": "lib/index.js",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": ["dsh-plugin", "skilltree", "course", "curriculum", "roadmap", "oneroster"],
+  "license": "MIT"
+}

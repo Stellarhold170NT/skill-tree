@@ -219,12 +219,15 @@ function apply(ctx) {
     return el('div', { className: 'rmv-root' + ' st-page' }, el(PageHeader, null), el(Panel, { onClose: function () {} }));
   }
 
+  // Consolidated into Môn học tab (skilltree-course-ui)
+  /*
   ctx.slots.inject('sidebar.panellist', () =>
     ctx.slots.register(
       { name: 'sidebar.panellist', id: 'roadmap-viewer', order: 21, label: 'Roadmap' },
       SidebarIcon
     )
   );
+  */
   ctx.slots.inject('main', () =>
     ctx.slots.register({ name: 'main', key: 'roadmap-viewer' }, MainPanel)
   );

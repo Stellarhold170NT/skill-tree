@@ -725,10 +725,10 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 	}
 	function PageHeader() {
 		return h("div", { style: { display: "flex", alignItems: "center", gap: "12px", padding: "0 0 16px", borderBottom: "1px solid rgba(127,127,127,.18)", marginBottom: "16px" } },
-			h("div", { style: { display: "grid", placeItems: "center", width: "40px", height: "40px", borderRadius: "10px", background: "rgba(39,169,95,.14)", color: "var(--dsw-alias-brand-primary, #27A95F)" } },
+			h("div", { style: { display: "grid", placeItems: "center", width: "40px", height: "40px", borderRadius: "10px", color: "#ffffff" } },
 				h("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 16 16", width: 22, height: 22, fill: "none", stroke: "currentColor", strokeWidth: 1.1, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", focusable: "false" }, h("path", { d: 'M3.4041 13.096C2.49514 12.187 1.87614 11.0288 1.62537 9.76798C1.37459 8.50716 1.50331 7.20028 1.99525 6.01261C2.48719 4.82494 3.32025 3.80981 4.3891 3.09557C5.45795 2.38134 6.71458 2.00008 8.0001 2C9.28563 2.00008 10.5423 2.38134 11.6111 3.09557C12.68 3.80981 13.513 4.82494 14.005 6.01261C14.4969 7.20028 14.6256 8.50716 14.3748 9.76798C14.1241 11.0288 13.5051 12.187 12.5961 13.096', stroke: "currentColor" }), h("path", { d: 'M8 8.49994L11.6114 4.88855', stroke: "currentColor" }), h("circle", { cx: 8, cy: 8.5, r: 1.25, stroke: "currentColor", fill: "currentColor" }))),
 			h("div", null,
-				h("h2", { style: { margin: 0, fontSize: "20px", fontWeight: 650, letterSpacing: "-0.01em" } }, "Bảng GV"),
+				h("h2", { style: { margin: 0, fontSize: "20px", fontWeight: 650, letterSpacing: "-0.01em" } }, "Tổng quan giáo viên"),
 				h("p", { style: { margin: "2px 0 0", fontSize: "13px", opacity: 0.7 } }, "Giao bài, xem độ nhớ và điểm nghẽn của lớp — hỗ trợ đúng lúc, đúng người.")));
 	}
 	function MainPanel() {
@@ -748,8 +748,8 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({
 			name: "sidebar.panellist",
 			id: NS,
-			order: 23,
-			label: "Bảng GV",
+			order: 20,
+			label: "Tổng quan",
 		}, SidebarIcon));
 		ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: NS }, MainPanel));
 	};
