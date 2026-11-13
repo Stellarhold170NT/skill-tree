@@ -27,6 +27,10 @@
 export const name = 'skilltree-teacher-ui'
 export const inject = ['webServer']
 
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 
 const DEFAULT_GATEWAY = 'http://localhost:8000'
 const BODY_LIMIT_BYTES = 16 * 1024
@@ -511,6 +515,25 @@ function mountProxyRoute(key, buildRequest, ctx) {
  * @param ctx - cordis host context providing the webServer service.
  */
 export function apply(ctx) {
+  ctx.webServer.register({
+    kind: 'exact',
+    path: '/skilltree-teacher/vis-network.min.js',
+    handler: async (request, response) => {
+      try {
+        const filePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../client/vis-network.min.js')
+        const content = await fs.promises.readFile(filePath)
+        response.writeHead(200, {
+          'content-type': 'application/javascript; charset=utf-8',
+          'cache-control': 'public, max-age=86400',
+        })
+        response.end(content)
+      } catch (err) {
+        response.writeHead(404)
+        response.end('Not found')
+      }
+    },
+  })
+
   ctx.webServer.register({
     kind: 'exact',
     path: '/skilltree-teacher/config',
