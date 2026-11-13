@@ -21,17 +21,17 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 		field: "var(--dsw-specific-login-input, #1f1f22)",
 		border: "var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.1))",
 		borderLight: "rgba(255, 255, 255, 0.06)",
-		borderFocus: "var(--dsw-alias-brand-primary, #fd505a)",
+		borderFocus: "#fd505a",
 		labelPrimary: "var(--dsw-alias-label-primary, #f9fafb)",
 		labelSecondary: "var(--dsw-alias-label-secondary, #cfd3d6)",
 		labelTertiary: "var(--dsw-alias-label-tertiary, #81858c)",
-		brand: "var(--dsw-alias-brand-primary, #fd505a)",
+		brand: "#fd505a",
 		brandHover: "#e0444e",
-		brandSoft: "rgba(253, 80, 90, 0.12)",
-		accent: "var(--dsw-alias-state-success-primary, #22c55e)",
-		accentSoft: "rgba(34, 197, 94, 0.12)",
-		danger: "var(--dsw-alias-state-error-primary, #f25a5a)",
-		dangerSoft: "rgba(242, 90, 90, 0.12)",
+		brandSoft: "rgba(253, 80, 90, 0.15)",
+		accent: "#22c55e",
+		accentSoft: "rgba(34, 197, 94, 0.15)",
+		danger: "#f25a5a",
+		dangerSoft: "rgba(242, 90, 90, 0.15)",
 	};
 
 	const FONT = 'var(--dsw-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)';
@@ -375,8 +375,10 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 								style: {
 									padding: "6px 14px", background: T.brand, color: "#fff",
 									border: "none", borderRadius: "8px", fontSize: "13px",
-									fontWeight: 500, cursor: "pointer"
-								}
+									fontWeight: 500, cursor: "pointer", transition: "background 0.15s"
+								},
+								onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
+								onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 							}, showEnrollNew ? "Đóng thêm học sinh" : "+ Thêm học sinh")
 						)
 					),
@@ -411,8 +413,11 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 								style: {
 									padding: "8px 16px", background: T.brand, color: "#fff",
 									border: "none", borderRadius: "8px", fontSize: "13px",
-									fontWeight: 500, cursor: "pointer"
-								}
+									fontWeight: 500, cursor: busy ? "not-allowed" : "pointer",
+									opacity: busy ? 0.6 : 1, transition: "background 0.15s"
+								},
+								onMouseEnter: (e) => { if (!busy) e.currentTarget.style.background = T.brandHover; },
+								onMouseLeave: (e) => { if (!busy) e.currentTarget.style.background = T.brand; }
 							}, busy ? "Đang thêm..." : "Thêm vào lớp")
 						),
 
@@ -516,7 +521,9 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 							padding: "8px 16px", background: T.brand, color: "#fff",
 							border: "none", borderRadius: "8px", fontSize: "13px",
 							fontWeight: 500, cursor: "pointer", transition: "background 0.15s"
-						}
+						},
+						onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
+						onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 					}, showCreate ? "Đóng tạo lớp" : "+ Tạo lớp học mới")
 				)
 			),
@@ -592,8 +599,11 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 						style: {
 							padding: "8px 18px", background: T.brand, color: "#fff",
 							border: "none", borderRadius: "8px", fontSize: "13px",
-							fontWeight: 500, cursor: "pointer", height: "35px"
-						}
+							fontWeight: 500, cursor: busy ? "not-allowed" : "pointer", height: "35px",
+							opacity: busy ? 0.6 : 1, transition: "background 0.15s"
+						},
+						onMouseEnter: (e) => { if (!busy) e.currentTarget.style.background = T.brandHover; },
+						onMouseLeave: (e) => { if (!busy) e.currentTarget.style.background = T.brand; }
 					}, busy ? "Đang tạo..." : "Tạo lớp")
 				)
 			) : null,
@@ -614,8 +624,10 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 						style: {
 							padding: "8px 16px", background: T.brand, color: "#fff",
 							border: "none", borderRadius: "8px", fontSize: "13px",
-							fontWeight: 500, cursor: "pointer"
-						}
+							fontWeight: 500, cursor: "pointer", transition: "background 0.15s"
+						},
+						onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
+						onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 					}, "+ Tạo lớp học ngay")
 				) :
 				h("div", {
