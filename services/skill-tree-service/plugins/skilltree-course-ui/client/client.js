@@ -140,6 +140,13 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 		},
 			h("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }),
 			h("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" })
+		),
+		X: (size = 14, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round"
+		},
+			h("line", { x1: "18", y1: "6", x2: "6", y2: "18" }),
+			h("line", { x1: "6", y1: "6", x2: "18", y2: "18" })
 		)
 	};
 
@@ -624,8 +631,8 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 							onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
 							onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 						},
-							Icons.Plus(14, "#fff"),
-							showAddClo ? "Đóng thêm CLO" : "+ Thêm chuẩn đầu ra"
+							showAddClo ? Icons.X(14, "#fff") : Icons.Plus(14, "#fff"),
+							showAddClo ? "Đóng" : "Thêm chuẩn đầu ra"
 						)
 					),
 
@@ -701,7 +708,7 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 						}
 					},
 						caseItems.length === 0 ? h("div", { style: { textAlign: "center", padding: "40px", color: T.labelTertiary, fontSize: "13px" } },
-							"Chưa có chuẩn đầu ra nào được định nghĩa. Nhấp '+ Thêm chuẩn đầu ra' ở trên để bắt đầu."
+							"Chưa có chuẩn đầu ra nào được định nghĩa. Nhấp 'Thêm chuẩn đầu ra' ở trên để bắt đầu."
 						) :
 							h("table", { style: { width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" } },
 								h("thead", null,
@@ -757,8 +764,8 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 							onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
 							onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 						},
-							Icons.Link(14, "#fff"),
-							showAddPrereq ? "Đóng nối tiên quyết" : "+ Gán quan hệ tiên quyết"
+							showAddPrereq ? Icons.X(14, "#fff") : Icons.Link(14, "#fff"),
+							showAddPrereq ? "Đóng" : "Gán quan hệ tiên quyết"
 						) : null
 					),
 
@@ -952,8 +959,8 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 							onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
 							onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 						},
-							Icons.Plus(14, "#fff"),
-							showAddDoc ? "Đóng nạp tài liệu" : "+ Nạp tài liệu vào RAG"
+							showAddDoc ? Icons.X(14, "#fff") : Icons.Plus(14, "#fff"),
+							showAddDoc ? "Đóng" : "Nạp tài liệu vào RAG"
 						)
 					),
 
@@ -1103,8 +1110,8 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 						onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
 						onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 					},
-						Icons.Plus(14, "#fff"),
-						showCreateCourse ? "Đóng tạo môn" : "+ Tạo môn học mới"
+						showCreateCourse ? Icons.X(14, "#fff") : Icons.Plus(14, "#fff"),
+						showCreateCourse ? "Đóng" : "Tạo môn học mới"
 					)
 				)
 			),
@@ -1201,7 +1208,7 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 						onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
 					},
 						Icons.Plus(14, "#fff"),
-						"+ Tạo môn học ngay"
+						"Tạo môn học ngay"
 					)
 				) :
 				h("div", {

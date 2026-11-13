@@ -379,7 +379,7 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 								},
 								onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
 								onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
-							}, showEnrollNew ? "Đóng thêm học sinh" : "+ Thêm học sinh")
+							}, showEnrollNew ? "Đóng thêm học sinh" : "Thêm học sinh")
 						)
 					),
 
@@ -462,7 +462,7 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 						style: { textAlign: "center", padding: "40px 20px", color: T.labelTertiary }
 					},
 						h("p", { style: { margin: "0 0 6px", fontSize: "14px", fontWeight: 500, color: T.labelSecondary } }, "Lớp học chưa có học sinh nào."),
-						h("p", { style: { margin: 0, fontSize: "13px", color: T.labelTertiary } }, 'Nhấp vào nút "+ Thêm học sinh" ở trên để đưa học sinh vào lớp.')
+						h("p", { style: { margin: 0, fontSize: "13px", color: T.labelTertiary } }, 'Nhấp vào nút "Thêm học sinh" ở trên để đưa học sinh vào lớp.')
 					) : h("div", { style: { overflowX: "auto" } },
 						h("table", { style: { width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" } },
 							h("thead", null,
@@ -524,7 +524,7 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 						},
 						onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
 						onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
-					}, showCreate ? "Đóng tạo lớp" : "+ Tạo lớp học mới")
+					}, showCreate ? "Đóng tạo lớp" : "Tạo lớp học mới")
 				)
 			),
 
@@ -628,7 +628,7 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 						},
 						onMouseEnter: (e) => { e.currentTarget.style.background = T.brandHover; },
 						onMouseLeave: (e) => { e.currentTarget.style.background = T.brand; }
-					}, "+ Tạo lớp học ngay")
+					}, "Tạo lớp học ngay")
 				) :
 				h("div", {
 					style: {
