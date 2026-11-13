@@ -650,7 +650,7 @@ window.__ModuleLoader__.load({ id: "skilltree-auth-ui-v2", factory: (require) =>
 			name: "sidebar.panellist",
 			id: NS,
 			order: 19,
-			label: "Đăng nhập",
+			label: () => (loadSession() ? "Tài khoản" : "Đăng nhập"),
 		}, SidebarIcon));
 
 		ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: NS }, SettingsPage));
