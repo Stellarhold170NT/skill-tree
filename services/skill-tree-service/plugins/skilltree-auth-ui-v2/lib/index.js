@@ -23,6 +23,12 @@
  * routes exist; POSTs must be same-origin; bodies are capped at 16 KiB.
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 export const name = 'skilltree-auth-ui-v2'
 export const inject = ['webServer']
 
@@ -165,11 +171,58 @@ async function proxyAuthRoute(key, request, response) {
   }
 }
 
+function getAssetBuffer(filename) {
+  const candidates = [
+    path.resolve(__dirname, '../../vai-branding-plugin/assets', filename),
+    path.resolve(__dirname, '../assets', filename),
+  ]
+  for (const c of candidates) {
+    try {
+      if (fs.existsSync(c)) return fs.readFileSync(c)
+    } catch {}
+  }
+  return null
+}
+
 /**
  * Mount the auth proxy routes on the harness web server.
  * @param ctx - cordis host context providing the webServer service.
  */
 export function apply(ctx) {
+  function serveSvg(filename) {
+    return (request, response) => {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        response.writeHead(405, { allow: 'GET, HEAD' })
+        response.end()
+        return
+      }
+      const buf = getAssetBuffer(filename)
+      if (!buf) {
+        response.writeHead(404)
+        response.end(filename + ' not found')
+        return
+      }
+      response.writeHead(200, {
+        'content-type': 'image/svg+xml; charset=utf-8',
+        'cache-control': 'public, max-age=86400',
+      })
+      if (request.method === 'HEAD') response.end()
+      else response.end(buf)
+    }
+  }
+
+  ctx.webServer.register({
+    kind: 'exact',
+    path: '/skilltree-auth/logo.svg',
+    handler: serveSvg('logo.svg'),
+  })
+
+  ctx.webServer.register({
+    kind: 'exact',
+    path: '/skilltree-auth/icon.svg',
+    handler: serveSvg('icon.svg'),
+  })
+
   ctx.webServer.register({
     kind: 'exact',
     path: '/skilltree-auth/config',

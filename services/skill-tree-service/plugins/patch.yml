@@ -49,7 +49,7 @@
       name: '/app/plugins/skilltree-auth-ui/lib/index.js'
 
     - id: skilltree-auth-ui-v2
-      name: 'skilltree-auth-ui-v2'
+      name: '/app/plugins/skilltree-auth-ui-v2/lib/index.js'
 
     # === UI học sinh: lớp + lộ trình + upload tài liệu (rag) + kiểm tra nhanh ===
     # Slot shell.overlay order 57; JWT từ skilltree-auth-ui (localStorage).
