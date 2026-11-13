@@ -1433,6 +1433,33 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		);
 	}
 
+	function SidebarIcon(props) {
+		const active = Boolean(props && props.active);
+		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? T.brand : "inherit" } },
+			Icons.Compass(18, active ? T.brand : "currentColor")
+		);
+	}
+
+	exports.name = NS;
+	exports.inject = ["slots"];
+	exports.stateChip = stateChip;
+	exports.conceptShort = conceptShort;
+	exports.buildDashboardCalls = buildDashboardCalls;
+	exports.buildDrillCalls = buildDrillCalls;
 	exports.Panel = Panel;
-	return exports;
+	exports.apply = function apply(ctx) {
+		ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({
+			name: "sidebar.panellist",
+			id: NS,
+			order: 20,
+			label: "Tổng quan",
+		}, SidebarIcon));
+
+		ctx.slots.inject("main", () => ctx.slots.register({
+			name: "main",
+			key: NS,
+		}, Panel));
+	};
+
+	return module.exports;
 }});
