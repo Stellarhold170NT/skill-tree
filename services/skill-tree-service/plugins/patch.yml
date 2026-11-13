@@ -45,18 +45,20 @@
     - id: vai-branding-plugin
       name: '/app/plugins/vai-branding-plugin/lib/index.js'
 
-    # === vAiPlatform SkillTree & Roadmap Designer ===
+    # === vAiPlatform SkillTree & Roadmap Designer (Tam comment theo yeu cau) ===
     - id: vai-skilltree
+      disabled: true
       name: '/app/plugins/vai-skilltree/lib/index.js'
       config:
         workspaceDir: ~/.dsh/skilltree
 
-    # === Auth UI: Tam thoi disable v1 -> chuyen qua skilltree-auth-ui-v2 theo thiet ke vAiPlatform ===
+    # === Auth UI: Tam thoi disable v1 & v2 theo yeu cau ===
     - id: skilltree-auth-ui
       disabled: true
       name: '/app/plugins/skilltree-auth-ui/lib/index.js'
 
     - id: skilltree-auth-ui-v2
+      disabled: true
       name: '/app/plugins/skilltree-auth-ui-v2/lib/index.js'
 
     # === UI học sinh: lớp + lộ trình + upload tài liệu (rag) + kiểm tra nhanh ===
