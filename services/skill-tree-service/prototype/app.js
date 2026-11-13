@@ -1,8 +1,7 @@
 /**
  * SkillTree Prototype Application Engine
  * Implements Glicko-2, Ebbinghaus decay, CASE graph DAG traversal,
- * Frontier calculation, Class Heatmap & Contrastive Teaching Plan in pure JS.
- * Design tokens strictly following DESIGN.md
+ * Frontier calculation, Interactive vis-network Mastery Graph & Class Heatmap.
  */
 
 // --- 1. Glicko-2 & Ebbinghaus Cognitive Models ---
@@ -84,7 +83,7 @@ const CONCEPTS = [
   {
     uri: "case:math:int_add",
     code: "TOAN-01",
-    title: "Phép cộng số nguyên",
+    title: "Cộng số nguyên",
     desc: "Cộng hai số nguyên cùng dấu và khác dấu, quy tắc dấu ngoặc",
     prereqs: [],
     unlocks: ["case:math:int_sub", "case:math:int_mult"],
@@ -97,7 +96,7 @@ const CONCEPTS = [
   {
     uri: "case:math:int_sub",
     code: "TOAN-02",
-    title: "Phép trừ số nguyên",
+    title: "Trừ số nguyên",
     desc: "Quy tắc trừ số nguyên: cộng với số đối",
     prereqs: ["case:math:int_add"],
     unlocks: ["case:math:order_ops"],
@@ -110,7 +109,7 @@ const CONCEPTS = [
   {
     uri: "case:math:int_mult",
     code: "TOAN-03",
-    title: "Phép nhân số nguyên",
+    title: "Nhân số nguyên",
     desc: "Quy tắc nhân dấu cùng dấu ra dương, khác dấu ra âm",
     prereqs: ["case:math:int_add"],
     unlocks: ["case:math:frac_mult", "case:math:order_ops"],
@@ -123,7 +122,7 @@ const CONCEPTS = [
   {
     uri: "case:math:order_ops",
     code: "TOAN-04",
-    title: "Thứ tự thực hiện phép tính",
+    title: "Thứ tự phép tính",
     desc: "Quy tắc ngoặc tròn, vuông, nhọn; nhân chia trước, cộng trừ sau",
     prereqs: ["case:math:int_sub", "case:math:int_mult"],
     unlocks: ["case:math:linear_eq"],
@@ -136,7 +135,7 @@ const CONCEPTS = [
   {
     uri: "case:math:frac_add",
     code: "TOAN-05",
-    title: "Cộng trừ phân số",
+    title: "Cộng phân số",
     desc: "Quy đồng mẫu số, rút gọn phân số tối giản",
     prereqs: ["case:math:int_add"],
     unlocks: ["case:math:frac_mult"],
@@ -149,7 +148,7 @@ const CONCEPTS = [
   {
     uri: "case:math:frac_mult",
     code: "TOAN-06",
-    title: "Nhân chia phân số",
+    title: "Nhân phân số",
     desc: "Tử nhân tử, mẫu nhân mẫu; chia là nhân nghịch đảo",
     prereqs: ["case:math:frac_add", "case:math:int_mult"],
     unlocks: ["case:math:linear_eq"],
@@ -162,7 +161,7 @@ const CONCEPTS = [
   {
     uri: "case:math:linear_eq",
     code: "TOAN-07",
-    title: "Phương trình bậc nhất 1 ẩn",
+    title: "Phương trình bậc 1",
     desc: "Phương trình dạng ax + b = 0, chuyển vế đổi dấu",
     prereqs: ["case:math:order_ops", "case:math:frac_mult"],
     unlocks: ["case:math:quad_eq", "case:math:linear_func"],
@@ -175,7 +174,7 @@ const CONCEPTS = [
   {
     uri: "case:math:linear_func",
     code: "TOAN-08",
-    title: "Hàm số bậc nhất y = ax + b",
+    title: "Hàm số bậc nhất",
     desc: "Đồ thị đường thẳng, hệ số góc, điểm cắt trục tung",
     prereqs: ["case:math:linear_eq"],
     unlocks: ["case:math:quad_func"],
@@ -188,7 +187,7 @@ const CONCEPTS = [
   {
     uri: "case:math:quad_eq",
     code: "TOAN-09",
-    title: "Phương trình bậc hai ax² + bx + c = 0",
+    title: "Phương trình bậc 2",
     desc: "Công thức nghiệm Delta, nhẩm nghiệm Viete",
     prereqs: ["case:math:linear_eq"],
     unlocks: ["case:math:quad_func"],
@@ -201,7 +200,7 @@ const CONCEPTS = [
   {
     uri: "case:math:quad_func",
     code: "TOAN-10",
-    title: "Đồ thị hàm số Parabol y = ax²",
+    title: "Hàm số Parabol",
     desc: "Đỉnh parabol, trục đối xứng, bề lõm quay lên/quay xuống",
     prereqs: ["case:math:linear_func", "case:math:quad_eq"],
     unlocks: [],
@@ -319,12 +318,50 @@ const STUDENTS = [
   }
 ];
 
-// --- 4. Application State & Controller ---
+// --- 4. Vis-Network Visual Palettes (Strictly DESIGN.md) ---
+const VIS_PALETTES = {
+  green: {
+    background: "#E6F7EC",
+    border: "#27A95F",
+    highlight: { background: "#C7E9D5", border: "#145831" },
+    font: { color: "#167F4D" }
+  },
+  amber: {
+    background: "#FFF4D6",
+    border: "#F5C453",
+    highlight: { background: "#FFE8A8", border: "#8A4B00" },
+    font: { color: "#8A4B00" }
+  },
+  red: {
+    background: "#FDECEC",
+    border: "#D9534F",
+    highlight: { background: "#FCD1D1", border: "#B3261E" },
+    font: { color: "#B3261E" }
+  },
+  rusty: {
+    background: "#FFF0EB",
+    border: "#C2410C",
+    highlight: { background: "#FED7AA", border: "#9A3412" },
+    font: { color: "#C2410C" }
+  },
+  locked: {
+    background: "#F2F2F2",
+    border: "#D4D8D6",
+    highlight: { background: "#E5E7EB", border: "#6B7280" },
+    font: { color: "#6B7280" }
+  }
+};
+
+// Application State
 let currentStudentId = "stu-001";
 let activeQuizConceptUri = "case:math:linear_eq";
 let selectedQuizOption = null;
 
-// Helper: Check if student has unlocked a concept (all prereqs are green)
+// Vis Network Instances
+let studentNetwork = null;
+let teacherNetwork = null;
+
+// Check unlocked status
 function isConceptUnlocked(student, conceptUri) {
   const concept = CONCEPTS.find(c => c.uri === conceptUri);
   if (!concept || concept.prereqs.length === 0) return true;
@@ -334,7 +371,6 @@ function isConceptUnlocked(student, conceptUri) {
   });
 }
 
-// Find Frontier Concept for a student (unlocked, but not green)
 function getFrontierConcept(student) {
   for (const c of CONCEPTS) {
     const s = student.skills[c.uri];
@@ -347,7 +383,191 @@ function getFrontierConcept(student) {
   return CONCEPTS[CONCEPTS.length - 1];
 }
 
-// Render Student View
+// -------------------------------------------------------------
+// RENDER VIS-NETWORK MASTERY GRAPH (STUDENT VIEW)
+// -------------------------------------------------------------
+function renderStudentMasteryGraph() {
+  const container = document.getElementById("student-graph");
+  if (!container || !window.vis) return;
+
+  const student = STUDENTS.find(s => s.id === currentStudentId);
+  const frontier = getFrontierConcept(student);
+
+  // Build nodes
+  const nodes = CONCEPTS.map(c => {
+    const s = student.skills[c.uri];
+    const unlocked = isConceptUnlocked(student, c.uri);
+    let state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+    if (!unlocked) state = "locked";
+
+    const isFrontier = unlocked && c.uri === frontier.uri;
+    const palette = VIS_PALETTES[state];
+
+    // Circle radius proportional to Glicko Rating (1200 -> 18, 1800 -> 36)
+    const normalizedSize = Math.max(16, Math.min(38, Math.round((s.rating - 1100) / 25)));
+
+    return {
+      id: c.uri,
+      label: `${c.code}\n${c.title}${isFrontier ? '\n★ FRONTIER' : ''}`,
+      title: `${c.title} — Rating: ${Math.round(s.rating)} pts · RD: ${Math.round(s.rd)}`,
+      shape: "dot",
+      size: normalizedSize,
+      color: {
+        background: palette.background,
+        border: isFrontier ? "#167F4D" : palette.border,
+        highlight: palette.highlight
+      },
+      borderWidth: isFrontier ? 3 : 2,
+      font: {
+        color: palette.font.color,
+        face: "system-ui, sans-serif",
+        size: 11,
+        bold: isFrontier
+      }
+    };
+  });
+
+  // Build prerequisite edges
+  const edges = [];
+  CONCEPTS.forEach(c => {
+    c.unlocks.forEach(targetUri => {
+      edges.push({
+        from: c.uri,
+        to: targetUri,
+        arrows: "to",
+        color: { color: "#C7E9D5", highlight: "#27A95F" },
+        width: 1.5,
+        smooth: { type: "cubicBezier", roundness: 0.2 }
+      });
+    });
+  });
+
+  const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+  const options = {
+    autoResize: true,
+    layout: {
+      hierarchical: {
+        direction: "LR", // Left to Right flow (ClassroomMemory style)
+        sortMethod: "directed",
+        levelSeparation: 120,
+        nodeSpacing: 80
+      }
+    },
+    physics: {
+      hierarchicalRepulsion: {
+        nodeDistance: 90
+      }
+    },
+    interaction: {
+      hover: true,
+      zoomView: true,
+      dragView: true
+    }
+  };
+
+  if (!studentNetwork) {
+    studentNetwork = new vis.Network(container, data, options);
+    studentNetwork.on("click", function(params) {
+      if (params.nodes.length > 0) {
+        const clickedNodeUri = params.nodes[0];
+        loadConceptToQuiz(clickedNodeUri);
+      }
+    });
+  } else {
+    studentNetwork.setData(data);
+  }
+}
+
+// -------------------------------------------------------------
+// RENDER VIS-NETWORK CLASS HEATMAP GRAPH (TEACHER VIEW)
+// -------------------------------------------------------------
+function renderTeacherHeatmapGraph() {
+  const container = document.getElementById("teacher-graph");
+  if (!container || !window.vis) return;
+
+  const nodes = CONCEPTS.map(c => {
+    let totalRating = 0;
+    let greenCount = 0;
+    let redCount = 0;
+
+    STUDENTS.forEach(student => {
+      const s = student.skills[c.uri];
+      totalRating += s.rating;
+      const state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
+      if (state === "green") greenCount++;
+      if (state === "red") redCount++;
+    });
+
+    const avgRating = Math.round(totalRating / STUDENTS.length);
+    let classState = "amber";
+    if (greenCount >= 4) classState = "green";
+    else if (redCount >= 3) classState = "red";
+
+    const palette = VIS_PALETTES[classState];
+
+    return {
+      id: c.uri,
+      label: `${c.code}\n${c.title}\n(${avgRating} pts)`,
+      title: `Trung bình lớp: ${avgRating} pts (${greenCount}/6 đạt Mastered)`,
+      shape: "dot",
+      size: 26,
+      color: {
+        background: palette.background,
+        border: palette.border,
+        highlight: palette.highlight
+      },
+      borderWidth: 2,
+      font: {
+        color: palette.font.color,
+        face: "system-ui, sans-serif",
+        size: 11
+      }
+    };
+  });
+
+  const edges = [];
+  CONCEPTS.forEach(c => {
+    c.unlocks.forEach(targetUri => {
+      edges.push({
+        from: c.uri,
+        to: targetUri,
+        arrows: "to",
+        color: { color: "#D4D8D6", highlight: "#167F4D" },
+        width: 1.5,
+        smooth: { type: "cubicBezier", roundness: 0.2 }
+      });
+    });
+  });
+
+  const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+  const options = {
+    autoResize: true,
+    layout: {
+      hierarchical: {
+        direction: "LR",
+        sortMethod: "directed",
+        levelSeparation: 120,
+        nodeSpacing: 80
+      }
+    },
+    physics: false,
+    interaction: {
+      hover: true,
+      zoomView: true,
+      dragView: true
+    }
+  };
+
+  if (!teacherNetwork) {
+    teacherNetwork = new vis.Network(container, data, options);
+  } else {
+    teacherNetwork.setData(data);
+  }
+}
+
+// -------------------------------------------------------------
+// STUDENT VIEW LOGIC
+// -------------------------------------------------------------
 function renderStudentView() {
   const student = STUDENTS.find(s => s.id === currentStudentId);
   if (!student) return;
@@ -374,48 +594,17 @@ function renderStudentView() {
   document.getElementById("cnt-rusty").innerText = rustyCount;
   document.getElementById("mastery-progress-bar").style.width = `${(greenCount / 10) * 100}%`;
 
-  // Render Concepts Spine (Right column)
   const frontier = getFrontierConcept(student);
-  const spineContainer = document.getElementById("student-concepts-list");
-  spineContainer.innerHTML = "";
-
-  CONCEPTS.forEach(c => {
-    const s = student.skills[c.uri];
-    const unlocked = isConceptUnlocked(student, c.uri);
-    let state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
-    if (!unlocked) state = "locked";
-
-    const isFrontier = unlocked && c.uri === frontier.uri;
-
-    const card = document.createElement("div");
-    card.className = `concept-node-card ${isFrontier ? 'frontier' : ''}`;
-    card.innerHTML = `
-      <div class="node-title-group">
-        <b>
-          ${c.title}
-          ${isFrontier ? '<span class="status-pill" style="font-size: 10px; padding: 2px 6px;">VÙNG BIÊN (FRONTIER)</span>' : ''}
-        </b>
-        <p>${c.desc}</p>
-      </div>
-      <div class="node-meta">
-        <span class="node-rating-pill ${state}">
-          ${state === 'locked' ? 'Chưa mở' : Math.round(s.rating) + ' pts'}
-        </span>
-        <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="loadConceptToQuiz('${c.uri}')">Luyện tập</button>
-      </div>
-    `;
-    spineContainer.appendChild(card);
-  });
-
-  // Load quiz for frontier concept by default if not set
   if (!activeQuizConceptUri) {
     loadConceptToQuiz(frontier.uri);
   } else {
     loadConceptToQuiz(activeQuizConceptUri);
   }
+
+  // Render the Canvas Mastery Graph
+  renderStudentMasteryGraph();
 }
 
-// Load a concept into the Quiz Terminal
 window.loadConceptToQuiz = function(uri) {
   activeQuizConceptUri = uri;
   selectedQuizOption = null;
@@ -469,7 +658,7 @@ document.getElementById("quiz-submit-btn").onclick = function() {
   skill.rd = updated.rd;
   skill.vol = updated.volatility;
   skill.reviews += 1;
-  student.elapsedDays = 0; // Reset forgetting curve on active review
+  student.elapsedDays = 0;
 
   const newRating = Math.round(skill.rating);
   const delta = newRating - oldRating;
@@ -477,17 +666,19 @@ document.getElementById("quiz-submit-btn").onclick = function() {
   const fb = document.getElementById("quiz-feedback");
   if (isCorrect) {
     fb.className = "quiz-feedback correct";
-    fb.innerText = `Chính xác! Glicko-2 Rating: ${oldRating} ➔ ${newRating} (${delta > 0 ? '+' + delta : delta} pts). Mức độ làm chủ tăng lên.`;
+    fb.innerText = `Chính xác! Glicko-2 Rating: ${oldRating} ➔ ${newRating} (${delta > 0 ? '+' + delta : delta} pts). Đồ thị đã cập nhật!`;
   } else {
     fb.className = "quiz-feedback wrong";
-    fb.innerText = `Chưa đúng! Glicko-2 Rating: ${oldRating} ➔ ${newRating} (${delta} pts). Hệ thống đã ghi nhận lỗ hổng vào bộ nhớ.`;
+    fb.innerText = `Chưa đúng! Glicko-2 Rating: ${oldRating} ➔ ${newRating} (${delta} pts). Hệ thống đã ghi nhận lỗ hổng vào đồ thị.`;
   }
 
   renderStudentView();
   renderTeacherView();
 };
 
-// Render Teacher Heatmap Matrix & Teaching Plan
+// -------------------------------------------------------------
+// TEACHER DASHBOARD LOGIC
+// -------------------------------------------------------------
 function renderTeacherView() {
   // 1. Table Header
   const headerRow = document.getElementById("heatmap-header-row");
@@ -506,10 +697,7 @@ function renderTeacherView() {
 
   STUDENTS.forEach(student => {
     const tr = document.createElement("tr");
-    tr.onclick = (e) => {
-      // Don't open if clicked directly on an interactive button
-      openStudentDrawer(student.id);
-    };
+    tr.onclick = () => openStudentDrawer(student.id);
 
     let cellsHtml = `<td><button class="student-link-btn">${student.name}</button></td>`;
 
@@ -532,11 +720,10 @@ function renderTeacherView() {
     tbody.appendChild(tr);
   });
 
-  // 3. Contrastive Teaching Plan (ClassroomMemory ranking: Readiness × Unblocking Power)
+  // 3. Contrastive Teaching Plan
   const planList = document.getElementById("teaching-plan-list");
   planList.innerHTML = "";
 
-  // Compute gaps for each concept across the entire class
   const conceptGaps = CONCEPTS.map(c => {
     let strugglingCount = 0;
     let readyCount = 0;
@@ -546,15 +733,10 @@ function renderTeacherView() {
       const state = computeState(s.rating, s.rd, s.reviews, student.elapsedDays);
       const unlocked = isConceptUnlocked(student, c.uri);
 
-      if (state === "red" || state === "amber" || state === "rusty") {
-        strugglingCount++;
-      }
-      if (unlocked) {
-        readyCount++;
-      }
+      if (state === "red" || state === "amber" || state === "rusty") strugglingCount++;
+      if (unlocked) readyCount++;
     });
 
-    // Unblocking power: how many downstream concepts this concept unlocks
     const unblockingPower = c.unlocks.length;
     const priorityScore = (strugglingCount * 1.5) + (readyCount * 1.0) + (unblockingPower * 2.0);
 
@@ -584,9 +766,14 @@ function renderTeacherView() {
     `;
     planList.appendChild(li);
   });
+
+  // Render Vis-network Heatmap
+  renderTeacherHeatmapGraph();
 }
 
-// Render Curriculum Graph (CASE list)
+// -------------------------------------------------------------
+// CURRICULUM VIEW LOGIC
+// -------------------------------------------------------------
 function renderCurriculumView() {
   const container = document.getElementById("curriculum-list-container");
   container.innerHTML = "";
@@ -620,7 +807,9 @@ function renderCurriculumView() {
   });
 }
 
-// Student Drill-down Drawer
+// -------------------------------------------------------------
+// DRAWER & NAVIGATION
+// -------------------------------------------------------------
 function openStudentDrawer(studentId) {
   const student = STUDENTS.find(s => s.id === studentId);
   if (!student) return;
@@ -630,7 +819,7 @@ function openStudentDrawer(studentId) {
 
   let html = `
     <div style="font-size: 13px; color: var(--st-neutral-500); margin-bottom: 16px;">
-      Mã định danh: <code>${student.id}</code> · Trạng thái trí nhớ: <strong>Cognee Active</strong>
+      Mã định danh: <code>${student.id}</code> · Trạng thái: <strong>Cognee Cloud Active</strong>
     </div>
     <h4 style="font-size: 14px; font-weight: 700; color: var(--st-ink); margin-bottom: 8px;">Chi tiết từng kỹ năng:</h4>
     <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -648,7 +837,7 @@ function openStudentDrawer(studentId) {
           <b>${c.code} - ${c.title}</b>
           <div style="color: var(--st-neutral-500); font-size: 11px;">Số lần ôn: ${s.reviews} · Độ lệch RD: ${Math.round(s.rd)}</div>
         </div>
-        <span class="node-rating-pill ${state}">${state === 'locked' ? 'Chưa mở' : Math.round(s.rating) + ' pts'}</span>
+        <span class="hm-cell-badge ${state}" style="width: auto; padding: 2px 8px;">${state === 'locked' ? 'Chưa mở' : Math.round(s.rating) + ' pts'}</span>
       </div>
     `;
   });
@@ -656,7 +845,7 @@ function openStudentDrawer(studentId) {
   html += `
     </div>
     <button class="btn-primary" style="margin-top: 16px; width: 100%;" onclick="currentStudentId='${student.id}'; document.getElementById('student-select').value='${student.id}'; renderStudentView(); closeDrawer(); switchTab('student');">
-      Chuyển góc nhìn học sinh này
+      Chuyển sang học sinh này
     </button>
   `;
 
@@ -673,7 +862,6 @@ function closeDrawer() {
 document.getElementById("drawer-close-btn").onclick = closeDrawer;
 document.getElementById("drawer-backdrop").onclick = closeDrawer;
 
-// Navigation Switcher
 function switchTab(viewId) {
   document.querySelectorAll(".navlink-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.view === viewId);
@@ -681,6 +869,12 @@ function switchTab(viewId) {
   document.querySelectorAll(".view-container").forEach(view => {
     view.classList.toggle("active", view.id === `view-${viewId}`);
   });
+  if (viewId === "student" && studentNetwork) {
+    setTimeout(() => studentNetwork.fit({ animation: false }), 200);
+  }
+  if (viewId === "teacher" && teacherNetwork) {
+    setTimeout(() => teacherNetwork.fit({ animation: false }), 200);
+  }
 }
 
 document.querySelectorAll(".navlink-btn").forEach(btn => {
@@ -698,6 +892,14 @@ document.getElementById("hero-view-heatmap").onclick = () => {
   switchTab("teacher");
 };
 
+document.getElementById("btn-fit-student-graph").onclick = () => {
+  if (studentNetwork) studentNetwork.fit({ animation: true });
+};
+
+document.getElementById("btn-fit-teacher-graph").onclick = () => {
+  if (teacherNetwork) teacherNetwork.fit({ animation: true });
+};
+
 // Populate Student Selector
 const selectEl = document.getElementById("student-select");
 STUDENTS.forEach(s => {
@@ -712,17 +914,17 @@ selectEl.onchange = (e) => {
   renderStudentView();
 };
 
-// Simulate Forgetting Curve (Ebbinghaus Decay Button: +14 days)
+// Ebbinghaus Decay Button (+14 days)
 document.getElementById("decay-btn").onclick = function() {
   STUDENTS.forEach(s => {
     s.elapsedDays += 14;
   });
   renderStudentView();
   renderTeacherView();
-  alert("Đã tua nhanh thời gian +14 ngày! Một số kỹ năng chưa được ôn tập định kỳ đã suy giảm và chuyển sang trạng thái cần ôn (Rusty).");
+  alert("Đã tua nhanh thời gian +14 ngày! Một số kỹ năng trên Mastery Graph đã đổi màu sang trạng thái cần ôn (Rusty).");
 };
 
-// Ask Memory (Student assistant)
+// Ask Memory
 document.getElementById("ask-student-btn").onclick = function() {
   const query = document.getElementById("ask-student-input").value.trim();
   const respEl = document.getElementById("ask-student-response");
@@ -732,10 +934,10 @@ document.getElementById("ask-student-btn").onclick = function() {
   const frontier = getFrontierConcept(student);
 
   respEl.style.display = "block";
-  respEl.innerHTML = `<strong>Phản hồi từ trí nhớ đồ thị của ${student.name}:</strong> Dựa trên dữ liệu học tập cá nhân, bạn đã làm chủ tốt các phép toán số nguyên cơ bản. Điểm bạn nên tập trung tiếp theo là <em>${frontier.title} (${frontier.code})</em> vì đây là mắt xích trực tiếp dẫn tới phương trình bậc nhất.`;
+  respEl.innerHTML = `<strong>Phản hồi từ đồ thị trí nhớ của ${student.name}:</strong> Dựa trên dữ liệu học tập cá nhân, bạn đã làm chủ tốt các phép toán số nguyên cơ bản. Điểm bạn nên tập trung tiếp theo là <em>${frontier.title} (${frontier.code})</em> vì đây là mắt xích trực tiếp dẫn tới phương trình bậc nhất.`;
 };
 
-// Ask the Class (Teacher query)
+// Ask the Class
 document.getElementById("class-ask-btn").onclick = function() {
   const query = document.getElementById("class-ask-input").value.trim();
   const respEl = document.getElementById("class-ask-response");

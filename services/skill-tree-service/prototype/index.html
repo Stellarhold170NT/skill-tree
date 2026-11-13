@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkillTree — Decode the invisible thread</title>
+  <title>SkillTree — Mastery Graph & Adaptive Classroom</title>
+  <!-- vis-network standalone for the interactive canvas graph -->
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,7 +15,7 @@
     <header class="topbar">
       <a class="brand" href="#student" id="brand-link">
         <div class="brand-icon">
-          <!-- Exact Brand Icon SVG from skilltree-brand assets/icon.svg -->
+          <!-- Official SkillTree SVG Vector Brand Logo -->
           <svg viewBox="0 0 483 374" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M-2.8 370.5C-2 369.3-1.3 368.3-.2 367.5 5.9 363.1 13.4 359.7 19.9 355.9L61.4 331.3 194.9 251.6c9.1-5.3 18-10.8 26.8-16.6 5.5-3.6 11.5-8.5 17.4-11.2V-3.5C228.3 6.2 212.8 12.7 200.4 20.4L15.3 124.8-1.4 135.1v174.2c0 15.5 2.2 47.6-1.4 61.2z" fill="#56C974" transform="matrix(1 0 0 -1 0 374)"/>
             <path d="M240.4 369.5V139.1L124.8 70.3C95.6 53.1 66.2 36.4 37.4 18.4 24.5 11.4 12 3-1.2-3.5L-3.1-1.5v227.3l.6.7c17.9 11 36.5 21 54.5 31.7 37.8 22.8 75.8 45.4 114 67.7 24.3 14.2 52.1 26.6 74.4 43.6z" fill="#27A95F" transform="matrix(1 0 0 -1 241 374)"/>
@@ -26,21 +28,21 @@
         </div>
       </a>
 
-      <!-- Primary Navigation (Matches ClassroomMemory: student, teacher, curriculum) -->
+      <!-- Primary Navigation -->
       <nav class="navlinks" aria-label="Primary">
         <button class="navlink-btn active" data-view="student">Học sinh</button>
         <button class="navlink-btn" data-view="teacher">Giáo viên</button>
         <button class="navlink-btn" data-view="curriculum">Cây tri thức (CASE)</button>
       </nav>
 
-      <!-- Header actions (Matches ClassroomMemory: age +30d & status pill) -->
+      <!-- Header actions (ClassroomMemory pattern) -->
       <div class="header-actions">
         <button id="decay-btn" class="btn-decay" title="Mô phỏng lãng quên Ebbinghaus">Tua nhanh +14 ngày</button>
-        <span class="status-pill"><i class="dot"></i>Glicko-2 & Memory Live</span>
+        <span class="status-pill"><i class="dot"></i>Glicko-2 & Vis.Graph Live</span>
       </div>
     </header>
 
-    <!-- Hero / Headline Band (Matches ClassroomMemory structure) -->
+    <!-- Hero / Headline Band -->
     <section class="hero-band">
       <div class="hero-copy">
         <p class="overline">KIẾN TRÚC MẠNG TRI THỨC & THÍCH ỨNG THEO ĐỒ THỊ</p>
@@ -76,21 +78,21 @@
         </div>
         <div class="cockpit-storage">
           <div class="cockpit-storage-head">
-            <span>Cognee Cloud & Memory Graph</span>
-            <span>Trạng thái: Sẵn sàng</span>
+            <span>Cognee Cloud & Mastery Graph</span>
+            <span>Trạng thái: Trực tiếp</span>
           </div>
-          <p>Dữ liệu tri thức được lưu trữ liên tục. Không mất trạng thái khi tải lại trang.</p>
+          <p>Đồ thị mạng lưới kỹ năng (vis-network) phản ứng thời gian thực với mỗi lần nộp bài quiz.</p>
         </div>
       </aside>
     </section>
 
     <!-- ======================================================== -->
-    <!-- VIEW 1: STUDENT WORKBENCH                                -->
+    <!-- VIEW 1: STUDENT WORKBENCH WITH LIVE MASTERY GRAPH        -->
     <!-- ======================================================== -->
     <main id="view-student" class="view-container active">
       <div class="view-heading">
-        <h2>Không gian Học sinh — Lộ trình học tập thích ứng</h2>
-        <p>Thuật toán tự động tìm điểm biên (Frontier): kỹ năng bạn đã đủ điều kiện tiên quyết và sẵn sàng làm chủ.</p>
+        <h2>Không gian Học sinh — Mastery Graph & Lộ trình thích ứng</h2>
+        <p>Bên trái là Quiz Terminal nạp điểm Glicko-2. Bên phải là <strong>Mastery Graph trực quan</strong> (vis-network): kích thước nút biểu thị độ làm chủ, màu sắc hiển thị trạng thái.</p>
       </div>
 
       <div class="workbench-grid">
@@ -125,7 +127,7 @@
 
             <div class="quiz-box">
               <div class="quiz-frontier-tag" id="quiz-frontier-tag">GỢI Ý BIÊN GIỚI TRI THỨC (FRONTIER)</div>
-              <div class="quiz-question-title" id="quiz-question-text">Chọn một kỹ năng bên phải để làm quiz hoặc nhấn bắt đầu.</div>
+              <div class="quiz-question-title" id="quiz-question-text">Chọn một nút trên đồ thị hoặc nhấn làm bài.</div>
               <div class="quiz-options-list" id="quiz-options-container">
                 <!-- Dynamically populated options -->
               </div>
@@ -145,24 +147,31 @@
           </div>
         </div>
 
-        <!-- Right Column: Concepts Spine / Mastery Graph -->
+        <!-- Right Column: Interactive Mastery Graph (Canvas Network) -->
         <div>
-          <div class="card-panel">
-            <div class="concepts-spine-header">
-              <h3 style="font-family: var(--font-serif); font-size: 16px; color: var(--st-ink); font-weight: 700;">
-                Cây tiến độ kỹ năng (Mastery Spine)
-              </h3>
-              <div class="spine-legend">
-                <span class="legend-badge"><i class="badge-dot green"></i> Làm chủ</span>
-                <span class="legend-badge"><i class="badge-dot amber"></i> Đang học</span>
-                <span class="legend-badge"><i class="badge-dot red"></i> Cần học</span>
-                <span class="legend-badge"><i class="badge-dot rusty"></i> Cần ôn tập</span>
-                <span class="legend-badge"><i class="badge-dot locked"></i> Chưa mở</span>
+          <div class="card-panel graph-panel-wrapper">
+            <div class="graph-panel-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="dot-indicator green"></span>
+                <h3 style="font-family: var(--font-serif); font-size: 16px; color: var(--st-ink); font-weight: 700;">
+                  Mastery Graph (Đồ thị kỹ năng trực quan)
+                </h3>
               </div>
+              <button id="btn-fit-student-graph" class="btn-ghost" style="padding: 3px 8px; font-size: 11px;">Căn giữa đồ thị</button>
             </div>
 
-            <div id="student-concepts-list">
-              <!-- Rendered dynamically -->
+            <!-- The canvas container where vis-network renders -->
+            <div id="student-graph" class="canvas-graph-container"></div>
+
+            <div class="graph-legend-strip">
+              <span class="legend-badge"><i class="badge-dot green"></i> Làm chủ (Mastered)</span>
+              <span class="legend-badge"><i class="badge-dot amber"></i> Đang học (Learning)</span>
+              <span class="legend-badge"><i class="badge-dot red"></i> Cần học (Gap)</span>
+              <span class="legend-badge"><i class="badge-dot rusty"></i> Cần ôn (Rusty)</span>
+              <span class="legend-badge"><i class="badge-dot locked"></i> Chưa mở (Locked)</span>
+            </div>
+            <div class="graph-tip-note">
+              * Vòng tròn to = Rating cao · Mũi tên = Điều kiện tiên quyết (Prerequisites) · Nhấp vào nút để nạp câu hỏi vào Quiz
             </div>
           </div>
         </div>
@@ -170,33 +179,49 @@
     </main>
 
     <!-- ======================================================== -->
-    <!-- VIEW 2: TEACHER DASHBOARD                                -->
+    <!-- VIEW 2: TEACHER DASHBOARD (CLASS HEATMAP & TEACHING PLAN) -->
     <!-- ======================================================== -->
     <main id="view-teacher" class="view-container">
       <div class="view-heading">
-        <h2>Bảng điều khiển Giáo viên — Ma trận Lớp học & Kế hoạch Can thiệp</h2>
-        <p>Phân tích đa chiều trên toàn bộ học sinh: phát hiện lỗ hổng gốc rễ và tự động xếp thứ tự ưu tiên can thiệp.</p>
+        <h2>Bảng điều khiển Giáo viên — Class Heatmap Graph & Ma trận Lớp</h2>
+        <p>Phân tích đa chiều trên toàn bộ học sinh: đồ thị nhiệt lớp học trực quan kèm ma trận điểm số chi tiết.</p>
       </div>
 
       <div class="teacher-grid">
-        <!-- Main: Heatmap Matrix Table -->
+        <!-- Main: Heatmap Graph + Table -->
         <div>
+          <!-- Teacher Graph: Class Heat Map Canvas -->
+          <div class="card-panel graph-panel-wrapper" style="margin-bottom: 16px;">
+            <div class="graph-panel-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="dot-indicator blue"></span>
+                <h3 style="font-family: var(--font-serif); font-size: 15px; color: var(--st-ink); font-weight: 700;">
+                  Class Heat Map Graph (Điểm trung bình cả lớp theo từng kỹ năng)
+                </h3>
+              </div>
+              <button id="btn-fit-teacher-graph" class="btn-ghost" style="padding: 3px 8px; font-size: 11px;">Căn giữa</button>
+            </div>
+            <div id="teacher-graph" class="canvas-graph-container" style="height: 380px;"></div>
+            <div class="graph-tip-note">
+              * Màu sắc trên đồ thị thể hiện mức độ nắm vững trung bình của cả 6 học sinh trong lớp.
+            </div>
+          </div>
+
+          <!-- Heatmap Matrix Table -->
           <div class="heatmap-table-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
               <h3 style="font-family: var(--font-serif); font-size: 15px; color: var(--st-ink); font-weight: 700;">
-                Ma trận trạng thái lớp học (Classroom Heatmap)
+                Ma trận trạng thái lớp học (Classroom Matrix)
               </h3>
-              <span style="font-size: 12px; color: var(--st-neutral-500);">Nhấp vào tên học sinh để xem chi tiết</span>
+              <span style="font-size: 12px; color: var(--st-neutral-500);">Nhấp vào tên học sinh để mở hồ sơ chi tiết</span>
             </div>
             <table class="heatmap-table">
               <thead>
                 <tr id="heatmap-header-row">
                   <th>Học sinh</th>
-                  <!-- 10 Concept headers inserted dynamically -->
                 </tr>
               </thead>
               <tbody id="heatmap-body">
-                <!-- Students rows inserted dynamically -->
               </tbody>
             </table>
           </div>
@@ -223,7 +248,7 @@
               <small>Graph-reasoned</small>
             </div>
             <p style="font-size: 12px; color: var(--st-neutral-500); margin-bottom: 8px;">
-              Xếp hạng theo triết lý: <em>Độ sẵn sàng của lớp × Sức mạnh mở khoá kiến thức tiếp theo</em>.
+              Xếp hạng theo triết lý ClassroomMemory: <em>Độ sẵn sàng của lớp × Sức mạnh mở khoá kiến thức tiếp theo</em>.
             </p>
             <ul id="teaching-plan-list" class="teaching-plan-list">
               <!-- Inserted dynamically -->

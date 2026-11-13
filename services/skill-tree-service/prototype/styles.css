@@ -61,7 +61,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Site Shell (ClassroomMemory style centered layout with hairline borders) */
+/* Site Shell */
 .site-shell {
   width: min(1400px, calc(100vw - 32px));
   min-height: 100vh;
@@ -283,7 +283,7 @@ body {
   color: var(--st-ink);
 }
 
-/* System Cockpit Card (Right column in hero) */
+/* System Cockpit Card */
 .cockpit-panel {
   border-left: 1px solid var(--st-neutral-300);
   background: var(--st-surface);
@@ -351,7 +351,7 @@ body {
   line-height: 1.4;
 }
 
-/* Sub-views layout */
+/* Views Layout */
 .view-container {
   display: none;
   padding: 24px 32px;
@@ -362,7 +362,6 @@ body {
   display: block;
 }
 
-/* Section Headlines */
 .view-heading {
   margin-bottom: 20px;
 }
@@ -379,14 +378,13 @@ body {
   color: var(--st-neutral-500);
 }
 
-/* STUDENT VIEW: 2-column Workbench */
+/* STUDENT WORKBENCH: 2 Columns */
 .workbench-grid {
   display: grid;
-  grid-template-columns: 460px 1fr;
+  grid-template-columns: 440px 1fr;
   gap: 24px;
 }
 
-/* Command & Health Panels */
 .card-panel {
   background: var(--st-surface);
   border: 1px solid var(--st-neutral-300);
@@ -417,7 +415,7 @@ body {
   color: var(--st-neutral-500);
 }
 
-/* Mastery Summary Bar */
+/* Mastery Progress Track */
 .mastery-progress-track {
   height: 8px;
   background: var(--st-neutral-100);
@@ -579,18 +577,62 @@ body {
   display: none;
 }
 
-/* Right Column: Concepts Spine / Mastery Graph */
-.concepts-spine-header {
+/* VIS-NETWORK MASTERY GRAPH STYLING (Identical to ClassroomMemory) */
+.graph-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.graph-panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--st-neutral-100);
 }
 
-.spine-legend {
+.dot-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-indicator.green { background: var(--st-primary-500); }
+.dot-indicator.blue { background: #3B82F6; }
+
+.canvas-graph-container {
+  width: 100%;
+  height: 520px;
+  min-height: 480px;
+  position: relative;
+  background:
+    linear-gradient(var(--st-neutral-100) 1px, transparent 1px),
+    linear-gradient(90deg, var(--st-neutral-100) 1px, transparent 1px),
+    #FAFCFB;
+  background-size: 40px 40px;
+  border: 1px solid var(--st-neutral-300);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.canvas-graph-container .vis-network {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.graph-legend-strip {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
   font-size: 11px;
+  margin-top: 10px;
 }
 
 .legend-badge {
@@ -611,81 +653,13 @@ body {
 .badge-dot.rusty { background: #E65100; }
 .badge-dot.locked { background: var(--st-neutral-300); }
 
-.concept-node-card {
-  border: 1px solid var(--st-neutral-300);
-  border-radius: var(--r-md);
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  background: var(--st-surface);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.15s ease;
-}
-
-.concept-node-card:hover {
-  border-color: var(--st-primary-400);
-}
-
-.concept-node-card.frontier {
-  border: 1.5px solid var(--st-primary-500);
-  background: var(--st-primary-50);
-}
-
-.node-title-group b {
-  font-size: 14px;
-  color: var(--st-ink);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.node-title-group p {
-  font-size: 12px;
-  color: var(--st-neutral-500);
-  margin-top: 2px;
-}
-
-.node-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.node-rating-pill {
-  font-family: var(--font-mono);
+.graph-tip-note {
   font-size: 11px;
-  padding: 3px 8px;
-  border-radius: var(--r-full);
-}
-
-.node-rating-pill.green {
-  background: var(--st-success-tint);
-  color: var(--st-success-text);
-}
-
-.node-rating-pill.amber {
-  background: var(--st-warn-tint);
-  color: var(--st-warn);
-}
-
-.node-rating-pill.red {
-  background: var(--st-danger-tint);
-  color: var(--st-danger);
-}
-
-.node-rating-pill.rusty {
-  background: #FFF0EB;
-  color: #C2410C;
-}
-
-.node-rating-pill.locked {
-  background: var(--st-neutral-100);
   color: var(--st-neutral-500);
+  margin-top: 6px;
 }
 
-/* TEACHER DASHBOARD (Table-First, ClassroomMemory philosophy) */
+/* TEACHER DASHBOARD */
 .teacher-grid {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -744,7 +718,6 @@ body {
   padding: 0;
 }
 
-/* Heatmap cell styling */
 .hm-cell {
   text-align: center;
   padding: 6px 4px !important;
@@ -830,7 +803,7 @@ body {
   cursor: pointer;
 }
 
-/* CURRICULUM GRAPH VIEW (CASE Specification) */
+/* CURRICULUM GRAPH VIEW */
 .curriculum-list {
   display: flex;
   flex-direction: column;
@@ -882,7 +855,7 @@ body {
   margin-bottom: 2px;
 }
 
-/* Drill-Down Drawer (Sliding sidebar for student inspector) */
+/* Drawer */
 .drawer-backdrop {
   display: none;
   position: fixed;
