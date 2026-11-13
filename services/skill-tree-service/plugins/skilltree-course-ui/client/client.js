@@ -888,36 +888,47 @@ window.__ModuleLoader__.load({ id: "skilltree-course-ui", factory: (require) => 
 					),
 					caseItems.length === 0 ? h("div", { style: { textAlign: "center", padding: "30px", color: T.labelTertiary, fontSize: "13px" } }, "Chưa có chuẩn đầu ra nào được thiết lập.") :
 						h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-							[
-								{ chapter: "Chương 1: Kiến thức nền tảng & Cơ sở lý thuyết", range: "Tuần 1 – Tuần 4", items: caseItems.slice(0, 2) },
-								{ chapter: "Chương 2: Các phương pháp tính toán & Ứng dụng trọng tâm", range: "Tuần 5 – Tuần 9", items: caseItems.slice(2, 5) },
-								{ chapter: "Chương 3: Tổng hợp chuyên sâu & Đánh giá năng lực cuối kỳ", range: "Tuần 10 – Tuần 15", items: caseItems.slice(5) },
-							].filter(g => g.items.length > 0).map((grp, idx) => h("div", {
-								key: idx,
-								style: {
-									background: T.field, border: `0.5px solid ${T.borderLight}`, borderRadius: "10px",
-									padding: "16px"
-								}
-							},
-								h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" } },
-									h("h4", { style: { margin: 0, fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, grp.chapter),
-									h("span", { style: { fontSize: "12px", color: T.labelTertiary } }, grp.range)
-								),
-								h("div", { style: { display: "flex", flexDirection: "column", gap: "6px" } },
-									grp.items.map(it => h("div", {
-										key: it.id,
-										style: {
-											display: "flex", alignItems: "center", gap: "8px", fontSize: "13px",
-											color: T.labelSecondary, padding: "4px 8px", background: "rgba(255,255,255,0.03)", borderRadius: "6px"
-										}
-									},
-										h("span", { style: { color: T.brand, fontWeight: 600, fontSize: "12px", fontFamily: "monospace" } },
-											it.humanCodingScheme || it.human_coding_scheme || "CLO"
-										),
-										h("span", null, it.fullStatement || it.full_statement)
-									))
-								)
-							))
+							(() => {
+								const isMathLA = caseItems.some(it => (it.humanCodingScheme || it.human_coding_scheme || "").startsWith("MATH.LA."));
+								const chapters = isMathLA ? [
+									{ chapter: "Chương 1: Ma trận & Hệ phương trình đại số tuyến tính", range: "Tuần 1 – Tuần 4 (12 tiết lý thuyết + bài tập)", items: caseItems.filter(it => ["MATH.LA.01", "MATH.LA.02", "MATH.LA.03"].includes(it.humanCodingScheme || it.human_coding_scheme)) },
+									{ chapter: "Chương 2: Định thức (Determinant) & Ma trận nghịch đảo", range: "Tuần 5 – Tuần 7 (9 tiết lý thuyết + bài tập)", items: caseItems.filter(it => ["MATH.LA.04", "MATH.LA.05"].includes(it.humanCodingScheme || it.human_coding_scheme)) },
+									{ chapter: "Chương 3: Không gian vector Euclide & 4 Không gian con cơ bản", range: "Tuần 8 – Tuần 11 (12 tiết lý thuyết + thảo luận)", items: caseItems.filter(it => ["MATH.LA.06", "MATH.LA.07"].includes(it.humanCodingScheme || it.human_coding_scheme)) },
+									{ chapter: "Chương 4: Trị riêng, Vector riêng & Phép biến đổi trực giao", range: "Tuần 12 – Tuần 14 (9 tiết lý thuyết + thực hành máy)", items: caseItems.filter(it => ["MATH.LA.08", "MATH.LA.09"].includes(it.humanCodingScheme || it.human_coding_scheme)) },
+									{ chapter: "Chương 5: Phân tích SVD & Ứng dụng khoa học dữ liệu", range: "Tuần 15 (3 tiết tổng kết chuyên đề)", items: caseItems.filter(it => ["MATH.LA.10"].includes(it.humanCodingScheme || it.human_coding_scheme)) },
+								] : [
+									{ chapter: "Chương 1: Kiến thức nền tảng & Cơ sở lý thuyết", range: "Tuần 1 – Tuần 4", items: caseItems.slice(0, Math.max(1, Math.ceil(caseItems.length / 3))) },
+									{ chapter: "Chương 2: Các phương pháp tính toán & Ứng dụng trọng tâm", range: "Tuần 5 – Tuần 9", items: caseItems.slice(Math.max(1, Math.ceil(caseItems.length / 3)), Math.ceil((caseItems.length * 2) / 3)) },
+									{ chapter: "Chương 3: Tổng hợp chuyên sâu & Đánh giá năng lực cuối kỳ", range: "Tuần 10 – Tuần 15", items: caseItems.slice(Math.ceil((caseItems.length * 2) / 3)) },
+								];
+
+								return chapters.filter(g => g.items.length > 0).map((grp, idx) => h("div", {
+									key: idx,
+									style: {
+										background: T.field, border: `0.5px solid ${T.borderLight}`, borderRadius: "10px",
+										padding: "16px"
+									}
+								},
+									h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" } },
+										h("h4", { style: { margin: 0, fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, grp.chapter),
+										h("span", { style: { fontSize: "12px", color: T.labelTertiary } }, grp.range)
+									),
+									h("div", { style: { display: "flex", flexDirection: "column", gap: "6px" } },
+										grp.items.map(it => h("div", {
+											key: it.id,
+											style: {
+												display: "flex", alignItems: "center", gap: "8px", fontSize: "13px",
+												color: T.labelSecondary, padding: "4px 8px", background: "rgba(255,255,255,0.03)", borderRadius: "6px"
+											}
+										},
+											h("span", { style: { color: T.brand, fontWeight: 600, fontSize: "12px", fontFamily: "monospace" } },
+												it.humanCodingScheme || it.human_coding_scheme || "CLO"
+											),
+											h("span", null, it.fullStatement || it.full_statement)
+										))
+									)
+								));
+							})()
 						)
 				) :
 
