@@ -33,6 +33,10 @@
     - id: skilltree-teacher-ui
       name: 'skilltree-teacher-ui'
 
+    # === Tab Học tập (vai-youtube-news: Nguồn học -> Bài học -> Video & Bài viết) ===
+    - id: vai-youtube-news
+      name: 'vai-youtube-news'
+
     # === Brand: Tam thoi disable skilltree-brand (xanh la) -> chuyen qua vai-branding-plugin ===
     - id: skilltree-brand
       disabled: true

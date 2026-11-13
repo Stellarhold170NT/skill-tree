@@ -1,0 +1,62 @@
+import { useEffect, useRef, useState } from 'react';
+import { Icon } from './icons.jsx';
+import { isBilibiliEmbed } from '../video.js';
+
+// Bilibili's player loads straight from its own address; YouTube needs the loopback page and a sign-in aware view.
+export function VideoPlayer({ embed, playerUrl }) {
+  return isBilibiliEmbed(embed) ? <BilibiliPlayer embed={embed} /> : <YouTubePlayer embed={embed} playerUrl={playerUrl} />;
+}
+
+function BilibiliPlayer({ embed }) {
+  const params = new URL(embed).searchParams;
+  const part = Number(params.get('p')) || 1;
+  const watchUrl = `https://www.bilibili.com/video/${params.get('bvid')}/${part > 1 ? `?p=${part}` : ''}`;
+  return <div style={{ marginBottom:26 }}>
+    <iframe className="qrs-video-frame" src={embed} title="Trình phát video Bilibili" loading="lazy" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen style={{ marginBottom:8 }} />
+    <a className="qmrss-btn" href={watchUrl} target="_blank" rel="noopener noreferrer"><Icon name="external-link" size={16} />Mở trên Bilibili</a>
+  </div>;
+}
+
+function YouTubePlayer({ embed, playerUrl }) {
+  const bridge = typeof window !== 'undefined' ? window.dshDesktop?.browser : undefined;
+  const [lease, setLease] = useState(null);
+  const [error, setError] = useState('');
+  const watchUrl = `https://www.youtube.com/watch?v=${new URL(embed).pathname.split('/').pop()}`;
+  const openYouTube = () => window.open(watchUrl, '_blank', 'noopener,noreferrer');
+  const view = useRef(null);
+  const loaded = useRef(false);
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent.replace(/\sElectron\/\S+/g, '').replace(/\sDeepSeek[\w-]*\/\S+/g, '') : undefined;
+  useEffect(() => {
+    if (!bridge || !playerUrl) return;
+    let cancelled = false;
+    let acquired;
+    let unsubscribe;
+    void bridge.acquire('qiaomu-rss:youtube').then(value => {
+      acquired = value;
+      if (cancelled) { void bridge.release(value.lease); return; }
+      // Sign-in and other popup actions go to the video in the user's browser.
+      unsubscribe = bridge.onOpenRequested(value.lease, openYouTube);
+      setLease(value);
+    }).catch(e => setError(e.message));
+    return () => { cancelled = true; unsubscribe?.(); if (acquired) void bridge.release(acquired.lease); };
+  }, [bridge, playerUrl]);
+  useEffect(() => {
+    const element = view.current;
+    if (!element || !lease) return;
+    loaded.current = false;
+    const ready = () => {
+      if (loaded.current) return;
+      loaded.current = true;
+      element.setUserAgent(userAgent);
+      void element.loadURL(playerUrl, { userAgent }).catch(e => setError(e.message));
+    };
+    element.addEventListener('dom-ready', ready);
+    return () => element.removeEventListener('dom-ready', ready);
+  }, [lease, playerUrl]);
+  const externalLink = <a className="qmrss-btn" href={watchUrl} target="_blank" rel="noopener noreferrer"><Icon name="external-link" size={16} />Mở trên YouTube</a>;
+  if (!bridge || !playerUrl || error) return <div style={{ marginBottom:26 }}><iframe className="qrs-video-frame" src={playerUrl || embed} title="Trình phát video YouTube" loading="lazy" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />{error && <div role="alert">Trình phát tạm không khả dụng</div>}{externalLink}</div>;
+  return <div style={{ marginBottom:26 }}>
+    {lease ? <webview ref={view} className="qrs-video-frame" style={{ marginBottom:8 }} src={`about:blank#${lease.lease}`} partition={lease.partition} allowpopups="true" useragent={userAgent} title="Trình phát video YouTube" /> : <div role="status">Đang tải trình phát…</div>}
+    {externalLink}
+  </div>;
+}

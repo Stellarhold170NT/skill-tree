@@ -1,0 +1,62 @@
+{
+  "name": "vai-youtube-news",
+  "description": "Vai YouTube News: AI Engineer video feed, explanations and glossary inside DSH, powered by the local vai-crawler service",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "youtube",
+    "vaiplatform"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "prepack": "npm run build"
+  },
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "cordis.patch.yml",
+    "lib"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "meta": {
+      "title": "Vai YouTube News",
+      "description": "News feed kenh AI Engineer: video moi, giai thich va bang thuat ngu tu vai-crawler"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "lucide-react": "^0.539.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

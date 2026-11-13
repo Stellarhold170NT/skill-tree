@@ -1,0 +1,4 @@
+# vai-youtube-news · host plugin row (bundle patch, applied via dsh.profile.bundles)
+- insert:
+    - id: vai-youtube-news
+      name: 'vai-youtube-news'
