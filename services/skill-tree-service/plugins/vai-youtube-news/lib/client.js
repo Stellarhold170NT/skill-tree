@@ -19529,8 +19529,10 @@ function ensureStyles() {
   style.textContent = PANEL_CSS + refinements_default;
   document.head.appendChild(style);
 }
-function ReaderIcon({ size = 18, active = false }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { style: { color: active ? "var(--dsw-alias-brand-primary)" : "inherit", display: "inline-flex", alignItems: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Icon2, { name: "tv", size, strokeWidth: 1.8 }) });
+function ReaderIcon(props) {
+  const active = Boolean(props && props.active);
+  const size = props && props.size ? props.size : 18;
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("span", { style: { color: active ? "#fd505a" : "inherit", display: "inline-flex", alignItems: "center" }, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Icon2, { name: "tv", size, strokeWidth: 1.8, stroke: active ? "#fd505a" : "currentColor" }) });
 }
 function formatDate(value) {
   if (!value) return "";

@@ -247,10 +247,12 @@ function ensureStyles() {
 }
 
 /** Sidebar entry icon; receives {size, active} from the host sidebar. */
-export function ReaderIcon({ size = 18, active = false }) {
+export function ReaderIcon(props) {
+  const active = Boolean(props && props.active);
+  const size = props && props.size ? props.size : 18;
   return (
-    <span style={{ color: active ? 'var(--dsw-alias-brand-primary)' : 'inherit', display: 'inline-flex', alignItems: 'center' }}>
-      <Icon name="rss" size={size} strokeWidth={1.8} />
+    <span style={{ color: active ? '#fd505a' : 'inherit', display: 'inline-flex', alignItems: 'center' }}>
+      <Icon name="tv" size={size} strokeWidth={1.8} stroke={active ? '#fd505a' : 'currentColor'} />
     </span>
   );
 }

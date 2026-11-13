@@ -678,10 +678,10 @@ window.__ModuleLoader__.load({ id: "skilltree-class-ui", factory: (require) => {
 
 	function SidebarIcon(props) {
 		const active = Boolean(props && props.active);
-		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? "var(--dsw-alias-brand-primary, #fd505a)" : "inherit" } },
+		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? "#fd505a" : "inherit" } },
 			h("svg", {
 				xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", width: 18, height: 18,
-				fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round"
+				fill: "none", stroke: active ? "#fd505a" : "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round"
 			},
 				h("path", { d: "M22 10v6M2 10l10-5 10 5-10 5z" }),
 				h("path", { d: "M6 12v5c3 3 9 3 12 0v-5" })
