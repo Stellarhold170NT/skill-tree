@@ -70,7 +70,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		noneSoft: "rgba(255, 255, 255, 0.03)",
 	};
 
-	const FONT = 'var(--dsw-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)';
+	const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 	const MONO = 'ui-monospace, SFMono-Regular, Menlo, Cascadia Mono, Consolas, monospace';
 
 	/* Balanced two-line label from Classroom Memory */
@@ -816,7 +816,8 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		/* ---- RENDER (Layout & styling 1:1 "Tổng quan lớp (bản gọn).html") ---- */
 		return h("div", {
 			style: {
-				fontFamily: FONT, background: S.bg, color: S.label,
+				fontFamily: FONT, fontSize: "14px", lineHeight: 1.5, letterSpacing: "-0.01em",
+				background: S.bg, color: S.label,
 				minHeight: "100%", width: "100%", height: "100%", maxHeight: "100%",
 				overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch",
 				boxSizing: "border-box", padding: 0
@@ -929,9 +930,9 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 							padding: "14px 16px"
 						}
 					},
-						h("small", { style: { color: S.l3, fontSize: "12px", display: "block" } }, "Học sinh"),
-						h("b", { style: { display: "block", fontSize: "26px", fontWeight: 600, lineHeight: 1.25, margin: "2px 0" } }, metrics.total),
-						h("em", { style: { fontStyle: "normal", fontSize: "12px", color: S.l2 } }, "trong " + (metrics.currentClassTitle.toLowerCase().startsWith("lớp") ? metrics.currentClassTitle : "lớp " + metrics.currentClassTitle))
+						h("small", { style: { color: S.l3, fontSize: "12px", fontWeight: 400, display: "block", letterSpacing: "0.01em" } }, "Học sinh"),
+						h("b", { style: { display: "block", fontSize: "24px", fontWeight: 600, lineHeight: 1.2, margin: "2px 0 3px", letterSpacing: "-0.02em" } }, metrics.total),
+						h("em", { style: { fontStyle: "normal", fontSize: "12px", fontWeight: 400, color: S.l2, letterSpacing: "-0.005em" } }, "trong " + (metrics.currentClassTitle.toLowerCase().startsWith("lớp") ? metrics.currentClassTitle : "lớp " + metrics.currentClassTitle))
 					),
 
 					// KPI 2: Chỗ hổng lớn nhất
@@ -941,9 +942,9 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 							padding: "14px 16px"
 						}
 					},
-						h("small", { style: { color: S.l3, fontSize: "12px", display: "block" } }, "Chỗ hổng lớn nhất"),
-						h("b", { style: { display: "block", fontSize: "26px", fontWeight: 600, lineHeight: 1.25, margin: "2px 0" } }, metrics.worstGapName),
-						h("em", { style: { fontStyle: "normal", fontSize: "12px", color: S.l2 } }, metrics.worstGapCode + " · cả lớp nắm " + metrics.worstGapPct + "%")
+						h("small", { style: { color: S.l3, fontSize: "12px", fontWeight: 400, display: "block", letterSpacing: "0.01em" } }, "Chỗ hổng lớn nhất"),
+						h("b", { style: { display: "block", fontSize: "24px", fontWeight: 600, lineHeight: 1.2, margin: "2px 0 3px", letterSpacing: "-0.02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, metrics.worstGapName),
+						h("em", { style: { fontStyle: "normal", fontSize: "12px", fontWeight: 400, color: S.l2, letterSpacing: "-0.005em" } }, metrics.worstGapCode + " · cả lớp nắm " + metrics.worstGapPct + "%")
 					),
 
 					// KPI 3: Kỹ năng cả lớp còn yếu
@@ -953,9 +954,9 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 							padding: "14px 16px"
 						}
 					},
-						h("small", { style: { color: S.l3, fontSize: "12px", display: "block" } }, "Kỹ năng cả lớp còn yếu"),
-						h("b", { style: { display: "block", fontSize: "26px", fontWeight: 600, lineHeight: 1.25, margin: "2px 0", color: S.red } }, metrics.weakConcepts + " / " + metrics.totalConcepts),
-						h("em", { style: { fontStyle: "normal", fontSize: "12px", color: S.l2 } }, "cần ưu tiên giảng lại")
+						h("small", { style: { color: S.l3, fontSize: "12px", fontWeight: 400, display: "block", letterSpacing: "0.01em" } }, "Kỹ năng cả lớp còn yếu"),
+						h("b", { style: { display: "block", fontSize: "24px", fontWeight: 600, lineHeight: 1.2, margin: "2px 0 3px", letterSpacing: "-0.02em", color: S.red } }, metrics.weakConcepts + " / " + metrics.totalConcepts),
+						h("em", { style: { fontStyle: "normal", fontSize: "12px", fontWeight: 400, color: S.l2, letterSpacing: "-0.005em" } }, "cần ưu tiên giảng lại")
 					)
 				),
 
@@ -982,7 +983,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 						}
 					},
 						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2px" } },
-							h("h2", { style: { fontSize: "15px", fontWeight: 600, margin: 0 } },
+							h("h2", { style: { fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em", margin: 0, lineHeight: 1.35 } },
 								activeStudentId ? activeStudentName + " · Bản đồ kỹ năng" : "Bản đồ kỹ năng của lớp"
 							),
 							activeStudentId ? h("button", {
@@ -994,7 +995,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 								}
 							}, "← Quay lại cả lớp") : null
 						),
-						h("p", { style: { color: S.l3, fontSize: "12px", margin: "0 0 12px" } },
+						h("p", { style: { color: S.l3, fontSize: "12px", fontWeight: 400, margin: "0 0 12px", lineHeight: 1.4 } },
 							activeStudentId ? "Đang hiển thị mức độ nắm vững cá nhân của học sinh. Bấm một kỹ năng để xem chi tiết." :
 								"Màu thể hiện mức nắm trung bình của cả lớp. Bấm một kỹ năng để xem chi tiết."
 						),
@@ -1040,10 +1041,10 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 							}
 						},
 							h("div", null,
-								h("b", { style: { fontSize: "15px", fontWeight: 600, display: "block" } },
+								h("b", { style: { fontSize: "14px", fontWeight: 600, letterSpacing: "-0.01em", color: S.label, display: "block", lineHeight: 1.3 } },
 									selectedNodeInfo.title + " · " + selectedNodeInfo.code
 								),
-								h("div", { style: { color: S.l2, fontSize: "13px", marginTop: "2px" } },
+								h("div", { style: { color: S.l2, fontSize: "12.5px", fontWeight: 400, marginTop: "2px" } },
 									"Cả lớp nắm " + selectedNodeInfo.pct + "% · " + selectedNodeInfo.redCount + " học sinh chưa đạt"
 								)
 							),
@@ -1112,8 +1113,8 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 								padding: "16px", marginBottom: "16px"
 							}
 						},
-							h("h2", { style: { fontSize: "15px", fontWeight: 600, margin: "0 0 2px" } }, "Nên dạy trước"),
-							h("p", { style: { color: S.l3, fontSize: "12px", margin: "0 0 12px" } }, "Dạy các kỹ năng này sẽ mở khoá nhiều kỹ năng sau nhất."),
+							h("h2", { style: { fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 2px", lineHeight: 1.35 } }, "Nên dạy trước"),
+							h("p", { style: { color: S.l3, fontSize: "12px", fontWeight: 400, margin: "0 0 12px", lineHeight: 1.4 } }, "Dạy các kỹ năng này sẽ mở khoá nhiều kỹ năng sau nhất."),
 
 							plan.length === 0 ? h("div", { style: { padding: "12px 0", color: S.l3, fontSize: "13px" } }, "Đang suy luận lộ trình từ đồ thị tri thức...") :
 								h("div", null,
@@ -1141,8 +1142,8 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 												}
 											}, idx + 1),
 											h("div", { style: { flex: 1, minWidth: 0 } },
-												h("b", { style: { fontWeight: 500, fontSize: "13px", display: "block" } }, label),
-												h("div", { style: { color: S.l2, fontSize: "12px", marginTop: "2px" } },
+												h("b", { style: { fontWeight: 500, fontSize: "13.5px", letterSpacing: "-0.01em", color: S.label, display: "block", lineHeight: 1.35 } }, label),
+												h("div", { style: { color: S.l2, fontSize: "12px", fontWeight: 400, marginTop: "2px", lineHeight: 1.3 } },
 													entry.redCount + " em chưa đạt · mở khoá " + unlocksCount + " kỹ năng"
 												)
 											),
@@ -1169,8 +1170,8 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 								padding: "16px", marginBottom: 0
 							}
 						},
-							h("h2", { style: { fontSize: "15px", fontWeight: 600, margin: "0 0 2px" } }, "Học sinh"),
-							h("p", { style: { color: S.l3, fontSize: "12px", margin: "0 0 12px" } }, "Xếp theo mức cần hỗ trợ."),
+							h("h2", { style: { fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em", margin: "0 0 2px", lineHeight: 1.35 } }, "Học sinh"),
+							h("p", { style: { color: S.l3, fontSize: "12px", fontWeight: 400, margin: "0 0 12px", lineHeight: 1.4 } }, "Xếp theo mức cần hỗ trợ."),
 
 							sortedStudents.length === 0 ? h("div", { style: { padding: "12px 0", color: S.l3, fontSize: "13px" } }, "Chưa có dữ liệu học sinh.") :
 								h("div", null,
@@ -1192,7 +1193,8 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 										},
 											h("span", {
 												style: {
-													fontWeight: isSelected ? 600 : 400,
+													fontSize: "13px",
+													fontWeight: isSelected ? 500 : 400,
 													color: isSelected ? S.brand : S.label,
 													overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
 												}
@@ -1211,7 +1213,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 											),
 											h("span", {
 												style: {
-													textAlign: "right", fontSize: "13px", color: S.l2
+													textAlign: "right", fontSize: "12.5px", fontWeight: 500, fontVariantNumeric: "tabular-nums", color: S.l2
 												}
 											}, s.pct + "%")
 										);
