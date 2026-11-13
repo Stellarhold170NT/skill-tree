@@ -1,0 +1,34 @@
+{
+  "brandName": "",
+  "assets": {
+    "logo": "logo.svg",
+    "favicon": "icon.svg",
+    "heroIcon": "icon.svg",
+    "railIcon": "icon.svg"
+  },
+  "ui": {
+    "hideOriginalBrandWordmark": true,
+    "logoWidth": "170px",
+    "logoHeight": "26px",
+    "heroLogoWidth": "220px",
+    "heroLogoHeight": "54px",
+    "heroTitle": "Shaping the Invisible",
+    "heroIconWidth": "40px",
+    "heroIconHeight": "40px",
+    "wordmarkFontSize": "15px",
+    "hideBuildVersion": true,
+    "stylePrimaryButtons": true
+  },
+  "browser": {
+    "replaceTitle": true,
+    "setFavicon": true,
+    "rewriteBootWordmark": true,
+    "titleFormat": "suffix",
+    "titleSeparator": " â€” "
+  },
+  "logging": {
+    "file": true,
+    "requests": true
+  },
+  "css": {}
+}

@@ -1,0 +1,21 @@
+{
+  "name": "vai-branding-plugin",
+  "version": "2.0.0",
+  "description": "vAiPlatform Enterprise Branding & Theme System for DeepSeek Harness",
+  "main": "lib/index.js",
+  "keywords": [
+    "dsh-plugin",
+    "theme",
+    "branding",
+    "vaiplatform",
+    "customization"
+  ],
+  "author": "vAiPlatform Team",
+  "license": "MIT",
+  "topics": [
+    "dsh-plugin",
+    "theme",
+    "branding",
+    "vaiplatform"
+  ]
+}

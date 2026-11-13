@@ -29,9 +29,13 @@
     - id: skilltree-teacher-ui
       name: 'skilltree-teacher-ui'
 
-    # === Brand: SkillTree (theme tokens xanh la #27A95F + logo + favicon) ===
+    # === Brand: Tam thoi disable skilltree-brand (xanh la) -> chuyen qua vai-branding-plugin ===
     - id: skilltree-brand
+      disabled: true
       name: '/app/plugins/skilltree-brand/lib/index.js'
+
+    - id: vai-branding-plugin
+      name: '/app/plugins/vai-branding-plugin/lib/index.js'
 
     # === Auth UI: đăng nhập/đăng ký (M11 auth-service qua gateway M10, JWT localStorage) ===
     - id: skilltree-auth-ui
