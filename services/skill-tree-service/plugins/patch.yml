@@ -37,6 +37,12 @@
     - id: vai-branding-plugin
       name: '/app/plugins/vai-branding-plugin/lib/index.js'
 
+    # === vAiPlatform SkillTree & Roadmap Designer ===
+    - id: vai-skilltree
+      name: '/app/plugins/vai-skilltree/lib/index.js'
+      config:
+        workspaceDir: ~/.dsh/skilltree
+
     # === Auth UI: đăng nhập/đăng ký (M11 auth-service qua gateway M10, JWT localStorage) ===
     - id: skilltree-auth-ui
       name: '/app/plugins/skilltree-auth-ui/lib/index.js'
