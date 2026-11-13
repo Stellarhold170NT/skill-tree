@@ -1,151 +1,122 @@
 /**
- * skilltree-teacher-ui — CLIENT half (no build step; platform module format).
- * Registers one additive `shell.overlay` entry: a floating "Bảng GV" button and
- * a table-first teacher dashboard backed by learner-model (M5), assignment (M7),
- * analytics (M4), class (M6) and opencase (M1) through the api-gateway (M10).
- * All traffic goes through the host routes POST /skilltree-teacher/{batch,assign,
- * quiz,ask} — the page never addresses services directly, and the teacher JWT
- * (auth-ui, localStorage "skilltree.auth.v1") is forwarded per request.
+ * skilltree-teacher-ui — CLIENT half.
+ * Teacher Cockpit & Classroom Memory Dashboard.
+ * Integrates M5 (learner-model), M6 (class), M1 (opencase), M7 (assignment), M4 (analytics).
  *
- * Sections: class selector + documentId → RAG heatmap (students × concepts),
- * contrastive teaching plan (frontier/bottleneck + "Giao ôn tập" → M7),
- * per-student drill-down (mastery + next + event history), Class Ask box.
- *
- * Design tokens: DESIGN.md (brand: leaf green + deep teal ink). Anti-slop:
- * no gradients, no glassmorphism, no nested-card stacking, WCAG AA contrast,
- * table-first information density for teachers, no motion slop.
+ * Design tokens: DeepSeek Harness & vAiPlatform dark theme.
+ * Two-Column Workbench layout from Classroom Memory:
+ *   - Top: 4 Live Diagnostic Metrics Cards
+ *   - Left: Ask the Class Copilot + Graph-Reasoned Teaching Plan + Targeted Intervention
+ *   - Right: Class Heat Map (Students × Competency Matrix) + Student Diagnostic Drill-down
  */
 window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) => {
 	var module = { exports: {} };
 	var exports = module.exports;
 	const react = require("react");
-	const { createElement: h, useState, useEffect, useCallback } = react;
-
+	const { createElement: h, useState, useEffect, useCallback, useMemo } = react;
 
 	const NS = "skilltree-teacher-ui";
 	const STORE_KEY = "skilltree.teacherui.settings";
 	const AUTH_KEY = "skilltree.auth.v1";
 
-
-	/* ---- DESIGN.md tokens (brand: leaf green + deep teal ink) ---- */
+	/* ---- DeepSeek Harness & vAiPlatform Dark Theme Tokens ---- */
 	const T = {
-		primary500: "#27A95F",   // --st-primary-500 (brand fill, large UI only)
-		primary50: "#F4FBF7",    // --st-primary-50
-		primary100: "#E5F5EC",   // --st-primary-100
-		primary200: "#C7E9D5",   // --st-primary-200
-		boot: "#167F4D",         // --st-boot (white text on it: 5.03:1 AA)
-		primary800: "#145831",   // --st-primary-800 (button hover)
-		ink: "#1C3632",          // --st-ink
-		inkSoft: "#3A544E",      // --st-ink-soft
-		body: "#374151",         // --st-neutral-800 (body text, 10.31:1)
-		muted: "#6B7280",        // --st-neutral-500 (muted text, 4.83:1)
-		border: "#D4D8D6",       // --st-neutral-300 (hairline)
-		surface: "#FFFFFF",      // --st-surface
-		tint: "#F2F2F2",         // --st-neutral-100
-		successTint: "#E6F7EC",  // --st-success-tint
-		successText: "#167F4D",  // --st-success-text
-		danger: "#B3261E",       // --st-danger (6.54:1 on white)
-		dangerTint: "#FDECEC",   // --st-danger-tint
-		// RAG semantics (dashboard-only, derived from the brand ramp — declared in README):
-		amberText: "#7A5800",    // on amberTint: 6.1:1 AA
-		amberTint: "#FDF3D9",    // amber state tint
+		bg: "#151517",
+		card: "#1b1b1d",
+		cardAlt: "#202023",
+		field: "#111113",
+		border: "rgba(255, 255, 255, 0.08)",
+		borderLight: "rgba(255, 255, 255, 0.04)",
+		brand: "#fd505a",
+		brandHover: "#ff6b74",
+		brandSoft: "rgba(253, 80, 90, 0.12)",
+		labelPrimary: "#f9fafb",
+		labelSecondary: "#cfd3d6",
+		labelTertiary: "#9ca3af",
+		// Cognitive States (Classroom Memory 4-state vocabulary)
+		green: "#22c55e",
+		greenSoft: "rgba(34, 197, 94, 0.12)",
+		amber: "#f59e0b",
+		amberSoft: "rgba(245, 158, 11, 0.12)",
+		red: "#ef4444",
+		redSoft: "rgba(239, 68, 68, 0.14)",
+		rusty: "#d97706",
+		rustySoft: "rgba(217, 119, 6, 0.14)",
+		none: "#6b7280",
+		noneSoft: "rgba(107, 114, 128, 0.10)",
 	};
-	const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
+	const FONT = 'var(--dsw-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)';
 	const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
-
-	/* ---- styling (inline objects, theme-safe, no CSS files) ---- */
-	const S = {
-		root: { position: "relative", width: "100%", maxWidth: "100%", zIndex: 1, fontFamily: FONT },
-		fab: {
-			padding: "8px 14px", borderRadius: "999px", border: "none", cursor: "pointer",
-			fontSize: "13px", fontWeight: 600, background: T.boot, color: "#FFFFFF",
-			boxShadow: "0 2px 8px rgba(28,54,50,0.25)",
+	/* ---- Clean Vector SVG Icons ---- */
+	const Icons = {
+		Users: (size = 16, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		panel: {
-			position: "relative", right: "auto", bottom: "auto", width: "100%", maxWidth: "100%",
-			maxHeight: "none", overflow: "visible", background: "transparent", color: T.body,
-			border: "none", borderRadius: "0", padding: "0",
-			lineHeight: 1.45,
-			pointerEvents: "auto",
-			display: "flex", flexDirection: "column", gap: "12px",
-			paddingBottom: "24px",
+			h("path", { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }),
+			h("circle", { cx: "9", cy: "7", r: "4" }),
+			h("path", { d: "M23 21v-2a4 4 0 0 0-3-3.87" }),
+			h("path", { d: "M16 3.13a4 4 0 0 1 0 7.75" })
+		),
+		Sparkles: (size = 16, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		head: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" },
-		title: { margin: 0, fontSize: "18px", fontWeight: 700, color: T.ink },
-		subtitle: { margin: "2px 0 0", fontSize: "12px", color: T.muted },
-		close: { border: "none", background: "none", fontSize: "20px", cursor: "pointer", color: T.muted, lineHeight: 1 },
-		conn: { marginTop: "12px", padding: "12px", borderRadius: "8px", background: T.primary50, border: "1px solid " + T.primary200 },
-		connRow: { display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "flex-end", marginTop: "6px" },
-		label: { display: "block", fontSize: "12px", fontWeight: 600, color: T.inkSoft, margin: "6px 0 2px" },
-		input: {
-			boxSizing: "border-box", padding: "7px 9px", fontSize: "13px", borderRadius: "4px",
-			border: "1px solid " + T.border, background: T.surface, color: T.ink, outline: "none",
+			h("path", { d: "m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" }),
+			h("path", { d: "M5 3v4" }),
+			h("path", { d: "M19 17v4" }),
+			h("path", { d: "M3 5h4" }),
+			h("path", { d: "M17 19h4" })
+		),
+		Send: (size = 14, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		select: {
-			boxSizing: "border-box", padding: "7px 9px", fontSize: "13px", borderRadius: "4px",
-			border: "1px solid " + T.border, background: T.surface, color: T.ink, outline: "none",
+			h("line", { x1: "22", y1: "2", x2: "11", y2: "13" }),
+			h("polygon", { points: "22 2 15 22 11 13 2 9 22 2" })
+		),
+		AlertCircle: (size = 16, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		btn: {
-			padding: "7px 14px", fontSize: "13px", fontWeight: 600, borderRadius: "8px", border: "none",
-			cursor: "pointer", background: T.boot, color: "#FFFFFF",
+			h("circle", { cx: "12", cy: "12", r: "10" }),
+			h("line", { x1: "12", y1: "8", x2: "12", y2: "12" }),
+			h("line", { x1: "12", y1: "16", x2: "12.01", y2: "16" })
+		),
+		TrendingUp: (size = 16, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		btnGhost: {
-			padding: "4px 10px", fontSize: "12px", borderRadius: "8px", cursor: "pointer",
-			border: "1px solid " + T.border, background: T.surface, color: T.inkSoft,
+			h("polyline", { points: "23 6 13.5 15.5 8.5 10.5 1 18" }),
+			h("polyline", { points: "17 6 23 6 23 12" })
+		),
+		Compass: (size = 16, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		btnSmall: {
-			padding: "3px 9px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "none",
-			cursor: "pointer", background: T.primary100, color: T.primary800,
+			h("circle", { cx: "12", cy: "12", r: "10" }),
+			h("polygon", { points: "16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" })
+		),
+		X: (size = 14, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		error: {
-			marginTop: "10px", padding: "8px 10px", borderRadius: "8px", fontSize: "13px",
-			background: T.dangerTint, color: T.danger,
+			h("line", { x1: "18", y1: "6", x2: "6", y2: "18" }),
+			h("line", { x1: "6", y1: "6", x2: "18", y2: "18" })
+		),
+		RefreshCw: (size = 14, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round"
 		},
-		warn: {
-			marginTop: "10px", padding: "8px 10px", borderRadius: "8px", fontSize: "13px",
-			background: T.amberTint, color: T.amberText,
-		},
-		okMsg: {
-			marginTop: "10px", padding: "8px 10px", borderRadius: "8px", fontSize: "13px",
-			background: T.successTint, color: T.successText,
-		},
-		section: { marginTop: "16px" },
-		sectionHead: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap" },
-		sectionTitle: { margin: 0, fontSize: "14px", fontWeight: 700, color: T.ink },
-		table: { width: "100%", borderCollapse: "collapse", marginTop: "8px", fontSize: "13px", tableLayout: "auto" },
-		th: {
-			textAlign: "left", fontSize: "12px", color: T.inkSoft, fontWeight: 600,
-			borderBottom: "1px solid " + T.border, padding: "6px 8px", whiteSpace: "nowrap",
-		},
-		thConcept: {
-			textAlign: "center", fontSize: "11px", color: T.inkSoft, fontWeight: 600,
-			borderBottom: "1px solid " + T.border, padding: "4px 4px", maxWidth: "110px",
-		},
-		td: { borderBottom: "1px solid " + T.tint, padding: "6px 8px", verticalAlign: "top", color: T.body },
-		tdCenter: { borderBottom: "1px solid " + T.tint, padding: "4px", textAlign: "center", verticalAlign: "middle" },
-		studentBtn: {
-			border: "none", background: "none", padding: 0, cursor: "pointer",
-			fontSize: "13px", fontWeight: 600, color: T.boot, textDecoration: "underline",
-		},
-		mono: { fontFamily: MONO, fontSize: "11px", color: T.inkSoft, wordBreak: "break-all" },
-		muted: { fontSize: "12px", color: T.muted },
-		legend: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", marginTop: "8px" },
-		scrollX: { overflowX: "auto", marginTop: "4px" },
-		back: { border: "none", background: "none", cursor: "pointer", color: T.boot, fontSize: "13px", padding: 0 },
-		formGrid: { display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "flex-end", marginTop: "8px" },
-		divider: { borderTop: "1px solid " + T.tint, margin: "12px 0" },
-		askBox: { width: "100%", boxSizing: "border-box", minHeight: "56px", resize: "vertical",
-			padding: "8px 10px", fontSize: "13px", borderRadius: "6px", border: "1px solid " + T.border,
-			background: T.surface, color: T.ink, outline: "none", fontFamily: FONT },
-		answer: { marginTop: "10px", padding: "10px 12px", borderRadius: "8px", fontSize: "13px",
-			background: T.primary50, border: "1px solid " + T.primary200, color: T.ink, whiteSpace: "pre-wrap" },
-		sourceLine: { marginTop: "4px", fontSize: "11px", color: T.muted },
-		unlock: { color: T.inkSoft },
+			h("polyline", { points: "23 4 23 10 17 10" }),
+			h("polyline", { points: "1 20 1 14 7 14" }),
+			h("path", { d: "M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" })
+		)
 	};
 
-
-	/* ---- settings persistence (browser-local; token stays client-side) ---- */
+	/* ---- settings persistence ---- */
 	function loadSettings() {
 		try {
 			const raw = JSON.parse(window.localStorage.getItem(STORE_KEY) || "{}");
@@ -159,11 +130,9 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		}
 	}
 
-
 	function saveSettings(next) {
-		try { window.localStorage.setItem(STORE_KEY, JSON.stringify(next)); } catch (e) { /* private mode */ }
+		try { window.localStorage.setItem(STORE_KEY, JSON.stringify(next)); } catch (e) {}
 	}
-
 
 	function readToken() {
 		try {
@@ -172,30 +141,23 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		} catch (e) { return ""; }
 	}
 
-
 	/* ---- pure helpers (unit-tested in tests/client.mjs) ---- */
-
-	/** RAG state → chip spec {label, bg, fg, dashed} with AA contrast pairs. */
 	function stateChip(state) {
-		if (state === "red") return { label: "Đỏ", bg: T.dangerTint, fg: T.danger, dashed: false };
-		if (state === "amber") return { label: "Vàng", bg: T.amberTint, fg: T.amberText, dashed: false };
-		if (state === "green") return { label: "Xanh", bg: T.successTint, fg: T.successText, dashed: false };
-		if (state === "rusty") return { label: "Rusty", bg: T.amberTint, fg: T.amberText, dashed: true };
-		return { label: "—", bg: T.surface, fg: T.muted, dashed: false };
+		if (state === "red") return { label: "Hổng (Red)", bg: T.redSoft, fg: T.red, dashed: false };
+		if (state === "amber") return { label: "Đang học", bg: T.amberSoft, fg: T.amber, dashed: false };
+		if (state === "green") return { label: "Thành thạo", bg: T.greenSoft, fg: T.green, dashed: false };
+		if (state === "rusty") return { label: "Mai một", bg: T.rustySoft, fg: T.rusty, dashed: true };
+		return { label: "—", bg: "rgba(255,255,255,0.04)", fg: T.labelTertiary, dashed: false };
 	}
 
-
-	/** Short display label for a concept column. */
 	function conceptShort(node) {
 		if (!node) return "";
-		const scheme = typeof node.humanCodingScheme === "string" ? node.humanCodingScheme : "";
-		const statement = typeof node.fullStatement === "string" ? node.fullStatement : (node.title || "");
+		const scheme = typeof node.humanCodingScheme === "string" ? node.humanCodingScheme : (node.human_coding_scheme || "");
+		const statement = typeof node.fullStatement === "string" ? node.fullStatement : (node.full_statement || node.title || "");
 		if (scheme && statement) return scheme;
 		return statement || "";
 	}
 
-
-	/** GET-only batch for the class dashboard (allow-listed prefixes, one wire round-trip). */
 	function buildDashboardCalls(classId, documentId) {
 		const enc = encodeURIComponent;
 		return [
@@ -207,8 +169,6 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		];
 	}
 
-
-	/** GET-only batch for the per-student drill-down. */
 	function buildDrillCalls(studentId, documentId) {
 		const enc = encodeURIComponent;
 		return [
@@ -218,265 +178,77 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		];
 	}
 
-
 	function indexResults(results) {
 		const byId = {};
 		(Array.isArray(results) ? results : []).forEach((r) => { byId[r.id] = r; });
 		return byId;
 	}
 
-
 	function resultData(result) {
 		return result && result.ok ? result.data : null;
 	}
-
-
-	function resultError(result) {
-		return result && !result.ok ? (result.error || "HTTP " + result.status) : "";
-	}
-
 
 	function api(path, body, token) {
 		return window.fetch(path, {
 			method: "POST",
 			headers: Object.assign(
 				{ "content-type": "application/json" },
-				token ? { authorization: "Bearer " + token } : {},
+				token ? { authorization: "Bearer " + token } : {}
 			),
 			body: JSON.stringify(body),
 		}).then((res) => res.json().catch(() => ({ ok: false, error: "HTTP " + res.status })));
 	}
 
+	/* ---- Components ---- */
 
-	/* ---- components ---- */
+	function MetricCard({ title, value, subtext, icon, color, bgSoft }) {
+		return h("div", {
+			style: {
+				flex: "1 1 200px", background: T.card, border: `0.5px solid ${T.border}`,
+				borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px",
+				boxSizing: "border-box"
+			}
+		},
+			h("div", {
+				style: {
+					width: "42px", height: "42px", borderRadius: "10px",
+					display: "grid", placeItems: "center", background: bgSoft || "rgba(255,255,255,0.05)",
+					color: color || T.brand, flexShrink: 0
+				}
+			}, icon),
+			h("div", { style: { minWidth: 0 } },
+				h("div", { style: { fontSize: "12px", color: T.labelTertiary, marginBottom: "2px" } }, title),
+				h("div", { style: { fontSize: "20px", fontWeight: 700, color: T.labelPrimary, lineHeight: "26px" } }, value),
+				subtext ? h("div", { style: { fontSize: "12px", color: color || T.labelSecondary, marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, subtext) : null
+			)
+		);
+	}
 
 	function Chip(props) {
 		const chip = stateChip(props.state);
 		return h("span", {
 			title: chip.label,
 			style: {
-				display: "inline-block", minWidth: "44px", padding: "2px 8px", borderRadius: "999px",
+				display: "inline-flex", alignItems: "center", justifyContent: "center",
+				minWidth: "48px", padding: "3px 8px", borderRadius: "6px",
 				fontSize: "11px", fontWeight: 600, textAlign: "center",
 				background: chip.bg, color: chip.fg,
-				border: chip.dashed ? "1px dashed " + chip.fg : "1px solid transparent",
+				border: chip.dashed ? `1px dashed ${chip.fg}` : "1px solid transparent",
 			},
 		}, chip.label);
 	}
 
-
-	function HeatmapTable(props) {
-		const { heatmap, roster, graph, onStudent } = props;
-		const nodeByUri = {};
-		(graph && Array.isArray(graph.nodes) ? graph.nodes : []).forEach((n) => { nodeByUri[n.identifier] = n; });
-		const nameBySid = {};
-		(Array.isArray(roster) ? roster : []).forEach((u) => { nameBySid[u.sourcedId] = u.displayName; });
-		const concepts = Array.isArray(heatmap.concepts) ? heatmap.concepts : [];
-		return h("div", { style: S.scrollX },
-			h("table", { style: S.table },
-				h("thead", null,
-					h("tr", null,
-						h("th", { style: S.th }, "Học sinh"),
-						concepts.map((uri) => {
-							const node = nodeByUri[uri];
-							const short = conceptShort(node) || uri;
-							return h("th", { key: uri, style: S.thConcept, title: node ? (node.fullStatement || uri) : uri }, short);
-						}),
-					),
-				),
-				h("tbody", null,
-					(Array.isArray(heatmap.students) ? heatmap.students : []).map((sid) =>
-						h("tr", { key: sid },
-							h("td", { style: S.td },
-								h("button", { style: S.studentBtn, onClick: () => onStudent(sid) }, nameBySid[sid] || sid),
-								h("div", { style: S.mono }, sid),
-							),
-							concepts.map((uri) =>
-								h("td", { key: uri, style: S.tdCenter },
-									h(Chip, { state: heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][uri] : "none" }),
-								),
-							),
-						),
-					),
-				),
-			),
-		);
-	}
-
-
-	function PlanTable(props) {
-		const { plan, graph, onAssign } = props;
-		const nodeByUri = {};
-		(graph && Array.isArray(graph.nodes) ? graph.nodes : []).forEach((n) => { nodeByUri[n.identifier] = n; });
-		return h("table", { style: S.table },
-			h("thead", null,
-				h("tr", null,
-					h("th", { style: S.th }, "#"),
-					h("th", { style: S.th }, "Khái niệm"),
-					h("th", { style: S.th }, "Đỏ"),
-					h("th", { style: S.th }, "Rusty"),
-					h("th", { style: S.th }, "Vàng"),
-					h("th", { style: S.th }, "Mở khóa"),
-					h("th", { style: S.th }, "Lý do (tương phản)"),
-					h("th", { style: S.th }, "Hành động"),
-				),
-			),
-			h("tbody", null,
-				(Array.isArray(plan) ? plan : []).map((entry, index) => {
-					const node = nodeByUri[entry.conceptUri];
-					const label = node ? (node.humanCodingScheme ? node.humanCodingScheme + " · " + node.fullStatement : node.fullStatement) : entry.conceptUri;
-					return h("tr", { key: entry.conceptUri },
-						h("td", { style: S.td }, String(index + 1)),
-						h("td", { style: S.td, title: entry.conceptUri }, label),
-						h("td", { style: S.td }, String(entry.redCount)),
-						h("td", { style: S.td }, String(entry.rustyCount)),
-						h("td", { style: S.td }, String(entry.amberCount)),
-						h("td", { style: S.td }, h("span", { style: S.unlock }, String(entry.unlocks ? entry.unlocks.length : 0) + " KCN")),
-						h("td", { style: S.td }, entry.reason || ""),
-						h("td", { style: S.td },
-							h("button", { style: S.btnSmall, onClick: () => onAssign(entry.conceptUri, label) }, "Giao ôn tập"),
-						),
-					);
-				}),
-			),
-		);
-	}
-
-
-	function AssignForm(props) {
-		const { conceptLabel, targetGroup, title, dueAt, busy, onField, onSubmit, onCancel } = props;
-		return h("form", { style: S.formGrid, onSubmit: onSubmit },
-			h("div", { style: { minWidth: "220px", flex: "1 1 260px" } },
-				h("label", { style: S.label, htmlFor: NS + "-assign-title" }, "Tiêu đề bài ôn tập *"),
-				h("input", {
-					id: NS + "-assign-title", style: Object.assign({}, S.input, { width: "100%" }),
-					value: title, onChange: (e) => onField("title", e.target.value),
-					placeholder: "Ôn tập " + conceptLabel + " — nhóm Red/Rusty",
-				}),
-				h("div", { style: S.muted, title: conceptLabel }, "Khái niệm: " + conceptLabel),
-			),
-			h("div", null,
-				h("label", { style: S.label, htmlFor: NS + "-assign-group" }, "Nhóm đích *"),
-				h("select", { id: NS + "-assign-group", style: S.select, value: targetGroup, onChange: (e) => onField("targetGroup", e.target.value) },
-					h("option", { value: "red_rusty" }, "Red + Rusty"),
-					h("option", { value: "red" }, "Red"),
-					h("option", { value: "rusty" }, "Rusty"),
-				),
-			),
-			h("div", null,
-				h("label", { style: S.label, htmlFor: NS + "-assign-due" }, "Hạn (tùy chọn)"),
-				h("input", {
-					id: NS + "-assign-due", type: "datetime-local", style: S.input,
-					value: dueAt, onChange: (e) => onField("dueAt", e.target.value),
-				}),
-			),
-			h("div", { style: { display: "flex", gap: "8px" } },
-				h("button", { style: S.btn, type: "submit", disabled: busy }, busy ? "Đang giao…" : "Giao bài (M7)"),
-				h("button", { style: S.btnGhost, type: "button", onClick: onCancel }, "Đóng"),
-			),
-		);
-	}
-
-
-	function DrillPanel(props) {
-		const { drill, documentId, onBack } = props;
-		const mastery = resultData(drill.mastery);
-		const next = resultData(drill.next);
-		const events = resultData(drill.events);
-		return h("div", { style: S.section },
-			h("div", { style: S.sectionHead },
-				h("button", { style: S.back, onClick: onBack }, "← Quay lại bảng lớp"),
-				h("span", { style: S.mono }, drill.sid),
-			),
-			drill.error ? h("div", { style: S.error }, drill.error) : null,
-			drill.loading ? h("p", { style: S.muted }, "Đang tải dữ liệu cá nhân…") : null,
-			!drill.loading && next && next.conceptUri
-				? h("div", { style: S.answer },
-						h("strong", null, "Học tiếp theo: "),
-						next.conceptUri,
-						h("div", { style: S.sourceLine }, (next.explanation || "") + (Array.isArray(next.unlocks) ? " Mở khóa " + next.unlocks.length + " khái niệm." : "")),
-					)
-				: null,
-			h("h4", { style: Object.assign({}, S.sectionTitle, { marginTop: "12px" }) }, "Mastery theo khái niệm (M5)"),
-			h("table", { style: S.table },
-				h("thead", null,
-					h("tr", null,
-						h("th", { style: S.th }, "Khái niệm"),
-						h("th", { style: S.th }, "Trạng thái"),
-						h("th", { style: S.th }, "Mastery"),
-						h("th", { style: S.th }, "Rating ± RD"),
-						h("th", { style: S.th }, "Lượt ôn"),
-					),
-				),
-				h("tbody", null,
-					(Array.isArray(mastery) ? mastery : []).map((m) =>
-						h("tr", { key: m.conceptUri },
-							h("td", { style: S.td, title: m.conceptUri }, m.conceptUri),
-							h("td", { style: S.td }, h(Chip, { state: m.state })),
-							h("td", { style: S.td }, Math.round((m.mastery || 0) * 100) + "%"),
-							h("td", { style: S.td }, Math.round(m.rating || 0) + " ± " + Math.round(m.ratingDeviation || 0)),
-							h("td", { style: S.td }, String(m.reviewCount)),
-						),
-					),
-				),
-			),
-			h("h4", { style: Object.assign({}, S.sectionTitle, { marginTop: "12px" }) }, "Lịch sử học tập (M4 analytics)"),
-			h("p", { style: S.muted }, "20 sự kiện gần nhất của học sinh (candidateId ẩn danh, Caliper)."),
-			h("table", { style: S.table },
-				h("thead", null,
-					h("tr", null,
-						h("th", { style: S.th }, "Thời điểm"),
-						h("th", { style: S.th }, "Sự kiện"),
-						h("th", { style: S.th }, "Đối tượng"),
-						h("th", { style: S.th }, "Kết quả"),
-					),
-				),
-				h("tbody", null,
-					(Array.isArray(events) ? events : []).map((ev, i) =>
-						h("tr", { key: ev.eventId || String(i) },
-							h("td", { style: S.td }, String(ev.occurredAt || "").replace("T", " ").slice(0, 19)),
-							h("td", { style: S.td }, ev.type || ""),
-							h("td", { style: S.td, title: ev.objectId || "" }, String(ev.objectId || "").split("/").pop()),
-							h("td", { style: S.td },
-								ev.payload && typeof ev.payload.isCorrect === "boolean" ? (ev.payload.isCorrect ? "Đúng" : "Sai") : "—"),
-						),
-					),
-				),
-			),
-			(!drill.loading && Array.isArray(mastery) && mastery.length === 0)
-				? h("p", { style: S.muted }, "Học sinh chưa có dữ liệu mastery — chưa làm bài nào qua M2/M5.") : null,
-			documentId ? null : null,
-		);
-	}
-
-
-	function AskBox(props) {
-		const { question, busy, ask, onField } = props;
-		return h("div", null,
-			h("textarea", {
-				style: S.askBox, value: question,
-				placeholder: "Ví dụ: Ai đã nắm vững recursion? — hay: Những em nào đang yếu ở đồ thị?",
-				onChange: (e) => onField(e.target.value),
-			}),
-			h("div", { style: S.formGrid },
-				h("button", { style: S.btn, type: "button", disabled: busy, onClick: ask }, busy ? "Đang hỏi…" : "Hỏi lớp"),
-				h("span", { style: S.muted }, "Trả lời từ dữ liệu sống M5 (heatmap + teaching-plan); nâng cấp cognee M8 sau."),
-			),
-		);
-	}
-
-
-	function Panel(props) {
-		const { onClose } = props;
+	function Panel() {
 		const initial = loadSettings();
 		const [gatewayOverride, setGatewayOverride] = useState(initial.gatewayOverride);
 		const [classId, setClassId] = useState(initial.classId);
 		const [documentId, setDocumentId] = useState(initial.documentId);
 		const [classes, setClasses] = useState([]);
+		const [documents, setDocuments] = useState([]);
 		const [dash, setDash] = useState(null);
 		const [busy, setBusy] = useState(false);
 		const [error, setError] = useState("");
 		const [notice, setNotice] = useState("");
-		const [hasToken] = useState(Boolean(readToken()));
 		const [drill, setDrill] = useState(null);
 		const [assignFor, setAssignFor] = useState(null);
 		const [assignTitle, setAssignTitle] = useState("");
@@ -494,256 +266,730 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			saveSettings({ gatewayOverride: next.gatewayOverride, classId: next.classId, documentId: next.documentId });
 		}, []);
 
-		const loadDashboard = useCallback(async () => {
-			const trimmedClass = classId.trim();
-			const trimmedDoc = documentId.trim();
-			if (!trimmedClass || !trimmedDoc) { setError("Chọn lớp và nhập documentId của M1."); return; }
-			setBusy(true); setError(""); setNotice(""); setDrill(null); setAssignment(null); setAsk(null);
+		const loadDashboard = useCallback(async (targetClassId, targetDocId) => {
+			const cId = (targetClassId || classId).trim();
+			const dId = (targetDocId || documentId).trim();
+			if (!cId || !dId) {
+				setError("Vui lòng chọn lớp học và môn học để phân tích.");
+				return;
+			}
+			setBusy(true); setError(""); setNotice(""); setDrill(null); setAssignment(null);
 			try {
 				const res = await api("/skilltree-teacher/batch", {
 					__baseUrl: gatewayOverride.trim() || undefined,
-					calls: buildDashboardCalls(trimmedClass, trimmedDoc),
+					calls: buildDashboardCalls(cId, dId),
 				}, token);
-				if (!res || !res.ok) { setError((res && res.error) || "Không tải được dashboard."); setDash(null); return; }
-				const byId = indexResults(res.results);
-				const failed = ["heatmap", "plan", "roster", "graph"].filter((k) => !byId[k] || !byId[k].ok);
-				if (failed.length) {
-					const first = byId[failed[0]];
-					setError("Mất kết nối dữ liệu lớp (" + failed.join(", ") + "): " + (resultError(first) || "unknown") +
-						". Gợi ý: chạy `docker compose -f services/skill-tree-service/docker-compose.yml up -d` và bảo đảm gateway :8000 + M5/M6/M1 đang chạy.");
+
+				if (!res || !res.ok) {
+					setError((res && res.error) || "Không tải được dữ liệu dashboard từ máy chủ.");
+					setDash(null);
+					return;
 				}
+				const byId = indexResults(res.results);
 				setDash(byId);
-			} catch (callError) {
-				setError("Lỗi gọi host route: " + String(callError));
-			} finally { setBusy(false); }
+			} catch (e) {
+				setError("Lỗi kết nối: " + String(e.message || e));
+				setDash(null);
+			} finally {
+				setBusy(false);
+			}
 		}, [classId, documentId, gatewayOverride, token]);
 
-		const openDrill = useCallback(async (sid) => {
-			setDrill({ sid, loading: true, error: "" });
+		// Initial Auto-Discovery: fetch available classes & documents, auto-link & auto-load
+		useEffect(() => {
+			let active = true;
+			async function init() {
+				try {
+					const [clsRes, docRes] = await Promise.all([
+						api("/skilltree-teacher/batch", { calls: [{ id: "classes", prefix: "class", path: "classes" }] }, token),
+						api("/skilltree-teacher/batch", { calls: [{ id: "documents", prefix: "case", path: "documents" }] }, token),
+					]);
+					if (!active) return;
+					const clsList = clsRes && clsRes.ok && clsRes.results && clsRes.results[0] && clsRes.results[0].ok ? clsRes.results[0].data : [];
+					const docList = docRes && docRes.ok && docRes.results && docRes.results[0] && docRes.results[0].ok ? docRes.results[0].data : [];
+					setClasses(Array.isArray(clsList) ? clsList : []);
+					setDocuments(Array.isArray(docList) ? docList : []);
+
+					let selectedC = classId;
+					if (!selectedC && clsList.length > 0) {
+						selectedC = clsList[0].sourcedId;
+						setClassId(selectedC);
+					}
+
+					let selectedD = documentId;
+					if (!selectedD && docList.length > 0) {
+						// Match linear algebra or default to first doc
+						const matched = docList.find(d => d.title && d.title.includes("Đại số tuyến tính")) || docList[0];
+						selectedD = matched.id;
+						setDocumentId(selectedD);
+					}
+
+					if (selectedC && selectedD) {
+						persist({ gatewayOverride, classId: selectedC, documentId: selectedD });
+						loadDashboard(selectedC, selectedD);
+					}
+				} catch (e) {
+					console.error("[skilltree-teacher-ui] error during auto-discovery", e);
+				}
+			}
+			init();
+			return () => { active = false; };
+		}, []);
+
+		// Handler when class selection changes
+		function onSelectClass(newClassId) {
+			setClassId(newClassId);
+			const cls = classes.find(c => c.sourcedId === newClassId);
+			let matchedDocId = documentId;
+			if (cls && cls.title) {
+				const doc = documents.find(d => d.title && cls.title.includes(d.title.split(" ")[0]));
+				if (doc) {
+					matchedDocId = doc.id;
+					setDocumentId(doc.id);
+				}
+			}
+			persist({ gatewayOverride, classId: newClassId, documentId: matchedDocId });
+			loadDashboard(newClassId, matchedDocId);
+		}
+
+		// Drill-down for individual student
+		const openDrill = useCallback(async (studentId) => {
+			if (!documentId) return;
+			setDrill({ studentId, loading: true });
 			try {
 				const res = await api("/skilltree-teacher/batch", {
 					__baseUrl: gatewayOverride.trim() || undefined,
-					calls: buildDrillCalls(sid, documentId.trim()),
+					calls: buildDrillCalls(studentId, documentId),
 				}, token);
-				if (!res || !res.ok) { setDrill({ sid, loading: false, error: (res && res.error) || "Không tải được drill-down." }); return; }
-				setDrill(Object.assign({ sid, loading: false, error: "" }, indexResults(res.results)));
-			} catch (callError) {
-				setDrill({ sid, loading: false, error: "Lỗi gọi host route: " + String(callError) });
+				if (!res || !res.ok) {
+					setDrill({ studentId, loading: false, error: (res && res.error) || "Lỗi tải hồ sơ học sinh." });
+					return;
+				}
+				const byId = indexResults(res.results);
+				setDrill({
+					studentId,
+					loading: false,
+					mastery: resultData(byId.mastery),
+					next: resultData(byId.next),
+					events: resultData(byId.events),
+				});
+			} catch (e) {
+				setDrill({ studentId, loading: false, error: String(e.message || e) });
 			}
 		}, [documentId, gatewayOverride, token]);
 
-		const startAssign = useCallback((conceptUri, label) => {
-			setAssignFor(conceptUri);
-			setAssignTitle("Ôn tập " + (label || conceptUri) + " — nhóm Red/Rusty");
-			setAssignment(null); setNotice("");
-		}, []);
-
-		const submitAssign = useCallback(async (e) => {
-			e.preventDefault();
-			if (!assignFor) return;
+		// Assign review mutation
+		const submitAssign = useCallback(async (ev) => {
+			ev.preventDefault();
+			if (!classId || !assignFor) return;
 			setAssignBusy(true); setError(""); setNotice("");
 			try {
 				const res = await api("/skilltree-teacher/assign", {
 					__baseUrl: gatewayOverride.trim() || undefined,
-					title: assignTitle.trim() || "Ôn tập nhóm Red/Rusty",
-					classId: classId.trim(),
+					classId,
 					conceptUri: assignFor,
 					targetGroup: assignGroup,
+					title: assignTitle.trim() || undefined,
 					dueAt: assignDue ? new Date(assignDue).toISOString() : undefined,
 				}, token);
-				if (!res || !res.ok) { setError("Giao bài thất bại: " + ((res && res.error) || "unknown")); return; }
-				setAssignment(res.data);
-				setNotice("Đã tạo bài ôn tập cho " + ((res.data && res.data.studentIds ? res.data.studentIds.length : 0)) + " học sinh, " + ((res.data && res.data.itemIds ? res.data.itemIds.length : 0)) + " câu hỏi (M2).");
-			} catch (callError) {
-				setError("Lỗi gọi host route: " + String(callError));
-			} finally { setAssignBusy(false); }
-		}, [assignFor, assignTitle, assignGroup, assignDue, classId, gatewayOverride, token]);
+				if (!res || !res.ok) {
+					setError((res && res.error) || "Giao bài tập thất bại.");
+				} else {
+					setAssignment(res.assignment || res);
+					setNotice("Đã tạo bài tập can thiệp thành công cho nhóm học sinh.");
+					loadDashboard();
+				}
+			} catch (e) {
+				setError("Lỗi giao bài: " + String(e.message || e));
+			} finally {
+				setAssignBusy(false);
+			}
+		}, [classId, assignFor, assignGroup, assignTitle, assignDue, gatewayOverride, token, loadDashboard]);
 
-		const generateQuiz = useCallback(async () => {
-			if (!assignment || !assignment.id) return;
-			setAssignBusy(true); setError(""); setNotice("");
-			try {
-				const res = await api("/skilltree-teacher/quiz", {
-					__baseUrl: gatewayOverride.trim() || undefined,
-					assignmentId: assignment.id,
-				}, token);
-				if (!res || !res.ok) { setError("Tạo quiz thất bại: " + ((res && res.error) || "unknown")); return; }
-				setAssignment(Object.assign({}, assignment, { quizTestId: res.data && res.data.quizTestId ? res.data.quizTestId : assignment.quizTestId }));
-				setNotice("Đã tạo đề kiểm tra M2: " + (res.data && res.data.quizIdentifier ? res.data.quizIdentifier : res.data && res.data.quizTestId));
-			} catch (callError) {
-				setError("Lỗi gọi host route: " + String(callError));
-			} finally { setAssignBusy(false); }
-		}, [assignment, gatewayOverride, token]);
-
-		const sendAsk = useCallback(async () => {
-			setAskBusy(true); setError(""); setAsk(null);
+		// Ask class AI query
+		const sendAsk = useCallback(async (q) => {
+			const query = (typeof q === "string" ? q : askQuestion).trim();
+			if (!query || !classId || !documentId) return;
+			setAskBusy(true); setAsk(null);
 			try {
 				const res = await api("/skilltree-teacher/ask", {
 					__baseUrl: gatewayOverride.trim() || undefined,
-					question: askQuestion.trim(),
-					classId: classId.trim(),
-					documentId: documentId.trim(),
+					classId,
+					documentId,
+					question: query,
 				}, token);
-				if (!res || !res.ok) { setError("Class Ask thất bại: " + ((res && res.error) || "unknown")); return; }
-				setAsk(res);
-			} catch (callError) {
-				setError("Lỗi gọi host route: " + String(callError));
-			} finally { setAskBusy(false); }
+				if (!res || !res.ok) {
+					setAsk({ ok: false, error: (res && res.error) || "Lỗi truy vấn AI." });
+				} else {
+					setAsk(res);
+				}
+			} catch (e) {
+				setAsk({ ok: false, error: String(e.message || e) });
+			} finally {
+				setAskBusy(false);
+			}
 		}, [askQuestion, classId, documentId, gatewayOverride, token]);
 
-		// On open: nothing to fetch — the class list arrives with the dashboard batch.
-		// Keep one mount effect for the token notice refresh.
-		useEffect(() => { /* hook placeholder: token notice derived at render */ }, []);
+		const heatmap = resultData(dash && dash.heatmap);
+		const planObj = resultData(dash && dash.plan);
+		const plan = Array.isArray(planObj) ? planObj : (planObj && Array.isArray(planObj.plan) ? planObj.plan : []);
+		const roster = resultData(dash && dash.roster) || [];
+		const graph = resultData(dash && dash.graph) || { nodes: [], edges: [] };
 
-		const classOptions = (dash && resultData(dash.classes) ? resultData(dash.classes) : classes) || [];
-		const heatmap = dash && resultData(dash.heatmap);
-		const plan = dash && resultData(dash.plan);
-		const roster = dash && resultData(dash.roster);
-		const graph = dash && resultData(dash.graph);
+		// Computed Metrics
+		const metrics = useMemo(() => {
+			if (!heatmap || !Array.isArray(heatmap.students) || heatmap.students.length === 0) {
+				return { total: 0, avgMastery: 0, worstGapName: "—", redCount: 0, rustyCount: 0 };
+			}
+			const total = heatmap.students.length;
+			let totalCells = 0, masteredCells = 0, redCells = 0, rustyCells = 0;
+			const conceptRedCounts = {};
 
-		const onField = (which, value) => {
-			if (which === "title") setAssignTitle(value);
-			if (which === "targetGroup") setAssignGroup(value);
-			if (which === "dueAt") setAssignDue(value);
-		};
+			for (const sid of heatmap.students) {
+				for (const cid of (heatmap.concepts || [])) {
+					totalCells++;
+					const state = heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][cid] : "none";
+					if (state === "green") masteredCells++;
+					else if (state === "amber") masteredCells += 0.5;
+					else if (state === "red") {
+						redCells++;
+						conceptRedCounts[cid] = (conceptRedCounts[cid] || 0) + 1;
+					} else if (state === "rusty") {
+						rustyCells++;
+					}
+				}
+			}
 
-		return h("div", { style: S.panel },
-			h("div", { style: S.head },
-				h("div", null,
-					h("h3", { style: S.title }, "Bảng giáo viên — SkillTree"),
-					h("p", { style: S.subtitle }, "Heatmap RAG + Teaching Plan (M5) · Giao bài (M7) · Drill-down (M4) · Class Ask"),
-				),
-				h("button", { style: S.close, onClick: onClose, "aria-label": "Đóng bảng giáo viên" }, "×"),
-			),
-			!hasToken ? h("div", { style: S.warn }, "Chưa có JWT (đăng nhập bằng plugin auth-ui trong Settings → Tài khoản). Gateway đang để auth off thì vẫn xem được, nhưng khuyến nghị đăng nhập.") : null,
-			h("div", { style: S.conn },
-				h("div", { style: S.connRow },
+			// Find biggest gap concept
+			let worstCid = null, maxReds = -1;
+			for (const [cid, count] of Object.entries(conceptRedCounts)) {
+				if (count > maxReds) {
+					maxReds = count;
+					worstCid = cid;
+				}
+			}
+			let worstGapName = "Không có";
+			if (worstCid && graph && graph.nodes) {
+				const n = graph.nodes.find(node => node.identifier === worstCid);
+				worstGapName = n ? (n.humanCodingScheme || n.fullStatement || "KCN") : worstCid.slice(-8);
+				if (maxReds > 0) worstGapName += ` (${maxReds} em đỏ)`;
+			}
+
+			return {
+				total,
+				avgMastery: totalCells > 0 ? Math.round((masteredCells / totalCells) * 100) : 0,
+				worstGapName,
+				redCount: redCells,
+				rustyCount: rustyCells,
+			};
+		}, [heatmap, graph]);
+
+		const nodeByUri = useMemo(() => {
+			const map = {};
+			(graph && graph.nodes ? graph.nodes : []).forEach(n => { map[n.identifier] = n; });
+			return map;
+		}, [graph]);
+
+		const nameBySid = useMemo(() => {
+			const map = {};
+			(roster || []).forEach(u => { map[u.sourcedId] = u.displayName || u.email || u.sourcedId; });
+			return map;
+		}, [roster]);
+
+		return h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } },
+			// Top Toolbar: Class & Document selector
+			h("div", {
+				style: {
+					display: "flex", justifyContent: "space-between", alignItems: "center",
+					flexWrap: "wrap", gap: "12px", background: T.card, border: `0.5px solid ${T.border}`,
+					borderRadius: "12px", padding: "14px 20px"
+				}
+			},
+				h("div", { style: { display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" } },
 					h("div", null,
-						h("label", { style: S.label, htmlFor: NS + "-class" }, "Lớp (M6)"),
+						h("label", { style: { display: "block", fontSize: "11px", fontWeight: 600, color: T.labelTertiary, marginBottom: "4px" } }, "LỚP HỌC PHẦN"),
 						h("select", {
-							id: NS + "-class", style: Object.assign({}, S.select, { minWidth: "180px" }),
 							value: classId,
-							onChange: (e) => { setClassId(e.target.value); persist({ gatewayOverride: gatewayOverride, classId: e.target.value, documentId: documentId }); },
+							onChange: (e) => onSelectClass(e.target.value),
+							style: {
+								padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+								borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", fontWeight: 500, outline: "none", minWidth: "220px"
+							}
 						},
-							h("option", { value: "" }, classOptions.length ? "— chọn lớp —" : "— tải dashboard để lấy lớp —"),
-							classOptions.map((c) => h("option", { key: c.sourcedId, value: c.sourcedId }, c.title || c.sourcedId)),
-						),
+							classes.length === 0 ? h("option", { value: "" }, "Đang tải danh sách lớp...") :
+								classes.map(c => h("option", { key: c.sourcedId, value: c.sourcedId }, c.title))
+						)
 					),
-					h("div", { style: { flex: "1 1 240px" } },
-						h("label", { style: S.label, htmlFor: NS + "-doc" }, "DocumentId môn học (M1)"),
-						h("input", {
-							id: NS + "-doc", style: Object.assign({}, S.input, { width: "100%" }),
-							value: documentId, placeholder: "UUID CFDocument",
-							onChange: (e) => { setDocumentId(e.target.value); persist({ gatewayOverride: gatewayOverride, classId: classId, documentId: e.target.value }); },
-						}),
-					),
-					h("div", { style: { flex: "1 1 180px" } },
-						h("label", { style: S.label, htmlFor: NS + "-gw" }, "Gateway override (tùy chọn)"),
-						h("input", {
-							id: NS + "-gw", style: Object.assign({}, S.input, { width: "100%" }),
-							value: gatewayOverride, placeholder: "http://localhost:8000",
-							onChange: (e) => { setGatewayOverride(e.target.value); persist({ gatewayOverride: e.target.value, classId: classId, documentId: documentId }); },
-						}),
-					),
-					h("button", { style: S.btn, onClick: loadDashboard, disabled: busy }, busy ? "Đang tải…" : "Tải dashboard"),
+					h("div", null,
+						h("label", { style: { display: "block", fontSize: "11px", fontWeight: 600, color: T.labelTertiary, marginBottom: "4px" } }, "MÔN HỌC & KHUNG NĂNG LỰC"),
+						h("select", {
+							value: documentId,
+							onChange: (e) => {
+								setDocumentId(e.target.value);
+								persist({ gatewayOverride, classId, documentId: e.target.value });
+								loadDashboard(classId, e.target.value);
+							},
+							style: {
+								padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+								borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", fontWeight: 500, outline: "none", minWidth: "240px"
+							}
+						},
+							documents.length === 0 ? h("option", { value: "" }, "Đang tải môn học...") :
+								documents.map(d => h("option", { key: d.id, value: d.id }, d.title))
+						)
+					)
 				),
+				h("button", {
+					onClick: () => loadDashboard(), disabled: busy,
+					style: {
+						display: "inline-flex", alignItems: "center", gap: "6px",
+						padding: "8px 16px", background: T.brand, color: "#fff",
+						border: "none", borderRadius: "8px", fontSize: "13px",
+						fontWeight: 500, cursor: busy ? "not-allowed" : "pointer"
+					}
+				},
+					Icons.RefreshCw(14, "#fff"),
+					busy ? "Đang cập nhật..." : "Làm mới dữ liệu"
+				)
 			),
-			error ? h("div", { style: S.error }, error) : null,
-			notice ? h("div", { style: S.okMsg }, notice) : null,
 
-			dash && heatmap ? h("div", { style: S.section },
-				h("div", { style: S.sectionHead },
-					h("h4", { style: S.sectionTitle }, "Heatmap lớp học — học sinh × khái niệm (M5)"),
-					h("span", { style: S.muted }, (heatmap.students ? heatmap.students.length : 0) + " học sinh · " + (heatmap.concepts ? heatmap.concepts.length : 0) + " khái niệm"),
-				),
-				h("div", { style: S.legend },
-					h(Chip, { state: "red" }), h("span", { style: S.muted }, "đỏ < 40%"),
-					h(Chip, { state: "amber" }), h("span", { style: S.muted }, "vàng 40–85%"),
-					h(Chip, { state: "green" }), h("span", { style: S.muted }, "xanh ≥ 85%"),
-					h(Chip, { state: "rusty" }), h("span", { style: S.muted }, "rusty — từng học, đang quên"),
-					h(Chip, { state: "none" }), h("span", { style: S.muted }, "chưa có dữ liệu"),
-				),
-				h("p", { style: S.muted }, "Bấm tên học sinh để mở drill-down cá nhân."),
-				h(HeatmapTable, { heatmap: heatmap, roster: roster, graph: graph, onStudent: openDrill }),
-			) : null,
+			// Alert messages
+			error ? h("div", {
+				style: {
+					padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
+					background: T.redSoft, color: T.red, border: `1px solid rgba(239, 68, 68, 0.3)`
+				}
+			}, error) : null,
 
-			dash && Array.isArray(plan) && plan.length > 0 ? h("div", { style: S.section },
-				h("div", { style: S.sectionHead },
-					h("h4", { style: S.sectionTitle }, "Teaching Plan tuần tới — gợi ý tương phản (M5)"),
-					h("span", { style: S.muted }, "dạy cái nào trước để mở khóa nhiều nhất"),
-				),
-				h(PlanTable, { plan: plan, graph: graph, onAssign: startAssign }),
-			) : null,
+			notice ? h("div", {
+				style: {
+					padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
+					background: T.greenSoft, color: T.green, border: `1px solid rgba(34, 197, 94, 0.3)`
+				}
+			}, notice) : null,
 
-			assignFor ? h("div", { style: S.section },
-				h("h4", { style: S.sectionTitle }, "Giao bài ôn tập trúng đích (M7)"),
-				h(AssignForm, {
-					conceptLabel: assignFor, targetGroup: assignGroup, title: assignTitle, dueAt: assignDue,
-					busy: assignBusy, onField: onField, onSubmit: submitAssign,
-					onCancel: () => setAssignFor(null),
+			// 1. TOP METRICS ROW (4 Live Diagnostic Cards)
+			h("div", { style: { display: "flex", gap: "14px", flexWrap: "wrap" } },
+				h(MetricCard, {
+					title: "SĨ SỐ LỚP",
+					value: `${metrics.total} học sinh`,
+					subtext: "Đã đồng bộ OneRoster M6",
+					icon: Icons.Users(20, T.brand),
+					bgSoft: T.brandSoft
 				}),
-				assignment ? h("div", { style: S.okMsg },
-					"Đã tạo bài tập #" + String(assignment.id || "").slice(0, 8) + " — nhóm " + assignment.targetGroup +
-					", " + (assignment.studentIds ? assignment.studentIds.length : 0) + " học sinh, " + (assignment.itemIds ? assignment.itemIds.length : 0) + " câu hỏi.",
-					assignment.quizTestId
-						? h("div", { style: S.sourceLine }, "Đề kiểm tra M2: " + assignment.quizTestId)
-						: h("div", { style: { marginTop: "6px" } },
-							h("button", { style: S.btnGhost, onClick: generateQuiz, disabled: assignBusy }, assignBusy ? "Đang tạo…" : "Tạo đề kiểm tra M2"),
+				h(MetricCard, {
+					title: "LÀM CHỦ TRUNG BÌNH",
+					value: `${metrics.avgMastery}%`,
+					subtext: "Mô hình nhận thức Glicko-2",
+					icon: Icons.TrendingUp(20, T.green),
+					color: T.green,
+					bgSoft: T.greenSoft
+				}),
+				h(MetricCard, {
+					title: "LỖ HỔNG LỚN NHẤT",
+					value: metrics.worstGapName,
+					subtext: "Khái niệm cả lớp đang đuối",
+					icon: Icons.AlertCircle(20, T.red),
+					color: T.red,
+					bgSoft: T.redSoft
+				}),
+				h(MetricCard, {
+					title: "BÁO ĐỘNG ĐỎ & MAI MỘT",
+					value: `${metrics.redCount} đỏ · ${metrics.rustyCount} rusty`,
+					subtext: "Cần can thiệp sư phạm",
+					icon: Icons.Compass(20, T.amber),
+					color: T.amber,
+					bgSoft: T.amberSoft
+				})
+			),
+
+			// 2. TWO-COLUMN WORKBENCH (Classroom Memory Architecture)
+			h("div", { style: { display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "flex-start" } },
+				// LEFT COLUMN: Copilot + Teaching Plan + Intervention
+				h("div", { style: { flex: "1 1 420px", display: "flex", flexDirection: "column", gap: "16px", minWidth: "320px" } },
+					// WIDGET 1: Ask the Class Copilot
+					h("div", {
+						style: {
+							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
+							padding: "18px 20px"
+						}
+					},
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
+							h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
+								Icons.Sparkles(16, T.brand),
+								h("h3", { style: { margin: 0, fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Ask the Class Copilot")
+							),
+							h("span", {
+								style: {
+									padding: "2px 8px", background: T.brandSoft, color: T.brand,
+									borderRadius: "6px", fontSize: "11px", fontWeight: 600, fontFamily: MONO
+								}
+							}, "Cognee Memory")
 						),
-				) : null,
-			) : null,
+						h("div", { style: { display: "flex", gap: "8px" } },
+							h("input", {
+								value: askQuestion,
+								onChange: (e) => setAskQuestion(e.target.value),
+								onKeyDown: (e) => { if (e.key === "Enter") sendAsk(); },
+								placeholder: "Hỏi AI: Ai đang bị đỏ ở Định thức? Hoặc tổng quan lớp...",
+								style: {
+									flex: 1, padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+									borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", outline: "none"
+								}
+							}),
+							h("button", {
+								onClick: () => sendAsk(), disabled: askBusy || !askQuestion.trim(),
+								style: {
+									padding: "8px 14px", background: T.brand, color: "#fff",
+									border: "none", borderRadius: "8px", cursor: askBusy ? "not-allowed" : "pointer"
+								}
+							}, Icons.Send(14, "#fff"))
+						),
+						// Suggested prompt chips
+						h("div", { style: { display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" } },
+							[
+								"Ai đang bị đỏ ở Định thức?",
+								"Ai đã nắm vững Ma trận?",
+								"Tổng quan tình hình lớp học ra sao?"
+							].map((chip, idx) => h("button", {
+								key: idx,
+								onClick: () => { setAskQuestion(chip); sendAsk(chip); },
+								style: {
+									padding: "3px 8px", background: "rgba(255,255,255,0.04)", border: `0.5px solid ${T.borderLight}`,
+									borderRadius: "6px", fontSize: "11px", color: T.labelSecondary, cursor: "pointer"
+								}
+							}, chip))
+						),
+						// AI Response Card
+						ask ? h("div", {
+							style: {
+								marginTop: "12px", padding: "12px 14px", background: T.field,
+								border: `0.5px solid ${T.border}`, borderRadius: "8px", fontSize: "13px", lineHeight: "20px"
+							}
+						},
+							ask.error ? h("div", { style: { color: T.red } }, ask.error) :
+								h("div", null,
+									h("div", { style: { color: T.labelPrimary, whiteSpace: "pre-wrap" } }, ask.answer),
+									h("div", { style: { fontSize: "11px", color: T.labelTertiary, marginTop: "6px", fontFamily: MONO } }, `Nguồn: ${ask.source || "M5 Learner Model"}`)
+								)
+						) : null
+					),
 
-			drill ? h(DrillPanel, { drill: drill, documentId: documentId, onBack: () => setDrill(null) }) : null,
+					// WIDGET 2: Graph-Reasoned Teaching Plan
+					h("div", {
+						style: {
+							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
+							padding: "18px 20px"
+						}
+					},
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
+							h("div", null,
+								h("h3", { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Kế hoạch bài giảng (Teaching Plan)"),
+								h("p", { style: { margin: 0, fontSize: "12px", color: T.labelTertiary } }, "Suy luận từ đồ thị tri thức: dạy bài nào để mở khóa nhiều nhất")
+							),
+							h("span", {
+								style: {
+									padding: "2px 8px", background: T.greenSoft, color: T.green,
+									borderRadius: "6px", fontSize: "11px", fontWeight: 600, fontFamily: MONO
+								}
+							}, "Graph-Reasoned")
+						),
+						plan.length === 0 ? h("div", { style: { textAlign: "center", padding: "20px", color: T.labelTertiary, fontSize: "13px" } }, "Lớp chưa có điểm nghẽn hoặc chưa có bài tập.") :
+							h("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } },
+								plan.map((entry, idx) => {
+									const node = nodeByUri[entry.conceptUri];
+									const code = node ? (node.humanCodingScheme || node.human_coding_scheme) : "KCN";
+									const label = node ? (node.fullStatement || node.full_statement || entry.conceptUri) : entry.conceptUri;
+									const unlocksCount = entry.unlocks ? entry.unlocks.length : 0;
 
-			h("div", { style: S.section },
-				h("h4", { style: S.sectionTitle }, "Class Ask — hỏi tổng quan lớp bằng ngôn ngữ tự nhiên"),
-				h(AskBox, { question: askQuestion, busy: askBusy, ask: sendAsk, onField: setAskQuestion }),
-				ask && ask.answer ? h("div", { style: S.answer }, ask.answer,
-					h("div", { style: S.sourceLine }, "Nguồn: " + (ask.source || "M5")) ,
-				) : null,
-			),
-			h("div", { style: S.divider }),
-			h("p", { style: S.muted },
-				"Dữ liệu qua api-gateway (M10): learner M5 · class M6 · case M1 · events M4 · assignments M7. ",
-				"JWT giáo viên nằm trong localStorage và chỉ đi kèm mỗi lời gọi qua host route.",
-			),
+									return h("div", {
+										key: entry.conceptUri,
+										style: {
+											padding: "12px 14px", background: T.field, border: `0.5px solid ${T.borderLight}`,
+											borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px"
+										}
+									},
+										h("div", { style: { flex: 1, minWidth: 0 } },
+											h("div", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" } },
+												h("span", { style: { fontSize: "12px", fontWeight: 700, color: T.brand, fontFamily: MONO } }, `${idx + 1}. [${code}]`),
+												h("span", { style: { fontSize: "13px", fontWeight: 600, color: T.labelPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, label)
+											),
+											h("div", { style: { fontSize: "12px", color: T.labelTertiary, lineHeight: "16px", marginBottom: "6px" } }, entry.reason),
+											h("div", { style: { display: "flex", gap: "6px", flexWrap: "wrap" } },
+												entry.redCount > 0 ? h("span", { style: { padding: "1px 6px", borderRadius: "4px", fontSize: "11px", background: T.redSoft, color: T.red } }, `${entry.redCount} em đỏ`) : null,
+												entry.rustyCount > 0 ? h("span", { style: { padding: "1px 6px", borderRadius: "4px", fontSize: "11px", background: T.rustySoft, color: T.rusty } }, `${entry.rustyCount} em rusty`) : null,
+												h("span", { style: { padding: "1px 6px", borderRadius: "4px", fontSize: "11px", background: T.greenSoft, color: T.green } }, `Mở khóa ${unlocksCount} bài sau`)
+											)
+										),
+										h("button", {
+											onClick: () => {
+												setAssignFor(entry.conceptUri);
+												setAssignTitle(`Ôn tập củng cố: [${code}] ${label}`);
+											},
+											style: {
+												padding: "6px 12px", background: T.brand, color: "#fff",
+												border: "none", borderRadius: "6px", fontSize: "12px", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap"
+											}
+										}, "Giao ôn tập")
+									);
+								})
+							)
+					),
+
+					// WIDGET 3: Targeted Intervention Card (when Assign is clicked)
+					assignFor ? h("div", {
+						style: {
+							background: T.card, border: `1px solid ${T.brand}`, borderRadius: "12px",
+							padding: "18px 20px"
+						}
+					},
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
+							h("h4", { style: { margin: 0, fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Tạo đợt can thiệp sư phạm (M7)"),
+							h("button", { onClick: () => setAssignFor(null), style: { background: "none", border: "none", color: T.labelTertiary, cursor: "pointer" } }, Icons.X(14, "currentColor"))
+						),
+						h("form", { onSubmit: submitAssign, style: { display: "flex", flexDirection: "column", gap: "10px" } },
+							h("div", null,
+								h("label", { style: { display: "block", fontSize: "11px", color: T.labelTertiary, marginBottom: "4px" } }, "Tiêu đề bài tập *"),
+								h("input", {
+									value: assignTitle, onChange: e => setAssignTitle(e.target.value),
+									style: { width: "100%", padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
+								})
+							),
+							h("div", { style: { display: "flex", gap: "10px" } },
+								h("div", { style: { flex: 1 } },
+									h("label", { style: { display: "block", fontSize: "11px", color: T.labelTertiary, marginBottom: "4px" } }, "Nhóm học sinh đích"),
+									h("select", {
+										value: assignGroup, onChange: e => setAssignGroup(e.target.value),
+										style: { width: "100%", padding: "8px 10px", background: T.field, border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
+									},
+										h("option", { value: "red_rusty" }, "Tất cả học sinh Đỏ + Rusty"),
+										h("option", { value: "red" }, "Chỉ học sinh Đỏ (Lỗ hổng lớn)"),
+										h("option", { value: "rusty" }, "Chỉ học sinh Rusty (Cần ôn lại)")
+									)
+								),
+								h("div", { style: { flex: 1 } },
+									h("label", { style: { display: "block", fontSize: "11px", color: T.labelTertiary, marginBottom: "4px" } }, "Hạn nộp (Tùy chọn)"),
+									h("input", {
+										type: "datetime-local", value: assignDue, onChange: e => setAssignDue(e.target.value),
+										style: { width: "100%", padding: "8px 10px", background: T.field, border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
+									})
+								)
+							),
+							h("div", { style: { display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "6px" } },
+								h("button", { type: "button", onClick: () => setAssignFor(null), style: { padding: "6px 12px", background: "none", border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelSecondary, fontSize: "12px", cursor: "pointer" } }, "Đóng"),
+								h("button", { type: "submit", disabled: assignBusy, style: { padding: "6px 14px", background: T.brand, border: "none", borderRadius: "6px", color: "#fff", fontSize: "12px", fontWeight: 500, cursor: assignBusy ? "not-allowed" : "pointer" } }, assignBusy ? "Đang giao..." : "Giao bài tập ngay")
+							)
+						)
+					) : null
+				),
+
+				// RIGHT COLUMN: Class Heat Map Matrix & Student Drill-Down
+				h("div", { style: { flex: "2 1 540px", display: "flex", flexDirection: "column", gap: "16px", minWidth: "340px" } },
+					// WIDGET 4: Class Heat Map Matrix
+					h("div", {
+						style: {
+							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
+							padding: "18px 20px"
+						}
+					},
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px", marginBottom: "14px" } },
+							h("div", null,
+								h("h3", { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Bản đồ nhiệt năng lực (Class Heat Map)"),
+								h("p", { style: { margin: 0, fontSize: "12px", color: T.labelTertiary } }, "Ma trận Học sinh × Chuẩn đầu ra; nhấp vào tên học sinh để xem chẩn đoán cá nhân")
+							),
+							// Legend
+							h("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" } },
+								h(Chip, { state: "green" }),
+								h(Chip, { state: "amber" }),
+								h(Chip, { state: "red" }),
+								h(Chip, { state: "rusty" }),
+							)
+						),
+
+						!heatmap || !Array.isArray(heatmap.students) || heatmap.students.length === 0 ?
+							h("div", { style: { textAlign: "center", padding: "40px", color: T.labelTertiary, fontSize: "13px" } }, "Chưa có dữ liệu học tập cho lớp học này.") :
+							h("div", { style: { overflowX: "auto", border: `0.5px solid ${T.borderLight}`, borderRadius: "8px" } },
+								h("table", { style: { width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" } },
+									h("thead", null,
+										h("tr", { style: { background: T.field, borderBottom: `0.5px solid ${T.border}` } },
+											h("th", { style: { padding: "10px 14px", fontWeight: 600, color: T.labelSecondary, minWidth: "150px" } }, "Học sinh"),
+											(heatmap.concepts || []).map(uri => {
+												const node = nodeByUri[uri];
+												const short = conceptShort(node) || uri.slice(-6);
+												return h("th", {
+													key: uri,
+													title: node ? (node.fullStatement || node.full_statement || uri) : uri,
+													style: { padding: "8px 6px", textAlign: "center", fontWeight: 600, color: T.brand, fontFamily: MONO, minWidth: "75px" }
+												}, short);
+											})
+										)
+									),
+									h("tbody", null,
+										heatmap.students.map(sid => {
+											const isSelected = drill && drill.studentId === sid;
+											return h("tr", {
+												key: sid,
+												style: {
+													borderBottom: `0.5px solid ${T.borderLight}`,
+													background: isSelected ? "rgba(253, 80, 90, 0.06)" : "transparent"
+												}
+											},
+												h("td", { style: { padding: "10px 14px", verticalAlign: "middle" } },
+													h("button", {
+														onClick: () => openDrill(sid),
+														style: {
+															background: "none", border: "none", padding: 0,
+															color: isSelected ? T.brand : T.labelPrimary, fontWeight: 600, fontSize: "13px",
+															cursor: "pointer", textAlign: "left", textDecoration: "underline"
+														}
+													}, nameBySid[sid] || sid.slice(0, 8)),
+													h("div", { style: { fontSize: "11px", color: T.labelTertiary, fontFamily: MONO } }, sid.slice(0, 8))
+												),
+												(heatmap.concepts || []).map(uri => {
+													const state = heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][uri] : "none";
+													return h("td", {
+														key: uri,
+														style: { padding: "6px 4px", textAlign: "center", verticalAlign: "middle" }
+													}, h(Chip, { state }));
+												})
+											);
+										})
+									)
+								)
+							)
+					),
+
+					// WIDGET 5: Individual Student Drill-Down Card
+					drill ? h("div", {
+						style: {
+							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
+							padding: "18px 20px"
+						}
+					},
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" } },
+							h("div", null,
+								h("h4", { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 600, color: T.labelPrimary } },
+									`Chẩn đoán cá nhân: ${nameBySid[drill.studentId] || drill.studentId}`
+								),
+								h("p", { style: { margin: 0, fontSize: "12px", color: T.labelTertiary, fontFamily: MONO } }, `ID: ${drill.studentId}`)
+							),
+							h("button", { onClick: () => setDrill(null), style: { background: "none", border: "none", color: T.labelTertiary, cursor: "pointer" } }, Icons.X(14, "currentColor"))
+						),
+						drill.loading ? h("div", { style: { textAlign: "center", padding: "20px", color: T.labelTertiary, fontSize: "13px" } }, "Đang tải hồ sơ nhận thức cá nhân...") :
+							drill.error ? h("div", { style: { color: T.red, fontSize: "13px" } }, drill.error) :
+								h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
+									// Recommended Next Step (XAI)
+									drill.next ? h("div", {
+										style: {
+											padding: "12px 14px", background: T.field, border: `0.5px solid ${T.green}`,
+											borderRadius: "8px"
+										}
+									},
+										h("div", { style: { fontSize: "11px", fontWeight: 600, color: T.green, marginBottom: "2px" } }, "KHUYẾN NGHỊ BƯỚC HỌC TIẾP THEO (XAI)"),
+										h("div", { style: { fontSize: "13px", fontWeight: 600, color: T.labelPrimary } },
+											nodeByUri[drill.next.conceptUri] ? (nodeByUri[drill.next.conceptUri].fullStatement || nodeByUri[drill.next.conceptUri].full_statement) : drill.next.conceptUri
+										),
+										drill.next.reason ? h("div", { style: { fontSize: "12px", color: T.labelSecondary, marginTop: "4px" } }, drill.next.reason) : null
+									) : null,
+
+									// Skills Breakdown Table
+									drill.mastery && drill.mastery.length > 0 ? h("div", { style: { overflowX: "auto" } },
+										h("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "12px" } },
+											h("thead", null,
+												h("tr", { style: { borderBottom: `0.5px solid ${T.border}`, color: T.labelTertiary } },
+													h("th", { style: { padding: "6px 8px" } }, "Khái niệm"),
+													h("th", { style: { padding: "6px 8px", textAlign: "center" } }, "Trạng thái"),
+													h("th", { style: { padding: "6px 8px", textAlign: "right" } }, "Điểm làm chủ"),
+													h("th", { style: { padding: "6px 8px", textAlign: "right" } }, "Lần luyện tập")
+												)
+											),
+											h("tbody", null,
+												drill.mastery.map(m => {
+													const node = nodeByUri[m.conceptUri];
+													const label = node ? (node.humanCodingScheme || node.human_coding_scheme || node.fullStatement) : m.conceptUri.slice(-8);
+													return h("tr", { key: m.conceptUri, style: { borderBottom: `0.5px solid ${T.borderLight}` } },
+														h("td", { style: { padding: "6px 8px", color: T.labelPrimary } }, label),
+														h("td", { style: { padding: "6px 8px", textAlign: "center" } }, h(Chip, { state: m.state })),
+														h("td", { style: { padding: "6px 8px", textAlign: "right", fontWeight: 600, color: T.labelPrimary } }, `${Math.round(m.mastery * 100)}%`),
+														h("td", { style: { padding: "6px 8px", textAlign: "right", color: T.labelTertiary } }, String(m.reviewCount || 0))
+													);
+												})
+											)
+										)
+									) : h("div", { style: { fontSize: "12px", color: T.labelTertiary } }, "Chưa có vết làm bài nào được ghi nhận.")
+								)
+					) : null
+				)
+			)
 		);
 	}
 
-
-
-	function PageIcon(props) {
-		const size = props && props.size ? props.size : 20;
-		const sw = props && props.strokeWidth ? props.strokeWidth : 1.25;
-		const active = Boolean(props && props.active);
-		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? "var(--dsw-alias-brand-primary, #27A95F)" : "inherit" } },
-			h("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 16 16", width: size, height: size, fill: "none", stroke: "currentColor", strokeWidth: sw, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", focusable: "false" }, h("path", { d: 'M3.4041 13.096C2.49514 12.187 1.87614 11.0288 1.62537 9.76798C1.37459 8.50716 1.50331 7.20028 1.99525 6.01261C2.48719 4.82494 3.32025 3.80981 4.3891 3.09557C5.45795 2.38134 6.71458 2.00008 8.0001 2C9.28563 2.00008 10.5423 2.38134 11.6111 3.09557C12.68 3.80981 13.513 4.82494 14.005 6.01261C14.4969 7.20028 14.6256 8.50716 14.3748 9.76798C14.1241 11.0288 13.5051 12.187 12.5961 13.096', stroke: "currentColor" }), h("path", { d: 'M8 8.49994L11.6114 4.88855', stroke: "currentColor" }), h("circle", { cx: 8, cy: 8.5, r: 1.25, stroke: "currentColor", fill: "currentColor" })));
-	}
 	function SidebarIcon(props) {
-		return h("span", { style: { display: "inline-flex", alignItems: "center", color: (props && props.active) ? "var(--dsw-alias-brand-primary, #27A95F)" : "inherit" } },
-			h("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 16 16", width: 20, height: 20, fill: "none", stroke: "currentColor", strokeWidth: 1.25, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", focusable: "false" }, h("path", { d: 'M3.4041 13.096C2.49514 12.187 1.87614 11.0288 1.62537 9.76798C1.37459 8.50716 1.50331 7.20028 1.99525 6.01261C2.48719 4.82494 3.32025 3.80981 4.3891 3.09557C5.45795 2.38134 6.71458 2.00008 8.0001 2C9.28563 2.00008 10.5423 2.38134 11.6111 3.09557C12.68 3.80981 13.513 4.82494 14.005 6.01261C14.4969 7.20028 14.6256 8.50716 14.3748 9.76798C14.1241 11.0288 13.5051 12.187 12.5961 13.096', stroke: "currentColor" }), h("path", { d: 'M8 8.49994L11.6114 4.88855', stroke: "currentColor" }), h("circle", { cx: 8, cy: 8.5, r: 1.25, stroke: "currentColor", fill: "currentColor" })));
-	}
-	function PageHeader() {
-		return h("div", { style: { display: "flex", alignItems: "center", gap: "12px", padding: "0 0 16px", borderBottom: "1px solid rgba(127,127,127,.18)", marginBottom: "16px" } },
-			h("div", { style: { display: "grid", placeItems: "center", width: "40px", height: "40px", borderRadius: "10px", color: "#ffffff" } },
-				h("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 16 16", width: 22, height: 22, fill: "none", stroke: "currentColor", strokeWidth: 1.1, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", focusable: "false" }, h("path", { d: 'M3.4041 13.096C2.49514 12.187 1.87614 11.0288 1.62537 9.76798C1.37459 8.50716 1.50331 7.20028 1.99525 6.01261C2.48719 4.82494 3.32025 3.80981 4.3891 3.09557C5.45795 2.38134 6.71458 2.00008 8.0001 2C9.28563 2.00008 10.5423 2.38134 11.6111 3.09557C12.68 3.80981 13.513 4.82494 14.005 6.01261C14.4969 7.20028 14.6256 8.50716 14.3748 9.76798C14.1241 11.0288 13.5051 12.187 12.5961 13.096', stroke: "currentColor" }), h("path", { d: 'M8 8.49994L11.6114 4.88855', stroke: "currentColor" }), h("circle", { cx: 8, cy: 8.5, r: 1.25, stroke: "currentColor", fill: "currentColor" }))),
-			h("div", null,
-				h("h2", { style: { margin: 0, fontSize: "20px", fontWeight: 650, letterSpacing: "-0.01em" } }, "Tổng quan giáo viên"),
-				h("p", { style: { margin: "2px 0 0", fontSize: "13px", opacity: 0.7 } }, "Giao bài, xem độ nhớ và điểm nghẽn của lớp — hỗ trợ đúng lúc, đúng người.")));
-	}
-	function MainPanel() {
-		return h("div", { className: "st-page", style: { width: "100%", maxWidth: "100%", padding: "20px 28px 40px", boxSizing: "border-box", fontFamily: "inherit" } },
-			h(PageHeader, null), h(Panel, { onClose: function () {} }));
+		const active = Boolean(props && props.active);
+		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? T.brand : "inherit" } },
+			Icons.Compass(18, active ? T.brand : "currentColor")
+		);
 	}
 
+	function PageHeader() {
+		return h("div", {
+			style: {
+				display: "flex", alignItems: "center", gap: "12px",
+				paddingBottom: "16px", borderBottom: `0.5px solid ${T.border}`, marginBottom: "20px"
+			}
+		},
+			h("div", {
+				style: {
+					display: "grid", placeItems: "center", width: "40px", height: "40px",
+					borderRadius: "10px", background: T.brandSoft, color: T.brand
+				}
+			}, Icons.Compass(22, T.brand)),
+			h("div", null,
+				h("h2", { style: { margin: 0, fontSize: "18px", fontWeight: 600, color: T.labelPrimary, lineHeight: "24px" } }, "Tổng quan giáo viên (Teacher Cockpit)"),
+				h("p", { style: { margin: "2px 0 0", fontSize: "13px", color: T.labelTertiary, lineHeight: "18px" } },
+					"Bản đồ nhiệt năng lực, kế hoạch bài giảng suy luận từ đồ thị tri thức & hỏi đáp toàn lớp (Classroom Memory)"
+				)
+			)
+		);
+	}
+
+	function MainPanel() {
+		return h("div", {
+			className: "st-page",
+			style: {
+				width: "100%",
+				height: "100%",
+				maxHeight: "100%",
+				overflowY: "auto",
+				overflowX: "hidden",
+				boxSizing: "border-box",
+				fontFamily: FONT,
+				color: T.labelPrimary,
+				WebkitOverflowScrolling: "touch"
+			}
+		},
+			h("div", {
+				style: {
+					width: "100%",
+					maxWidth: "1180px",
+					margin: "0 auto",
+					padding: "24px 32px 64px",
+					boxSizing: "border-box"
+				}
+			},
+				h(PageHeader, null),
+				h(Panel, null)
+			)
+		);
+	}
 
 	exports.name = NS;
 	exports.inject = ["slots"];
-	// Pure helpers, exported for unit tests (tests/client.mjs) — no DOM/side effects.
 	exports.stateChip = stateChip;
 	exports.conceptShort = conceptShort;
 	exports.buildDashboardCalls = buildDashboardCalls;
 	exports.buildDrillCalls = buildDrillCalls;
+
 	exports.apply = function apply(ctx) {
 		ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({
 			name: "sidebar.panellist",
@@ -751,7 +997,12 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			order: 20,
 			label: "Tổng quan",
 		}, SidebarIcon));
-		ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: NS }, MainPanel));
+
+		ctx.slots.inject("main", () => ctx.slots.register({
+			name: "main",
+			key: NS,
+		}, MainPanel));
 	};
+
 	return module.exports;
 }});

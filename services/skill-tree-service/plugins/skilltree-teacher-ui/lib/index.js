@@ -321,9 +321,9 @@ export function matchConcept(question, nodes) {
 
 function detectIntent(question) {
   const q = normalizeText(question)
-  if (/(master|nam vung|vung|solid|green|thong|hieu ro|xong)/.test(q)) return 'green'
-  if (/(rusty|quen|lang quen|on tap|review|forget|bo quen)/.test(q)) return 'rusty'
-  if (/(yeu|red|kho|bi ket|ket|gap kho|struggl|fail|truot)/.test(q)) return 'red'
+  if (/(master|nam vung|vung|solid|green|thong|hieu ro|xong|tot)/.test(q)) return 'green'
+  if (/(rusty|quen|lang quen|on tap|review|forget|bo quen|mai mot)/.test(q)) return 'rusty'
+  if (/(yeu|red|kho|bi ket|ket|gap kho|struggl|fail|truot|do|hong|chua dat)/.test(q)) return 'red'
   return 'summary'
 }
 
@@ -341,7 +341,9 @@ function namesOf(sids, roster) {
  */
 export function answerClassAsk(question, data) {
   const heatmap = data && data.heatmap ? data.heatmap : null
-  const plan = Array.isArray(data && data.plan) ? data.plan : []
+  const plan = Array.isArray(data && data.plan)
+    ? data.plan
+    : (data && data.plan && Array.isArray(data.plan.plan) ? data.plan.plan : [])
   const nodes = Array.isArray(data && data.nodes) ? data.nodes : []
   const roster = Array.isArray(data && data.roster) ? data.roster : []
   if (!heatmap || !Array.isArray(heatmap.students) || !Array.isArray(heatmap.concepts)) {
