@@ -6,8 +6,8 @@
  * Design tokens: DeepSeek Harness & vAiPlatform dark theme.
  * Two-Column Workbench layout from Classroom Memory:
  *   - Top: 4 Live Diagnostic Metrics Cards
- *   - Left: Ask the Class Copilot + Graph-Reasoned Teaching Plan + Targeted Intervention
- *   - Right: Class Heat Map (Students × Competency Matrix) + Student Diagnostic Drill-down
+ *   - Left: Ask the Class Copilot + Graph-Reasoned Teaching Plan + Student Roster List
+ *   - Right: THE MASTERY GRAPH (Interactive SVG DAG) + Concept Inspector + View Toggle
  */
 window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) => {
 	var module = { exports: {} };
@@ -33,17 +33,17 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		labelPrimary: "#f9fafb",
 		labelSecondary: "#cfd3d6",
 		labelTertiary: "#9ca3af",
-		// Cognitive States (Classroom Memory 4-state vocabulary)
+		// Cognitive States (Subdued, ergonomic tones)
 		green: "#22c55e",
-		greenSoft: "rgba(34, 197, 94, 0.12)",
+		greenSoft: "rgba(34, 197, 94, 0.14)",
 		amber: "#f59e0b",
-		amberSoft: "rgba(245, 158, 11, 0.12)",
+		amberSoft: "rgba(245, 158, 11, 0.14)",
 		red: "#ef4444",
 		redSoft: "rgba(239, 68, 68, 0.14)",
 		rusty: "#d97706",
 		rustySoft: "rgba(217, 119, 6, 0.14)",
-		none: "#6b7280",
-		noneSoft: "rgba(107, 114, 128, 0.10)",
+		none: "#52525b",
+		noneSoft: "rgba(255, 255, 255, 0.03)",
 	};
 
 	const FONT = 'var(--dsw-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)';
@@ -99,6 +99,32 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			h("circle", { cx: "12", cy: "12", r: "10" }),
 			h("polygon", { points: "16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" })
 		),
+		Network: (size = 16, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round"
+		},
+			h("rect", { x: "16", y: "16", width: "6", height: "6", rx: "1" }),
+			h("rect", { x: "2", y: "16", width: "6", height: "6", rx: "1" }),
+			h("rect", { x: "9", y: "2", width: "6", height: "6", rx: "1" }),
+			h("path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" }),
+			h("path", { d: "M12 12V8" })
+		),
+		Table: (size = 16, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round"
+		},
+			h("rect", { x: "3", y: "3", width: "18", height: "18", rx: "2" }),
+			h("path", { d: "M3 9h18" }),
+			h("path", { d: "M3 15h18" }),
+			h("path", { d: "M9 3v18" })
+		),
+		ArrowLeft: (size = 14, color = "currentColor") => h("svg", {
+			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+			stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round"
+		},
+			h("line", { x1: "19", y1: "12", x2: "5", y2: "12" }),
+			h("polyline", { points: "12 19 5 12 12 5" })
+		),
 		X: (size = 14, color = "currentColor") => h("svg", {
 			width: size, height: size, viewBox: "0 0 24 24", fill: "none",
 			stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round"
@@ -141,13 +167,12 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		} catch (e) { return ""; }
 	}
 
-	/* ---- pure helpers (unit-tested in tests/client.mjs) ---- */
 	function stateChip(state) {
-		if (state === "red") return { label: "Hổng (Red)", bg: T.redSoft, fg: T.red, dashed: false };
-		if (state === "amber") return { label: "Đang học", bg: T.amberSoft, fg: T.amber, dashed: false };
-		if (state === "green") return { label: "Thành thạo", bg: T.greenSoft, fg: T.green, dashed: false };
-		if (state === "rusty") return { label: "Mai một", bg: T.rustySoft, fg: T.rusty, dashed: true };
-		return { label: "—", bg: "rgba(255,255,255,0.04)", fg: T.labelTertiary, dashed: false };
+		if (state === "red") return { label: "Hổng (Red)", bg: T.redSoft, fg: T.red, border: T.red };
+		if (state === "amber") return { label: "Đang học", bg: T.amberSoft, fg: T.amber, border: T.amber };
+		if (state === "green") return { label: "Thành thạo", bg: T.greenSoft, fg: T.green, border: T.green };
+		if (state === "rusty") return { label: "Mai một", bg: T.rustySoft, fg: T.rusty, border: T.rusty, dashed: true };
+		return { label: "Chưa học", bg: T.noneSoft, fg: T.labelTertiary, border: "transparent" };
 	}
 
 	function conceptShort(node) {
@@ -199,12 +224,92 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		}).then((res) => res.json().catch(() => ({ ok: false, error: "HTTP " + res.status })));
 	}
 
+	/* ---- Dynamic Topological DAG Layout Engine ---- */
+	function computeDagLayout(nodes, edges, width = 860, height = 440) {
+		const nodeMap = new Map();
+		nodes.forEach(n => {
+			const id = n.identifier || n.id;
+			nodeMap.set(id, n);
+		});
+
+		const inDegree = new Map();
+		const adj = new Map();
+		nodes.forEach(n => {
+			const id = n.identifier || n.id;
+			inDegree.set(id, 0);
+			adj.set(id, []);
+		});
+
+		edges.forEach(e => {
+			const src = e.sourceIdentifier || e.source || e.from;
+			const tgt = e.targetIdentifier || e.target || e.to;
+			if (adj.has(src) && inDegree.has(tgt)) {
+				adj.get(src).push(tgt);
+				inDegree.set(tgt, inDegree.get(tgt) + 1);
+			}
+		});
+
+		const layers = new Map();
+		const queue = [];
+		nodes.forEach(n => {
+			const id = n.identifier || n.id;
+			if (inDegree.get(id) === 0) {
+				layers.set(id, 0);
+				queue.push(id);
+			}
+		});
+
+		const visited = new Set(queue);
+		while (queue.length > 0) {
+			const u = queue.shift();
+			const uLayer = layers.get(u) || 0;
+			for (const v of (adj.get(u) || [])) {
+				const vLayer = Math.max(layers.get(v) || 0, uLayer + 1);
+				layers.set(v, vLayer);
+				if (!visited.has(v)) {
+					visited.add(v);
+					queue.push(v);
+				}
+			}
+		}
+
+		const layerGroups = [];
+		nodes.forEach(n => {
+			const id = n.identifier || n.id;
+			const l = layers.get(id) || 0;
+			while (layerGroups.length <= l) layerGroups.push([]);
+			layerGroups[l].push(n);
+		});
+
+		const numLayers = Math.max(layerGroups.length, 1);
+		const padX = 85;
+		const padY = 55;
+		const availW = width - padX * 2;
+		const stepX = numLayers > 1 ? availW / (numLayers - 1) : availW / 2;
+
+		const positions = new Map();
+		layerGroups.forEach((group, lIdx) => {
+			const x = padX + lIdx * stepX;
+			const numNodes = group.length;
+			const availH = height - padY * 2;
+			const stepY = numNodes > 1 ? availH / (numNodes - 1) : 0;
+
+			group.forEach((node, nIdx) => {
+				const id = node.identifier || node.id;
+				const y = numNodes === 1 ? height / 2 : padY + nIdx * stepY;
+				positions.set(id, { x, y, layer: lIdx });
+			});
+		});
+
+		return { positions, layerGroups };
+	}
+
 	/* ---- Components ---- */
 
 	function MetricCard({ title, value, subtext, icon, color, bgSoft }) {
 		return h("div", {
 			style: {
-				flex: "1 1 200px", background: T.card, border: `0.5px solid ${T.border}`,
+				flex: "1 1 200px", background: T.card, border: "0.5px solid " + T.border,
 				borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px",
 				boxSizing: "border-box"
 			}
@@ -230,14 +335,15 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			title: chip.label,
 			style: {
 				display: "inline-flex", alignItems: "center", justifyContent: "center",
-				minWidth: "48px", padding: "3px 8px", borderRadius: "6px",
+				padding: "3px 8px", borderRadius: "6px",
 				fontSize: "11px", fontWeight: 600, textAlign: "center",
 				background: chip.bg, color: chip.fg,
-				border: chip.dashed ? `1px dashed ${chip.fg}` : "1px solid transparent",
+				border: chip.dashed ? "1px dashed " + chip.border : "1px solid " + chip.border,
 			},
 		}, chip.label);
 	}
 
+	/* ---- MAIN DASHBOARD PANEL ---- */
 	function Panel() {
 		const initial = loadSettings();
 		const [gatewayOverride, setGatewayOverride] = useState(initial.gatewayOverride);
@@ -249,13 +355,24 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		const [busy, setBusy] = useState(false);
 		const [error, setError] = useState("");
 		const [notice, setNotice] = useState("");
+
+		// Student drill mode (Classroom Memory pattern: active student changes Mastery Graph)
+		const [activeStudentId, setActiveStudentId] = useState(null);
 		const [drill, setDrill] = useState(null);
+
+		// Mastery Graph interactive state
+		const [selectedNodeUri, setSelectedNodeUri] = useState(null);
+		const [graphViewMode, setGraphViewMode] = useState("graph"); // "graph" | "table"
+
+		// Intervention creation state
 		const [assignFor, setAssignFor] = useState(null);
-		const [assignTitle, setAssignTitle] = useState("");
 		const [assignGroup, setAssignGroup] = useState("red_rusty");
+		const [assignTitle, setAssignTitle] = useState("");
 		const [assignDue, setAssignDue] = useState("");
 		const [assignBusy, setAssignBusy] = useState(false);
 		const [assignment, setAssignment] = useState(null);
+
+		// Ask Copilot state
 		const [askQuestion, setAskQuestion] = useState("");
 		const [askBusy, setAskBusy] = useState(false);
 		const [ask, setAsk] = useState(null);
@@ -263,9 +380,13 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 		const token = readToken();
 
 		const persist = useCallback((next) => {
-			saveSettings({ gatewayOverride: next.gatewayOverride, classId: next.classId, documentId: next.documentId });
+			setGatewayOverride(next.gatewayOverride);
+			setClassId(next.classId);
+			setDocumentId(next.documentId);
+			saveSettings(next);
 		}, []);
 
+		// Load Dashboard Data
 		const loadDashboard = useCallback(async (targetClassId, targetDocId) => {
 			const cId = (targetClassId || classId).trim();
 			const dId = (targetDocId || documentId).trim();
@@ -295,7 +416,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			}
 		}, [classId, documentId, gatewayOverride, token]);
 
-		// Initial Auto-Discovery: fetch available classes & documents, auto-link & auto-load
+		// Initial Auto-Discovery
 		useEffect(() => {
 			let active = true;
 			async function init() {
@@ -318,7 +439,6 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 
 					let selectedD = documentId;
 					if (!selectedD && docList.length > 0) {
-						// Match linear algebra or default to first doc
 						const matched = docList.find(d => d.title && d.title.includes("Đại số tuyến tính")) || docList[0];
 						selectedD = matched.id;
 						setDocumentId(selectedD);
@@ -336,7 +456,6 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			return () => { active = false; };
 		}, []);
 
-		// Handler when class selection changes
 		function onSelectClass(newClassId) {
 			setClassId(newClassId);
 			const cls = classes.find(c => c.sourcedId === newClassId);
@@ -348,12 +467,20 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 					setDocumentId(doc.id);
 				}
 			}
+			setActiveStudentId(null);
+			setDrill(null);
 			persist({ gatewayOverride, classId: newClassId, documentId: matchedDocId });
 			loadDashboard(newClassId, matchedDocId);
 		}
 
-		// Drill-down for individual student
-		const openDrill = useCallback(async (studentId) => {
+		// Drill-down for individual student: updates active student & personal mastery graph
+		const selectStudent = useCallback(async (studentId) => {
+			if (!studentId) {
+				setActiveStudentId(null);
+				setDrill(null);
+				return;
+			}
+			setActiveStudentId(studentId);
 			if (!documentId) return;
 			setDrill({ studentId, loading: true });
 			try {
@@ -448,60 +575,143 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			for (const sid of heatmap.students) {
 				for (const cid of (heatmap.concepts || [])) {
 					totalCells++;
-					const state = heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][cid] : "none";
-					if (state === "green") masteredCells++;
-					else if (state === "amber") masteredCells += 0.5;
-					else if (state === "red") {
+					const st = heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][cid] : "none";
+					if (st === "green") masteredCells++;
+					else if (st === "red") {
 						redCells++;
 						conceptRedCounts[cid] = (conceptRedCounts[cid] || 0) + 1;
-					} else if (state === "rusty") {
+					} else if (st === "rusty") {
 						rustyCells++;
 					}
 				}
 			}
 
-			// Find biggest gap concept
-			let worstCid = null, maxReds = -1;
-			for (const [cid, count] of Object.entries(conceptRedCounts)) {
-				if (count > maxReds) {
-					maxReds = count;
+			let worstCid = null, maxRed = 0;
+			for (const cid in conceptRedCounts) {
+				if (conceptRedCounts[cid] > maxRed) {
+					maxRed = conceptRedCounts[cid];
 					worstCid = cid;
 				}
 			}
+
 			let worstGapName = "Không có";
-			if (worstCid && graph && graph.nodes) {
-				const n = graph.nodes.find(node => node.identifier === worstCid);
-				worstGapName = n ? (n.humanCodingScheme || n.fullStatement || "KCN") : worstCid.slice(-8);
-				if (maxReds > 0) worstGapName += ` (${maxReds} em đỏ)`;
+			if (worstCid) {
+				const n = (graph.nodes || []).find(x => x.identifier === worstCid);
+				const code = n ? (n.humanCodingScheme || n.human_coding_scheme) : "Lỗ hổng";
+				worstGapName = code + " (" + maxRed + " em đỏ)";
+			}
+
+			const avgMastery = totalCells > 0 ? Math.round((masteredCells / totalCells) * 100) : 0;
+			return { total, avgMastery, worstGapName, redCount: redCells, rustyCount: rustyCells };
+		}, [heatmap, graph]);
+
+		const nameBySid = useMemo(() => {
+			const m = {};
+			roster.forEach(u => {
+				const name = u.displayName || (u.givenName ? ((u.givenName || "") + " " + (u.familyName || "")).trim() : u.email || u.sourcedId);
+				m[u.sourcedId] = name;
+			});
+			return m;
+		}, [roster]);
+
+		const nodeByUri = useMemo(() => {
+			const m = {};
+			(graph.nodes || []).forEach(n => {
+				m[n.identifier || n.id] = n;
+			});
+			return m;
+		}, [graph]);
+
+		// Layout for SVG DAG Mastery Graph
+		const dagLayout = useMemo(() => {
+			return computeDagLayout(graph.nodes || [], graph.edges || [], 860, 440);
+		}, [graph]);
+
+		// Selected node inspector details
+		const selectedNodeInfo = useMemo(() => {
+			if (!selectedNodeUri) return null;
+			const node = nodeByUri[selectedNodeUri];
+			if (!node) return null;
+
+			const code = node.humanCodingScheme || node.human_coding_scheme || "CHUẨN";
+			const title = node.fullStatement || node.full_statement || node.title || selectedNodeUri;
+
+			// Prerequisites (incoming edges)
+			const prereqs = (graph.edges || [])
+				.filter(e => (e.targetIdentifier || e.target || e.to) === selectedNodeUri)
+				.map(e => nodeByUri[e.sourceIdentifier || e.source || e.from])
+				.filter(Boolean);
+
+			// Unlocks (outgoing edges)
+			const unlocks = (graph.edges || [])
+				.filter(e => (e.sourceIdentifier || e.source || e.from) === selectedNodeUri)
+				.map(e => nodeByUri[e.targetIdentifier || e.target || e.to])
+				.filter(Boolean);
+
+			// Students struggling with this node
+			const redStudents = [];
+			const rustyStudents = [];
+			if (heatmap && heatmap.cells) {
+				(heatmap.students || []).forEach(sid => {
+					const st = heatmap.cells[sid] ? heatmap.cells[sid][selectedNodeUri] : "none";
+					if (st === "red") redStudents.push(nameBySid[sid] || sid.slice(0, 8));
+					else if (st === "rusty") rustyStudents.push(nameBySid[sid] || sid.slice(0, 8));
+				});
+			}
+
+			// Active student specific state if in drill mode
+			let studentState = null;
+			if (activeStudentId && heatmap && heatmap.cells) {
+				studentState = heatmap.cells[activeStudentId] ? heatmap.cells[activeStudentId][selectedNodeUri] : "none";
 			}
 
 			return {
-				total,
-				avgMastery: totalCells > 0 ? Math.round((masteredCells / totalCells) * 100) : 0,
-				worstGapName,
-				redCount: redCells,
-				rustyCount: rustyCells,
+				uri: selectedNodeUri,
+				code,
+				title,
+				prereqs,
+				unlocks,
+				redStudents,
+				rustyStudents,
+				studentState
 			};
-		}, [heatmap, graph]);
+		}, [selectedNodeUri, nodeByUri, graph, heatmap, nameBySid, activeStudentId]);
 
-		const nodeByUri = useMemo(() => {
-			const map = {};
-			(graph && graph.nodes ? graph.nodes : []).forEach(n => { map[n.identifier] = n; });
-			return map;
-		}, [graph]);
+		const activeStudentName = activeStudentId ? (nameBySid[activeStudentId] || activeStudentId.slice(0, 8)) : null;
+		const nextStepUri = drill && drill.next && drill.next.conceptUri ? drill.next.conceptUri : null;
 
-		const nameBySid = useMemo(() => {
-			const map = {};
-			(roster || []).forEach(u => { map[u.sourcedId] = u.displayName || u.email || u.sourcedId; });
-			return map;
-		}, [roster]);
+		/* ---- RENDER ---- */
+		return h("div", {
+			style: {
+				fontFamily: FONT, background: T.bg, color: T.labelPrimary,
+				minHeight: "100%", width: "100%", height: "100%", maxHeight: "100%",
+				overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch",
+				padding: "24px 28px", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "20px"
+			}
+		},
+			// Header Banner
+			h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" } },
+				h("div", null,
+					h("div", { style: { display: "flex", alignItems: "center", gap: "10px" } },
+						h("span", {
+							style: {
+								display: "inline-grid", placeItems: "center", width: "28px", height: "28px",
+								borderRadius: "8px", background: T.brandSoft, color: T.brand
+							}
+						}, Icons.Compass(18, T.brand)),
+						h("h1", { style: { margin: 0, fontSize: "20px", fontWeight: 700, color: T.labelPrimary } }, "Tổng quan giáo viên (Teacher Cockpit)")
+					),
+					h("p", { style: { margin: "4px 0 0", fontSize: "13px", color: T.labelTertiary } },
+						"Bản đồ nhận thức tri thức (Mastery Graph), kế hoạch bài giảng suy luận đồ thị & hỏi đáp lớp học"
+					)
+				)
+			),
 
-		return h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } },
 			// Top Toolbar: Class & Document selector
 			h("div", {
 				style: {
 					display: "flex", justifyContent: "space-between", alignItems: "center",
-					flexWrap: "wrap", gap: "12px", background: T.card, border: `0.5px solid ${T.border}`,
+					flexWrap: "wrap", gap: "12px", background: T.card, border: "0.5px solid " + T.border,
 					borderRadius: "12px", padding: "14px 20px"
 				}
 			},
@@ -512,7 +722,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 							value: classId,
 							onChange: (e) => onSelectClass(e.target.value),
 							style: {
-								padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+								padding: "8px 12px", background: T.field, border: "0.5px solid " + T.border,
 								borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", fontWeight: 500, outline: "none", minWidth: "220px"
 							}
 						},
@@ -526,11 +736,13 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 							value: documentId,
 							onChange: (e) => {
 								setDocumentId(e.target.value);
+								setActiveStudentId(null);
+								setDrill(null);
 								persist({ gatewayOverride, classId, documentId: e.target.value });
 								loadDashboard(classId, e.target.value);
 							},
 							style: {
-								padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+								padding: "8px 12px", background: T.field, border: "0.5px solid " + T.border,
 								borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", fontWeight: 500, outline: "none", minWidth: "240px"
 							}
 						},
@@ -557,14 +769,14 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			error ? h("div", {
 				style: {
 					padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
-					background: T.redSoft, color: T.red, border: `1px solid rgba(239, 68, 68, 0.3)`
+					background: T.redSoft, color: T.red, border: "1px solid rgba(239, 68, 68, 0.3)"
 				}
 			}, error) : null,
 
 			notice ? h("div", {
 				style: {
 					padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
-					background: T.greenSoft, color: T.green, border: `1px solid rgba(34, 197, 94, 0.3)`
+					background: T.greenSoft, color: T.green, border: "1px solid rgba(34, 197, 94, 0.3)"
 				}
 			}, notice) : null,
 
@@ -572,14 +784,14 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 			h("div", { style: { display: "flex", gap: "14px", flexWrap: "wrap" } },
 				h(MetricCard, {
 					title: "SĨ SỐ LỚP",
-					value: `${metrics.total} học sinh`,
+					value: metrics.total + " học sinh",
 					subtext: "Đã đồng bộ OneRoster M6",
 					icon: Icons.Users(20, T.brand),
 					bgSoft: T.brandSoft
 				}),
 				h(MetricCard, {
 					title: "LÀM CHỦ TRUNG BÌNH",
-					value: `${metrics.avgMastery}%`,
+					value: metrics.avgMastery + "%",
 					subtext: "Mô hình nhận thức Glicko-2",
 					icon: Icons.TrendingUp(20, T.green),
 					color: T.green,
@@ -595,7 +807,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 				}),
 				h(MetricCard, {
 					title: "BÁO ĐỘNG ĐỎ & MAI MỘT",
-					value: `${metrics.redCount} đỏ · ${metrics.rustyCount} rusty`,
+					value: metrics.redCount + " đỏ · " + metrics.rustyCount + " rusty",
 					subtext: "Cần can thiệp sư phạm",
 					icon: Icons.Compass(20, T.amber),
 					color: T.amber,
@@ -605,16 +817,16 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 
 			// 2. TWO-COLUMN WORKBENCH (Classroom Memory Architecture)
 			h("div", { style: { display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "flex-start" } },
-				// LEFT COLUMN: Copilot + Teaching Plan + Intervention
-				h("div", { style: { flex: "1 1 420px", display: "flex", flexDirection: "column", gap: "16px", minWidth: "320px" } },
+				// LEFT COLUMN: Copilot + Teaching Plan + Student Roster List
+				h("div", { style: { flex: "1 1 380px", display: "flex", flexDirection: "column", gap: "16px", minWidth: "320px", maxWidth: "460px" } },
 					// WIDGET 1: Ask the Class Copilot
 					h("div", {
 						style: {
-							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
-							padding: "18px 20px"
+							background: T.card, border: "0.5px solid " + T.border, borderRadius: "12px",
+							padding: "16px 18px"
 						}
 					},
-						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" } },
 							h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
 								Icons.Sparkles(16, T.brand),
 								h("h3", { style: { margin: 0, fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Ask the Class Copilot")
@@ -633,7 +845,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 								onKeyDown: (e) => { if (e.key === "Enter") sendAsk(); },
 								placeholder: "Hỏi AI: Ai đang bị đỏ ở Định thức? Hoặc tổng quan lớp...",
 								style: {
-									flex: 1, padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`,
+									flex: 1, padding: "8px 12px", background: T.field, border: "0.5px solid " + T.border,
 									borderRadius: "8px", color: T.labelPrimary, fontSize: "13px", outline: "none"
 								}
 							}),
@@ -655,7 +867,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 								key: idx,
 								onClick: () => { setAskQuestion(chip); sendAsk(chip); },
 								style: {
-									padding: "3px 8px", background: "rgba(255,255,255,0.04)", border: `0.5px solid ${T.borderLight}`,
+									padding: "3px 8px", background: "rgba(255,255,255,0.04)", border: "0.5px solid " + T.borderLight,
 									borderRadius: "6px", fontSize: "11px", color: T.labelSecondary, cursor: "pointer"
 								}
 							}, chip))
@@ -664,13 +876,13 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 						ask ? h("div", {
 							style: {
 								marginTop: "12px", padding: "12px 14px", background: T.field,
-								border: `0.5px solid ${T.border}`, borderRadius: "8px", fontSize: "13px", lineHeight: "20px"
+								border: "0.5px solid " + T.border, borderRadius: "8px", fontSize: "13px", lineHeight: "20px"
 							}
 						},
 							ask.error ? h("div", { style: { color: T.red } }, ask.error) :
 								h("div", null,
 									h("div", { style: { color: T.labelPrimary, whiteSpace: "pre-wrap" } }, ask.answer),
-									h("div", { style: { fontSize: "11px", color: T.labelTertiary, marginTop: "6px", fontFamily: MONO } }, `Nguồn: ${ask.source || "M5 Learner Model"}`)
+									h("div", { style: { fontSize: "11px", color: T.labelTertiary, marginTop: "6px", fontFamily: MONO } }, "Nguồn: " + (ask.source || "M5 Learner Model"))
 								)
 						) : null
 					),
@@ -678,14 +890,14 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 					// WIDGET 2: Graph-Reasoned Teaching Plan
 					h("div", {
 						style: {
-							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
-							padding: "18px 20px"
+							background: T.card, border: "0.5px solid " + T.border, borderRadius: "12px",
+							padding: "16px 18px"
 						}
 					},
 						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
 							h("div", null,
 								h("h3", { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Kế hoạch bài giảng (Teaching Plan)"),
-								h("p", { style: { margin: 0, fontSize: "12px", color: T.labelTertiary } }, "Suy luận từ đồ thị tri thức: dạy bài nào để mở khóa nhiều nhất")
+								h("p", { style: { margin: 0, fontSize: "12px", color: T.labelTertiary } }, "Suy luận thứ tự dạy mở khóa nhiều nhất")
 							),
 							h("span", {
 								style: {
@@ -694,9 +906,9 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 								}
 							}, "Graph-Reasoned")
 						),
-						plan.length === 0 ? h("div", { style: { textAlign: "center", padding: "20px", color: T.labelTertiary, fontSize: "13px" } }, "Lớp chưa có điểm nghẽn hoặc chưa có bài tập.") :
-							h("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } },
-								plan.map((entry, idx) => {
+						plan.length === 0 ? h("div", { style: { textAlign: "center", padding: "16px", color: T.labelTertiary, fontSize: "13px" } }, "Lớp chưa có điểm nghẽn hoặc chưa có bài tập.") :
+							h("div", { style: { display: "flex", flexDirection: "column", gap: "8px" } },
+								plan.slice(0, 3).map((entry, idx) => {
 									const node = nodeByUri[entry.conceptUri];
 									const code = node ? (node.humanCodingScheme || node.human_coding_scheme) : "KCN";
 									const label = node ? (node.fullStatement || node.full_statement || entry.conceptUri) : entry.conceptUri;
@@ -705,30 +917,30 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 									return h("div", {
 										key: entry.conceptUri,
 										style: {
-											padding: "12px 14px", background: T.field, border: `0.5px solid ${T.borderLight}`,
+											padding: "10px 12px", background: T.field, border: "0.5px solid " + T.borderLight,
 											borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px"
 										}
 									},
 										h("div", { style: { flex: 1, minWidth: 0 } },
-											h("div", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" } },
-												h("span", { style: { fontSize: "12px", fontWeight: 700, color: T.brand, fontFamily: MONO } }, `${idx + 1}. [${code}]`),
+											h("div", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" } },
+												h("span", { style: { fontSize: "12px", fontWeight: 700, color: T.brand, fontFamily: MONO } }, (idx + 1) + ". [" + code + "]"),
 												h("span", { style: { fontSize: "13px", fontWeight: 600, color: T.labelPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, label)
 											),
-											h("div", { style: { fontSize: "12px", color: T.labelTertiary, lineHeight: "16px", marginBottom: "6px" } }, entry.reason),
+											h("div", { style: { fontSize: "11px", color: T.labelTertiary, lineHeight: "15px", marginBottom: "4px" } }, entry.reason),
 											h("div", { style: { display: "flex", gap: "6px", flexWrap: "wrap" } },
-												entry.redCount > 0 ? h("span", { style: { padding: "1px 6px", borderRadius: "4px", fontSize: "11px", background: T.redSoft, color: T.red } }, `${entry.redCount} em đỏ`) : null,
-												entry.rustyCount > 0 ? h("span", { style: { padding: "1px 6px", borderRadius: "4px", fontSize: "11px", background: T.rustySoft, color: T.rusty } }, `${entry.rustyCount} em rusty`) : null,
-												h("span", { style: { padding: "1px 6px", borderRadius: "4px", fontSize: "11px", background: T.greenSoft, color: T.green } }, `Mở khóa ${unlocksCount} bài sau`)
+												entry.redCount > 0 ? h("span", { style: { padding: "1px 5px", borderRadius: "4px", fontSize: "10px", background: T.redSoft, color: T.red } }, entry.redCount + " em đỏ") : null,
+												entry.rustyCount > 0 ? h("span", { style: { padding: "1px 5px", borderRadius: "4px", fontSize: "10px", background: T.rustySoft, color: T.rusty } }, entry.rustyCount + " em rusty") : null,
+												h("span", { style: { padding: "1px 5px", borderRadius: "4px", fontSize: "10px", background: T.greenSoft, color: T.green } }, "Mở khóa " + unlocksCount + " bài")
 											)
 										),
 										h("button", {
 											onClick: () => {
 												setAssignFor(entry.conceptUri);
-												setAssignTitle(`Ôn tập củng cố: [${code}] ${label}`);
+												setAssignTitle("Ôn tập củng cố: [" + code + "] " + label);
 											},
 											style: {
-												padding: "6px 12px", background: T.brand, color: "#fff",
-												border: "none", borderRadius: "6px", fontSize: "12px", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap"
+												padding: "5px 10px", background: T.brand, color: "#fff",
+												border: "none", borderRadius: "6px", fontSize: "11px", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap"
 											}
 										}, "Giao ôn tập")
 									);
@@ -736,11 +948,78 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 							)
 					),
 
-					// WIDGET 3: Targeted Intervention Card (when Assign is clicked)
+					// WIDGET 3: Student Roster List (Classroom Memory Pattern: click student to drill into Mastery Graph)
+					h("div", {
+						style: {
+							background: T.card, border: "0.5px solid " + T.border, borderRadius: "12px",
+							padding: "16px 18px"
+						}
+					},
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
+							h("div", null,
+								h("h3", { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Danh sách học sinh (Class Roster)"),
+								h("p", { style: { margin: 0, fontSize: "11px", color: T.labelTertiary } }, "Chọn học sinh để hiển thị Bản đồ tri thức cá nhân")
+							),
+							activeStudentId ? h("button", {
+								onClick: () => selectStudent(null),
+								style: {
+									padding: "3px 8px", background: "rgba(255,255,255,0.06)", border: "0.5px solid " + T.border,
+									borderRadius: "6px", fontSize: "11px", color: T.labelSecondary, cursor: "pointer"
+								}
+							}, "Xem cả lớp") : null
+						),
+						!heatmap || !Array.isArray(heatmap.students) || heatmap.students.length === 0 ?
+							h("div", { style: { textAlign: "center", padding: "16px", color: T.labelTertiary, fontSize: "12px" } }, "Chưa có danh sách sinh viên.") :
+							h("div", { style: { display: "flex", flexDirection: "column", gap: "6px" } },
+								heatmap.students.map(sid => {
+									const isCurrent = activeStudentId === sid;
+									const sName = nameBySid[sid] || sid.slice(0, 8);
+									// compute student stats
+									let sMastered = 0, sRed = 0, sRusty = 0, sTotal = (heatmap.concepts || []).length;
+									(heatmap.concepts || []).forEach(cid => {
+										const st = heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][cid] : "none";
+										if (st === "green") sMastered++;
+										else if (st === "red") sRed++;
+										else if (st === "rusty") sRusty++;
+									});
+									const sPct = sTotal > 0 ? Math.round((sMastered / sTotal) * 100) : 0;
+
+									return h("div", {
+										key: sid,
+										onClick: () => selectStudent(isCurrent ? null : sid),
+										style: {
+											padding: "10px 12px", borderRadius: "8px", cursor: "pointer",
+											background: isCurrent ? "rgba(253, 80, 90, 0.12)" : T.field,
+											border: isCurrent ? "1px solid " + T.brand : "0.5px solid " + T.borderLight,
+											display: "flex", justifyContent: "space-between", alignItems: "center",
+											transition: "all 0.15s ease"
+										}
+									},
+										h("div", { style: { minWidth: 0 } },
+											h("div", { style: { fontSize: "13px", fontWeight: 600, color: isCurrent ? T.brand : T.labelPrimary } }, sName),
+											h("div", { style: { fontSize: "11px", color: T.labelTertiary, display: "flex", gap: "8px", marginTop: "2px" } },
+												h("span", { style: { color: T.green } }, sMastered + " vững"),
+												sRed > 0 ? h("span", { style: { color: T.red } }, sRed + " hổng") : null,
+												sRusty > 0 ? h("span", { style: { color: T.rusty } }, sRusty + " rusty") : null,
+												h("span", null, sPct + "%")
+											)
+										),
+										h("div", {
+											style: {
+												fontSize: "11px", fontWeight: 600, color: isCurrent ? T.brand : T.labelTertiary,
+												display: "flex", alignItems: "center", gap: "4px"
+											}
+										}, isCurrent ? "Đang chọn ›" : "Xem đồ thị ›")
+									);
+								})
+							)
+					),
+
+					// Targeted Intervention Modal/Drawer (when Assign is clicked)
 					assignFor ? h("div", {
 						style: {
-							background: T.card, border: `1px solid ${T.brand}`, borderRadius: "12px",
-							padding: "18px 20px"
+							background: T.card, border: "1px solid " + T.brand, borderRadius: "12px",
+							padding: "16px 18px"
 						}
 					},
 						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" } },
@@ -752,7 +1031,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 								h("label", { style: { display: "block", fontSize: "11px", color: T.labelTertiary, marginBottom: "4px" } }, "Tiêu đề bài tập *"),
 								h("input", {
 									value: assignTitle, onChange: e => setAssignTitle(e.target.value),
-									style: { width: "100%", padding: "8px 12px", background: T.field, border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
+									style: { width: "100%", padding: "8px 12px", background: T.field, border: "0.5px solid " + T.border, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
 								})
 							),
 							h("div", { style: { display: "flex", gap: "10px" } },
@@ -760,7 +1039,7 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 									h("label", { style: { display: "block", fontSize: "11px", color: T.labelTertiary, marginBottom: "4px" } }, "Nhóm học sinh đích"),
 									h("select", {
 										value: assignGroup, onChange: e => setAssignGroup(e.target.value),
-										style: { width: "100%", padding: "8px 10px", background: T.field, border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
+										style: { width: "100%", padding: "8px 10px", background: T.field, border: "0.5px solid " + T.border, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
 									},
 										h("option", { value: "red_rusty" }, "Tất cả học sinh Đỏ + Rusty"),
 										h("option", { value: "red" }, "Chỉ học sinh Đỏ (Lỗ hổng lớn)"),
@@ -771,238 +1050,389 @@ window.__ModuleLoader__.load({ id: "skilltree-teacher-ui", factory: (require) =>
 									h("label", { style: { display: "block", fontSize: "11px", color: T.labelTertiary, marginBottom: "4px" } }, "Hạn nộp (Tùy chọn)"),
 									h("input", {
 										type: "datetime-local", value: assignDue, onChange: e => setAssignDue(e.target.value),
-										style: { width: "100%", padding: "8px 10px", background: T.field, border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
+										style: { width: "100%", padding: "8px 10px", background: T.field, border: "0.5px solid " + T.border, borderRadius: "6px", color: T.labelPrimary, fontSize: "13px", boxSizing: "border-box", outline: "none" }
 									})
 								)
 							),
 							h("div", { style: { display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "6px" } },
-								h("button", { type: "button", onClick: () => setAssignFor(null), style: { padding: "6px 12px", background: "none", border: `0.5px solid ${T.border}`, borderRadius: "6px", color: T.labelSecondary, fontSize: "12px", cursor: "pointer" } }, "Đóng"),
+								h("button", { type: "button", onClick: () => setAssignFor(null), style: { padding: "6px 12px", background: "none", border: "0.5px solid " + T.border, borderRadius: "6px", color: T.labelSecondary, fontSize: "12px", cursor: "pointer" } }, "Đóng"),
 								h("button", { type: "submit", disabled: assignBusy, style: { padding: "6px 14px", background: T.brand, border: "none", borderRadius: "6px", color: "#fff", fontSize: "12px", fontWeight: 500, cursor: assignBusy ? "not-allowed" : "pointer" } }, assignBusy ? "Đang giao..." : "Giao bài tập ngay")
 							)
 						)
 					) : null
 				),
 
-				// RIGHT COLUMN: Class Heat Map Matrix & Student Drill-Down
-				h("div", { style: { flex: "2 1 540px", display: "flex", flexDirection: "column", gap: "16px", minWidth: "340px" } },
-					// WIDGET 4: Class Heat Map Matrix
+				// RIGHT COLUMN: THE MASTERY GRAPH (The True Hero of the Dashboard)
+				h("div", { style: { flex: "2 1 540px", display: "flex", flexDirection: "column", gap: "16px", minWidth: "360px" } },
 					h("div", {
 						style: {
-							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
-							padding: "18px 20px"
+							background: T.card, border: "0.5px solid " + T.border, borderRadius: "12px",
+							padding: "18px 20px", display: "flex", flexDirection: "column", gap: "14px"
 						}
 					},
-						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px", marginBottom: "14px" } },
-							h("div", null,
-								h("h3", { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, "Bản đồ nhiệt năng lực (Class Heat Map)"),
-								h("p", { style: { margin: 0, fontSize: "12px", color: T.labelTertiary } }, "Ma trận Học sinh × Chuẩn đầu ra; nhấp vào tên học sinh để xem chẩn đoán cá nhân")
+						// Graph Window Bar
+						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" } },
+							h("div", { style: { display: "flex", alignItems: "center", gap: "10px" } },
+								h("div", {
+									style: {
+										width: "10px", height: "10px", borderRadius: "50%",
+										background: activeStudentId ? T.brand : "#38bdf8",
+										boxShadow: activeStudentId ? "0 0 8px #fd505a" : "0 0 8px #38bdf8"
+									}
+								}),
+								h("h3", { style: { margin: 0, fontSize: "15px", fontWeight: 600, color: T.labelPrimary } },
+									activeStudentId ? activeStudentName + " · mastery graph" : "mastery graph · Bản đồ nhận thức cả lớp"
+								),
+								activeStudentId ? h("button", {
+									onClick: () => selectStudent(null),
+									style: {
+										display: "inline-flex", alignItems: "center", gap: "4px",
+										padding: "3px 8px", background: "rgba(255,255,255,0.06)", border: "0.5px solid " + T.border,
+										borderRadius: "6px", fontSize: "11px", color: T.labelSecondary, cursor: "pointer"
+									}
+								}, Icons.ArrowLeft(12, "currentColor"), "Quay lại cả lớp") : null
 							),
-							// Legend
-							h("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" } },
-								h(Chip, { state: "green" }),
-								h(Chip, { state: "amber" }),
-								h(Chip, { state: "red" }),
-								h(Chip, { state: "rusty" }),
+
+							// View Mode Switcher
+							h("div", { style: { display: "flex", background: T.field, border: "0.5px solid " + T.borderLight, borderRadius: "8px", padding: "2px" } },
+								h("button", {
+									onClick: () => setGraphViewMode("graph"),
+									style: {
+										display: "inline-flex", alignItems: "center", gap: "6px",
+										padding: "5px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 500,
+										background: graphViewMode === "graph" ? "rgba(255,255,255,0.08)" : "transparent",
+										color: graphViewMode === "graph" ? T.labelPrimary : T.labelTertiary,
+										border: "none", cursor: "pointer"
+									}
+								}, Icons.Network(14, "currentColor"), "Đồ thị (Graph)"),
+								h("button", {
+									onClick: () => setGraphViewMode("table"),
+									style: {
+										display: "inline-flex", alignItems: "center", gap: "6px",
+										padding: "5px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 500,
+										background: graphViewMode === "table" ? "rgba(255,255,255,0.08)" : "transparent",
+										color: graphViewMode === "table" ? T.labelPrimary : T.labelTertiary,
+										border: "none", cursor: "pointer"
+									}
+								}, Icons.Table(14, "currentColor"), "Ma trận (Matrix)")
 							)
 						),
 
-						!heatmap || !Array.isArray(heatmap.students) || heatmap.students.length === 0 ?
-							h("div", { style: { textAlign: "center", padding: "40px", color: T.labelTertiary, fontSize: "13px" } }, "Chưa có dữ liệu học tập cho lớp học này.") :
-							h("div", { style: { overflowX: "auto", border: `0.5px solid ${T.borderLight}`, borderRadius: "8px" } },
-								h("table", { style: { width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" } },
-									h("thead", null,
-										h("tr", { style: { background: T.field, borderBottom: `0.5px solid ${T.border}` } },
-											h("th", { style: { padding: "10px 14px", fontWeight: 600, color: T.labelSecondary, minWidth: "150px" } }, "Học sinh"),
-											(heatmap.concepts || []).map(uri => {
-												const node = nodeByUri[uri];
-												const short = conceptShort(node) || uri.slice(-6);
-												return h("th", {
-													key: uri,
-													title: node ? (node.fullStatement || node.full_statement || uri) : uri,
-													style: { padding: "8px 6px", textAlign: "center", fontWeight: 600, color: T.brand, fontFamily: MONO, minWidth: "75px" }
-												}, short);
-											})
-										)
+						// VIEW 1: THE INTERACTIVE SVG MASTERY GRAPH
+						graphViewMode === "graph" ? h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
+							// Canvas Container
+							h("div", {
+								style: {
+									width: "100%", background: "#131315", borderRadius: "10px",
+									border: "0.5px solid rgba(255,255,255,0.06)", overflow: "hidden", position: "relative"
+								}
+							},
+								h("svg", {
+									viewBox: "0 0 860 440",
+									style: { width: "100%", height: "auto", display: "block" }
+								},
+									// Arrowhead marker definitions
+									h("defs", null,
+										h("marker", {
+											id: "arrow-default", viewBox: "0 0 10 10", refX: "28", refY: "5",
+											markerWidth: "6", markerHeight: "6", orient: "auto-start-reverse"
+										}, h("path", { d: "M 0 1.5 L 10 5 L 0 8.5 z", fill: "#45454b" })),
+										h("marker", {
+											id: "arrow-active", viewBox: "0 0 10 10", refX: "28", refY: "5",
+											markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse"
+										}, h("path", { d: "M 0 1.5 L 10 5 L 0 8.5 z", fill: T.brand }))
 									),
-									h("tbody", null,
-										heatmap.students.map(sid => {
-											const isSelected = drill && drill.studentId === sid;
-											return h("tr", {
-												key: sid,
-												style: {
-													borderBottom: `0.5px solid ${T.borderLight}`,
-													background: isSelected ? "rgba(253, 80, 90, 0.06)" : "transparent"
+
+									// Background Grid / Connection Curves
+									(graph.edges || []).map((edge, idx) => {
+										const srcId = edge.sourceIdentifier || edge.source || edge.from;
+										const tgtId = edge.targetIdentifier || edge.target || edge.to;
+										const p1 = dagLayout.positions.get(srcId);
+										const p2 = dagLayout.positions.get(tgtId);
+										if (!p1 || !p2) return null;
+
+										const isEdgeActive = selectedNodeUri && (srcId === selectedNodeUri || tgtId === selectedNodeUri);
+										const midX = (p1.x + p2.x) / 2;
+										const pathD = "M " + p1.x + " " + p1.y + " C " + midX + " " + p1.y + ", " + midX + " " + p2.y + ", " + p2.x + " " + p2.y;
+
+										return h("path", {
+											key: "edge-" + idx,
+											d: pathD,
+											fill: "none",
+											stroke: isEdgeActive ? T.brand : "#38383e",
+											strokeWidth: isEdgeActive ? "2.5" : "1.5",
+											markerEnd: isEdgeActive ? "url(#arrow-active)" : "url(#arrow-default)",
+											style: { transition: "stroke 0.2s, stroke-width 0.2s" }
+										});
+									}),
+
+									// Graph Nodes
+									(graph.nodes || []).map(node => {
+										const id = node.identifier || node.id;
+										const pos = dagLayout.positions.get(id);
+										if (!pos) return null;
+
+										const isSelected = selectedNodeUri === id;
+										const isNext = activeStudentId && nextStepUri === id;
+
+										// Calculate state
+										let nodeState = "none";
+										let centerText = "—";
+
+										if (activeStudentId) {
+											// Student View: exact student state
+											nodeState = heatmap && heatmap.cells && heatmap.cells[activeStudentId] ? heatmap.cells[activeStudentId][id] : "none";
+											if (nodeState === "green") centerText = "✓";
+											else if (nodeState === "red") centerText = "!";
+											else if (nodeState === "rusty") centerText = "◷";
+											else if (nodeState === "amber") centerText = "…";
+										} else {
+											// Class View: aggregated class state
+											let gCount = 0, rCount = 0, rustyCount = 0, total = (heatmap && heatmap.students ? heatmap.students.length : 0);
+											if (heatmap && heatmap.cells && total > 0) {
+												heatmap.students.forEach(sid => {
+													const st = heatmap.cells[sid] ? heatmap.cells[sid][id] : "none";
+													if (st === "green") gCount++;
+													else if (st === "red") rCount++;
+													else if (st === "rusty") rustyCount++;
+												});
+												if (rCount > 0) {
+													nodeState = "red";
+													centerText = rCount + " đỏ";
+												} else if (rustyCount > 0) {
+													nodeState = "rusty";
+													centerText = rustyCount + " ôn";
+												} else if (gCount === total && total > 0) {
+													nodeState = "green";
+													centerText = "100%";
+												} else if (gCount > 0) {
+													nodeState = "amber";
+													centerText = Math.round((gCount / total) * 100) + "%";
+												} else {
+													nodeState = "none";
+													centerText = "0%";
 												}
-											},
-												h("td", { style: { padding: "10px 14px", verticalAlign: "middle" } },
-													h("button", {
-														onClick: () => openDrill(sid),
-														style: {
-															background: "none", border: "none", padding: 0,
-															color: isSelected ? T.brand : T.labelPrimary, fontWeight: 600, fontSize: "13px",
-															cursor: "pointer", textAlign: "left", textDecoration: "underline"
-														}
-													}, nameBySid[sid] || sid.slice(0, 8)),
-													h("div", { style: { fontSize: "11px", color: T.labelTertiary, fontFamily: MONO } }, sid.slice(0, 8))
-												),
-												(heatmap.concepts || []).map(uri => {
-													const state = heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][uri] : "none";
-													return h("td", {
-														key: uri,
-														style: { padding: "6px 4px", textAlign: "center", verticalAlign: "middle" }
-													}, h(Chip, { state }));
-												})
-											);
+											}
+										}
+
+										const chip = stateChip(nodeState);
+										const code = node.humanCodingScheme || node.human_coding_scheme || "KCN";
+										const statement = node.fullStatement || node.full_statement || node.title || id;
+										const shortName = statement.split(/[(-–,]/)[0].trim().slice(0, 18);
+
+										return h("g", {
+											key: id,
+											transform: "translate(" + pos.x + ", " + pos.y + ")",
+											cursor: "pointer",
+											onClick: () => setSelectedNodeUri(isSelected ? null : id)
+										},
+											// Next Step Pulsing Outer Halo
+											isNext ? h("circle", {
+												r: "30", fill: "none", stroke: T.brand, strokeWidth: "2",
+												strokeDasharray: "4 2", opacity: "0.8"
+											}) : null,
+
+											// Selection Outer Ring
+											isSelected ? h("circle", {
+												r: "28", fill: "none", stroke: "#fff", strokeWidth: "2", opacity: "0.9"
+											}) : null,
+
+											// Main Circle
+											h("circle", {
+												r: "22",
+												fill: chip.bg,
+												stroke: chip.border,
+												strokeWidth: nodeState === "rusty" ? "2" : "2.5",
+												strokeDasharray: chip.dashed ? "4 2" : "none"
+											}),
+
+											// Center Status Text
+											h("text", {
+												textAnchor: "middle", dy: "4",
+												fontSize: "10px", fontWeight: "700",
+												fontFamily: MONO, fill: chip.fg
+											}, centerText),
+
+											// Top Code Scheme Tag
+											h("text", {
+												textAnchor: "middle", y: "-28",
+												fontSize: "10px", fontWeight: "700",
+												fontFamily: MONO, fill: isSelected ? T.brand : T.labelTertiary
+											}, code),
+
+											// Bottom Concept Name Label
+											h("text", {
+												textAnchor: "middle", y: "36",
+												fontSize: "11px", fontWeight: "500",
+												fill: isSelected ? T.labelPrimary : T.labelSecondary
+											}, shortName),
+
+											// "BƯỚC TIẾP THEO" Badge if AI recommended frontier
+											isNext ? h("g", { transform: "translate(0, -42)" },
+												h("rect", { x: "-38", y: "-8", width: "76", height: "16", rx: "4", fill: T.brand }),
+												h("text", { textAnchor: "middle", y: "4", fontSize: "9px", fontWeight: "700", fill: "#fff" }, "TIẾP THEO")
+											) : null
+										);
+									})
+								)
+							),
+
+							// Graph Legend
+							h("div", {
+								style: {
+									display: "flex", justifyContent: "space-between", alignItems: "center",
+									flexWrap: "wrap", gap: "10px", padding: "6px 4px", fontSize: "11px", color: T.labelTertiary
+								}
+							},
+								h("div", { style: { display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" } },
+									h("span", { style: { display: "flex", alignItems: "center", gap: "4px" } },
+										h("span", { style: { width: "8px", height: "8px", borderRadius: "50%", background: T.red } }), "Lỗ hổng (Gap / Đỏ)"
+									),
+									h("span", { style: { display: "flex", alignItems: "center", gap: "4px" } },
+										h("span", { style: { width: "8px", height: "8px", borderRadius: "50%", background: T.amber } }), "Đang học / Hỗn hợp"
+									),
+									h("span", { style: { display: "flex", alignItems: "center", gap: "4px" } },
+										h("span", { style: { width: "8px", height: "8px", borderRadius: "50%", background: T.green } }), "Đã nắm vững (Mastered)"
+									),
+									h("span", { style: { display: "flex", alignItems: "center", gap: "4px" } },
+										h("span", { style: { width: "8px", height: "8px", borderRadius: "50%", border: "1px dashed " + T.rusty, background: "transparent" } }), "Mai một (Rusty / Cần ôn)"
+									)
+								),
+								h("span", { style: { fontStyle: "italic" } }, "Mũi tên = Quan hệ tiên quyết · Nhấp vào nút để xem phân tích")
+							),
+
+							// CONCEPT INSPECTOR CARD (Shown when a node is clicked)
+							selectedNodeInfo ? h("div", {
+								style: {
+									background: T.field, border: "1px solid " + T.border, borderRadius: "10px",
+									padding: "16px 18px", display: "flex", flexDirection: "column", gap: "10px",
+									animation: "fadeIn 0.2s ease"
+								}
+							},
+								h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" } },
+									h("div", null,
+										h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" } },
+											h("span", { style: { fontSize: "12px", fontWeight: 700, color: T.brand, fontFamily: MONO } }, selectedNodeInfo.code),
+											selectedNodeInfo.studentState ? h(Chip, { state: selectedNodeInfo.studentState }) : null
+										),
+										h("h4", { style: { margin: 0, fontSize: "14px", fontWeight: 600, color: T.labelPrimary } }, selectedNodeInfo.title)
+									),
+									h("button", {
+										onClick: () => setSelectedNodeUri(null),
+										style: { background: "none", border: "none", color: T.labelTertiary, cursor: "pointer", padding: "4px" }
+									}, Icons.X(14, "currentColor"))
+								),
+
+								// Prerequisites and Unlocks row
+								h("div", { style: { display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "12px" } },
+									h("div", { style: { flex: 1, minWidth: "200px" } },
+										h("span", { style: { color: T.labelTertiary, display: "block", marginBottom: "2px" } }, "Điều kiện tiên quyết (Prerequisites):"),
+										selectedNodeInfo.prereqs.length === 0 ?
+											h("span", { style: { color: T.green } }, "Khái niệm khởi đầu (Không cần tiên quyết)") :
+											h("div", { style: { display: "flex", gap: "4px", flexWrap: "wrap" } },
+												selectedNodeInfo.prereqs.map(p => h("span", {
+													key: p.identifier,
+													style: { padding: "2px 6px", background: "rgba(255,255,255,0.05)", borderRadius: "4px", fontFamily: MONO }
+												}, p.humanCodingScheme || p.identifier.slice(-8)))
+											)
+									),
+									h("div", { style: { flex: 1, minWidth: "200px" } },
+										h("span", { style: { color: T.labelTertiary, display: "block", marginBottom: "2px" } }, "Mở khóa tiếp theo (Unlocks):"),
+										selectedNodeInfo.unlocks.length === 0 ?
+											h("span", { style: { color: T.labelTertiary } }, "Chuẩn đầu ra đích môn học") :
+											h("div", { style: { display: "flex", gap: "4px", flexWrap: "wrap" } },
+												selectedNodeInfo.unlocks.map(u => h("span", {
+													key: u.identifier,
+													style: { padding: "2px 6px", background: "rgba(255,255,255,0.05)", borderRadius: "4px", fontFamily: MONO, color: T.green }
+												}, u.humanCodingScheme || u.identifier.slice(-8)))
+											)
+									)
+								),
+
+								// Student cohort breakdown
+								selectedNodeInfo.redStudents.length > 0 || selectedNodeInfo.rustyStudents.length > 0 ? h("div", {
+									style: { fontSize: "12px", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: "6px" }
+								},
+									selectedNodeInfo.redStudents.length > 0 ? h("div", { style: { color: T.red, marginBottom: "2px" } },
+										"● " + selectedNodeInfo.redStudents.length + " học sinh đang bị đỏ: " + selectedNodeInfo.redStudents.join(", ")
+									) : null,
+									selectedNodeInfo.rustyStudents.length > 0 ? h("div", { style: { color: T.rusty } },
+										"● " + selectedNodeInfo.rustyStudents.length + " học sinh bị mai một kiến thức: " + selectedNodeInfo.rustyStudents.join(", ")
+									) : null
+								) : null,
+
+								// Action
+								h("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: "4px" } },
+									h("button", {
+										onClick: () => {
+											setAssignFor(selectedNodeInfo.uri);
+											setAssignTitle("Ôn tập củng cố: [" + selectedNodeInfo.code + "] " + selectedNodeInfo.title);
+										},
+										style: {
+											padding: "6px 14px", background: T.brand, color: "#fff",
+											border: "none", borderRadius: "6px", fontSize: "12px", fontWeight: 500, cursor: "pointer"
+										}
+									}, "Giao bài tập củng cố cho nhóm này")
+								)
+							) : null
+						) :
+
+						// VIEW 2: COMPACT CLEAN MATRIX TABLE (Secondary View)
+						h("div", { style: { overflowX: "auto", border: "0.5px solid " + T.borderLight, borderRadius: "8px" } },
+							h("table", { style: { width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px" } },
+								h("thead", null,
+									h("tr", { style: { background: T.field, borderBottom: "0.5px solid " + T.border } },
+										h("th", { style: { padding: "10px 14px", fontWeight: 600, color: T.labelSecondary, minWidth: "150px" } }, "Học sinh"),
+										(heatmap.concepts || []).map(uri => {
+											const node = nodeByUri[uri];
+											const short = conceptShort(node) || uri.slice(-6);
+											return h("th", {
+												key: uri,
+												title: node ? (node.fullStatement || node.full_statement || uri) : uri,
+												style: { padding: "8px 6px", textAlign: "center", fontWeight: 600, color: T.brand, fontFamily: MONO, minWidth: "75px" }
+											}, short);
 										})
 									)
+								),
+								h("tbody", null,
+									(heatmap.students || []).map(sid => {
+										const isSelected = activeStudentId === sid;
+										return h("tr", {
+											key: sid,
+											style: {
+												borderBottom: "0.5px solid " + T.borderLight,
+												background: isSelected ? "rgba(253, 80, 90, 0.08)" : "transparent"
+											}
+										},
+											h("td", { style: { padding: "10px 14px", verticalAlign: "middle" } },
+												h("button", {
+													onClick: () => selectStudent(sid),
+													style: {
+														background: "none", border: "none", padding: 0,
+														color: isSelected ? T.brand : T.labelPrimary, fontWeight: 600, fontSize: "13px",
+														cursor: "pointer", textAlign: "left", textDecoration: "underline"
+													}
+												}, nameBySid[sid] || sid.slice(0, 8)),
+												h("div", { style: { fontSize: "11px", color: T.labelTertiary, fontFamily: MONO } }, sid.slice(0, 8))
+											),
+											(heatmap.concepts || []).map(uri => {
+												const state = heatmap.cells && heatmap.cells[sid] ? heatmap.cells[sid][uri] : "none";
+												return h("td", {
+													key: uri,
+													style: { padding: "6px 4px", textAlign: "center", verticalAlign: "middle" }
+												}, h(Chip, { state }));
+											})
+										);
+									})
 								)
 							)
-					),
-
-					// WIDGET 5: Individual Student Drill-Down Card
-					drill ? h("div", {
-						style: {
-							background: T.card, border: `0.5px solid ${T.border}`, borderRadius: "12px",
-							padding: "18px 20px"
-						}
-					},
-						h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" } },
-							h("div", null,
-								h("h4", { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 600, color: T.labelPrimary } },
-									`Chẩn đoán cá nhân: ${nameBySid[drill.studentId] || drill.studentId}`
-								),
-								h("p", { style: { margin: 0, fontSize: "12px", color: T.labelTertiary, fontFamily: MONO } }, `ID: ${drill.studentId}`)
-							),
-							h("button", { onClick: () => setDrill(null), style: { background: "none", border: "none", color: T.labelTertiary, cursor: "pointer" } }, Icons.X(14, "currentColor"))
-						),
-						drill.loading ? h("div", { style: { textAlign: "center", padding: "20px", color: T.labelTertiary, fontSize: "13px" } }, "Đang tải hồ sơ nhận thức cá nhân...") :
-							drill.error ? h("div", { style: { color: T.red, fontSize: "13px" } }, drill.error) :
-								h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-									// Recommended Next Step (XAI)
-									drill.next ? h("div", {
-										style: {
-											padding: "12px 14px", background: T.field, border: `0.5px solid ${T.green}`,
-											borderRadius: "8px"
-										}
-									},
-										h("div", { style: { fontSize: "11px", fontWeight: 600, color: T.green, marginBottom: "2px" } }, "KHUYẾN NGHỊ BƯỚC HỌC TIẾP THEO (XAI)"),
-										h("div", { style: { fontSize: "13px", fontWeight: 600, color: T.labelPrimary } },
-											nodeByUri[drill.next.conceptUri] ? (nodeByUri[drill.next.conceptUri].fullStatement || nodeByUri[drill.next.conceptUri].full_statement) : drill.next.conceptUri
-										),
-										drill.next.reason ? h("div", { style: { fontSize: "12px", color: T.labelSecondary, marginTop: "4px" } }, drill.next.reason) : null
-									) : null,
-
-									// Skills Breakdown Table
-									drill.mastery && drill.mastery.length > 0 ? h("div", { style: { overflowX: "auto" } },
-										h("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "12px" } },
-											h("thead", null,
-												h("tr", { style: { borderBottom: `0.5px solid ${T.border}`, color: T.labelTertiary } },
-													h("th", { style: { padding: "6px 8px" } }, "Khái niệm"),
-													h("th", { style: { padding: "6px 8px", textAlign: "center" } }, "Trạng thái"),
-													h("th", { style: { padding: "6px 8px", textAlign: "right" } }, "Điểm làm chủ"),
-													h("th", { style: { padding: "6px 8px", textAlign: "right" } }, "Lần luyện tập")
-												)
-											),
-											h("tbody", null,
-												drill.mastery.map(m => {
-													const node = nodeByUri[m.conceptUri];
-													const label = node ? (node.humanCodingScheme || node.human_coding_scheme || node.fullStatement) : m.conceptUri.slice(-8);
-													return h("tr", { key: m.conceptUri, style: { borderBottom: `0.5px solid ${T.borderLight}` } },
-														h("td", { style: { padding: "6px 8px", color: T.labelPrimary } }, label),
-														h("td", { style: { padding: "6px 8px", textAlign: "center" } }, h(Chip, { state: m.state })),
-														h("td", { style: { padding: "6px 8px", textAlign: "right", fontWeight: 600, color: T.labelPrimary } }, `${Math.round(m.mastery * 100)}%`),
-														h("td", { style: { padding: "6px 8px", textAlign: "right", color: T.labelTertiary } }, String(m.reviewCount || 0))
-													);
-												})
-											)
-										)
-									) : h("div", { style: { fontSize: "12px", color: T.labelTertiary } }, "Chưa có vết làm bài nào được ghi nhận.")
-								)
-					) : null
+						)
+					)
 				)
 			)
 		);
 	}
 
-	function SidebarIcon(props) {
-		const active = Boolean(props && props.active);
-		return h("span", { style: { display: "inline-flex", alignItems: "center", color: active ? T.brand : "inherit" } },
-			Icons.Compass(18, active ? T.brand : "currentColor")
-		);
-	}
-
-	function PageHeader() {
-		return h("div", {
-			style: {
-				display: "flex", alignItems: "center", gap: "12px",
-				paddingBottom: "16px", borderBottom: `0.5px solid ${T.border}`, marginBottom: "20px"
-			}
-		},
-			h("div", {
-				style: {
-					display: "grid", placeItems: "center", width: "40px", height: "40px",
-					borderRadius: "10px", background: T.brandSoft, color: T.brand
-				}
-			}, Icons.Compass(22, T.brand)),
-			h("div", null,
-				h("h2", { style: { margin: 0, fontSize: "18px", fontWeight: 600, color: T.labelPrimary, lineHeight: "24px" } }, "Tổng quan giáo viên (Teacher Cockpit)"),
-				h("p", { style: { margin: "2px 0 0", fontSize: "13px", color: T.labelTertiary, lineHeight: "18px" } },
-					"Bản đồ nhiệt năng lực, kế hoạch bài giảng suy luận từ đồ thị tri thức & hỏi đáp toàn lớp (Classroom Memory)"
-				)
-			)
-		);
-	}
-
-	function MainPanel() {
-		return h("div", {
-			className: "st-page",
-			style: {
-				width: "100%",
-				height: "100%",
-				maxHeight: "100%",
-				overflowY: "auto",
-				overflowX: "hidden",
-				boxSizing: "border-box",
-				fontFamily: FONT,
-				color: T.labelPrimary,
-				WebkitOverflowScrolling: "touch"
-			}
-		},
-			h("div", {
-				style: {
-					width: "100%",
-					maxWidth: "1180px",
-					margin: "0 auto",
-					padding: "24px 32px 64px",
-					boxSizing: "border-box"
-				}
-			},
-				h(PageHeader, null),
-				h(Panel, null)
-			)
-		);
-	}
-
-	exports.name = NS;
-	exports.inject = ["slots"];
-	exports.stateChip = stateChip;
-	exports.conceptShort = conceptShort;
-	exports.buildDashboardCalls = buildDashboardCalls;
-	exports.buildDrillCalls = buildDrillCalls;
-
-	exports.apply = function apply(ctx) {
-		ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({
-			name: "sidebar.panellist",
-			id: NS,
-			order: 20,
-			label: "Tổng quan",
-		}, SidebarIcon));
-
-		ctx.slots.inject("main", () => ctx.slots.register({
-			name: "main",
-			key: NS,
-		}, MainPanel));
-	};
-
-	return module.exports;
+	exports.Panel = Panel;
+	return exports;
 }});
