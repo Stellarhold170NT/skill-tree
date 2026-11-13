@@ -64,7 +64,11 @@ export async function forwardClassRequest(input, fetchImpl) {
   if (typeof fetchFn !== 'function') {
     return { ok: false, status: 0, error: 'fetch unavailable in host runtime' }
   }
-  const baseUrl = input && typeof input.baseUrl === 'string' ? input.baseUrl.trim() : ''
+  let baseUrl = input && typeof input.baseUrl === 'string' ? input.baseUrl.trim() : ''
+  if (!baseUrl || baseUrl === 'http://localhost:8000') {
+    // If running in docker container, api-gateway:8000 is the internal service network
+    baseUrl = process.env.API_GATEWAY_URL || 'http://api-gateway:8000'
+  }
   if (!/^https?:\/\//i.test(baseUrl) || /[\s]/.test(baseUrl)) {
     return { ok: false, status: 0, error: 'invalid or missing baseUrl (must start with http:// or https://)' }
   }
